@@ -5,21 +5,23 @@
 #include "core/input_system.h"
 #include "core/world.h"
 
-class test_plugin {
- public:
-  int count = 0;
+//class test_plugin : public plugin_base {
+// public:
+//  int count = 0;
+//
+//  void update(engine*) override {
+//    count++;
+//
+//    if (count > 180) {
+//      logger::core::Info("test_plugin::update !!! ");
+//      count = 0;
+//    }
+//  }
+//  void start(engine*) override {}
+//  void stop(engine*) override {}
+//};
 
-  void update1(engine*) {
-    count++;
-
-    if (count > 180) {
-      logger::core::Info("test_plugin::update");
-      count = 0;
-    }
-  }
-};
-
-class spin_plugin {
+class spin_plugin : public plugin_base {
  public:
   static int ver;
   int count = 0;
@@ -27,7 +29,7 @@ class spin_plugin {
 
   spin_plugin() = default;
 
-  void update(engine*) {
+  void update(engine*) override {
     count++;
 
     if (count > 180) {
@@ -36,22 +38,22 @@ class spin_plugin {
     }
   }
 
-  void start(engine*) {}
-  void stop(engine*) {}
+  void start(engine*) override {}
+  void stop(engine*) override {}
 
   ~spin_plugin() {
     logger::core::Info("~spin_plugin (ver.{})", ver);
   }
 };
 
-int spin_plugin::ver = 10;
+int spin_plugin::ver = 13;
 
 void load_spin_plugin(plugins_registry *reg) {
   logger::core::Info("load_spin_plugin {}", spin_plugin::ver);
   spin_plugin* plugin = reg->add_plugin<spin_plugin>("spin_plugin");
   plugin->counter = 200;
 
-  reg->add_plugin<test_plugin>("test_plugin");
+  reg->add_plugin<some_plugin>("some_plugin");
 }
 
 void unload_spin_plugin(plugins_registry *reg) {
@@ -60,5 +62,21 @@ void unload_spin_plugin(plugins_registry *reg) {
   spin_plugin* plugin = reg->get_plugin<spin_plugin>("spin_plugin");
 
   reg->remove_plugin("spin_plugin");
-  reg->remove_plugin("test_plugin");
+  reg->remove_plugin("some_plugin");
+}
+
+int some_plugin::foo() {
+  count++;
+  logger::core::Info("some_plugin::foo: {}", count);
+  return 42;
+}
+
+void some_plugin::start(engine *e) { logger::core::Info("some_plugin::start {}", count); }
+
+void some_plugin::update(engine *e) {
+  count++;
+  if (count > 180) {
+    count = 0;
+    logger::core::Info("some_plugin::update");
+  }
 }

@@ -54,7 +54,7 @@ set(SANDBOX_DIR ${CMAKE_SOURCE_DIR}/sandbox/)
 add_executable(game
         ${SANDBOX_DIR}/src/load_libraries.cpp
         ${SANDBOX_DIR}/src/spin_plugin.cpp ${SANDBOX_DIR}/src/spin_plugin.h
-        )
+        ${SANDBOX_DIR}/src/sandbox_plugin.cpp ${SANDBOX_DIR}/src/sandbox_plugin.h)
 target_link_libraries(game PRIVATE ${ENGINE_LIBS})
 target_include_directories(game PRIVATE ${ENGINE_INCLUDES})
 
@@ -65,6 +65,20 @@ target_link_libraries(spin_plugin PRIVATE ${ENGINE_LIBS})
 target_include_directories(spin_plugin PRIVATE ${ENGINE_INCLUDES})
 
 set_target_properties(spin_plugin
+        PROPERTIES
+        ARCHIVE_OUTPUT_DIRECTORY "${SANDBOX_DIR}/libs"
+        LIBRARY_OUTPUT_DIRECTORY "${SANDBOX_DIR}/libs"
+        RUNTIME_OUTPUT_DIRECTORY "${SANDBOX_DIR}/libs"
+        )
+
+add_library(sandbox_plugin SHARED
+        ${SANDBOX_DIR}/src/spin_plugin.cpp ${SANDBOX_DIR}/src/spin_plugin.h
+        ${SANDBOX_DIR}/src/sandbox_plugin.cpp ${SANDBOX_DIR}/src/sandbox_plugin.h
+        )
+target_link_libraries(sandbox_plugin PRIVATE ${ENGINE_LIBS})
+target_include_directories(sandbox_plugin PRIVATE ${ENGINE_INCLUDES})
+
+set_target_properties(sandbox_plugin
         PROPERTIES
         ARCHIVE_OUTPUT_DIRECTORY "${SANDBOX_DIR}/libs"
         LIBRARY_OUTPUT_DIRECTORY "${SANDBOX_DIR}/libs"

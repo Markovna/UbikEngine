@@ -12,7 +12,7 @@
 
 int main(int argc, char* argv[]) {
   const std::vector<std::string> plugin_names = {
-      "spin_plugin"
+      "spin_plugin", "sandbox_plugin"
   };
 
   std::filesystem::path project_path(argv[1]);
