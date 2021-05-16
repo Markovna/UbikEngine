@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD 17)
 add_subdirectory(thirdparty/glfw glfw)
 add_subdirectory(thirdparty/glad glad)
 add_subdirectory(thirdparty/spdlog spdlog)
+add_subdirectory(thirdparty/stb_image stb_image)
 add_subdirectory(thirdparty/efsw efsw)
 
 # ----------------------------------------- #
@@ -35,14 +36,14 @@ add_library(engine STATIC
         ${BASE_SRC} ${CORE_SRC} ${GFX_SRC} ${PLATFORM_SRC}
         )
 
-target_link_libraries(
-        engine PRIVATE
+target_link_libraries(engine PRIVATE
         glfw
         glad
-        spdlog)
+        spdlog
+        stb_image)
 target_include_directories(engine PRIVATE src)
 
-set(ENGINE_LIBS engine glfw glad spdlog)
+set(ENGINE_LIBS engine glfw glad spdlog stb_image)
 set(ENGINE_INCLUDES src)
 
 # ----------------------------------------- #
