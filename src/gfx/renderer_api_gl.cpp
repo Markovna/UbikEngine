@@ -552,7 +552,7 @@ void GLRendererAPI::RenderFrame(const frame& frame) {
                             ToType(item.attribute.format.type),
                             item.attribute.normalized,
                             layout.get_stride(),
-                            (void*) (base_vertex + item.offset)
+                            (void*)(uintptr_t)(base_vertex + item.offset)
                         ));
                         uint16_t mask = 1u << idx;
                         enabledAttribMask |= mask;
