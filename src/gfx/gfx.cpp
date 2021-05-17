@@ -246,29 +246,150 @@ void set_uniform_impl(uniform_handle handle, T value) {
 void set_uniform(uniform_handle handle, int value) {
   set_uniform_impl(handle, value);
 }
+
 void set_uniform(uniform_handle handle, float value) {
   set_uniform_impl(handle, value);
 }
+
 void set_uniform(uniform_handle handle, bool value) {
   set_uniform_impl(handle, value);
 }
+
 void set_uniform(uniform_handle handle, const vec3& value) {
   set_uniform_impl(handle, value);
 }
+
 void set_uniform(uniform_handle handle, const vec4& value) {
   set_uniform_impl(handle, value);
 }
+
 void set_uniform(uniform_handle handle, const color& value) {
   set_uniform_impl(handle, value);
 }
+
 void set_uniform(uniform_handle handle, const mat4& value) {
   set_uniform_impl(handle, value);
 }
+
 void set_uniform(uniform_handle handle, texture_handle tex_handle, tex_slot slot) {
   details::draw_unit &draw = details::g_state.frame.get_draw();
   draw.textures[slot] = tex_handle;
   draw.texture_slots[draw.texture_slots_size++] = slot;
   set_uniform(handle, (int) slot);
+}
+
+void set_buffer(vertexbuf_handle handle, uint32_t offset, uint32_t num) {
+  details::draw_unit &draw = details::g_state.frame.get_draw();
+  draw.vb_handle = handle;
+  draw.vb_offset = offset;
+  draw.vb_size = num;
+}
+
+void set_buffer(indexbuf_handle handle, uint32_t offset, uint32_t num) {
+  details::draw_unit &draw = details::g_state.frame.get_draw();
+  draw.ib_handle = handle;
+  draw.vb_offset = offset;
+  draw.vb_size = num;
+}
+
+void set_transform(const mat4& val) {
+  details::draw_unit &draw = details::g_state.frame.get_draw();
+  draw.transform = val;
+}
+
+shader_handle create_shader(const std::string &source) {
+  shader_handle handle(details::g_state.shader_handles.get());
+  auto& command = details::g_state.frame.emplace_command<details::create_shader_command>();
+  command.handle = handle;
+  command.source = source;
+  return handle;
+}
+
+uniform_handle create_uniform(const char* c_str) {
+  uniform_handle handle(details::g_state.uniform_handles.get());
+  auto& command = details::g_state.frame.emplace_command<details::create_uniform_command>();
+  command.handle = handle;
+  std::strcpy(command.name, c_str);
+  return handle;
+}
+
+texture_handle create_texture(uint32_t width, uint32_t height, texture_format::type format, buffer_ptr ptr) {
+  texture_handle handle(details::g_state.texture_handles.get());
+  auto& command = details::g_state.frame.emplace_command<details::create_texture_command>();
+  command.handle = handle;
+  command.width = width;
+  command.height = height;
+  command.format = format;
+  command.wrap = {};
+  command.filter = {};
+  command.flags = {};
+  command.ptr = std::move(ptr);
+  return handle;
+}
+
+texture_handle create_texture(uint32_t width,
+                                   uint32_t height,
+                                   texture_format::type format,
+                                   texture_wrap wrap,
+                                   texture_filter filter,
+                                   texture_flags::mask flags,
+                                   buffer_ptr ptr) {
+  texture_handle handle(details::g_state.texture_handles.get());
+  auto& command = details::g_state.frame.emplace_command<details::create_texture_command>();
+  command.handle = handle;
+  command.width = width;
+  command.height = height;
+  command.format = format;
+  command.wrap = wrap;
+  command.filter = filter;
+  command.flags = flags;
+  command.ptr = std::move(ptr);
+  return handle;
+}
+
+buffer_ptr copy(const void * data, uint32_t size) {
+  std::shared_ptr<void> ptr(operator new(size), [](void *p) { operator delete(p); });
+  memcpy(ptr.get(), data, size);
+  return {ptr, size};
+}
+
+buffer_ptr make_ref(void * data, uint32_t size) {
+  std::shared_ptr<void> ptr(data, [](void *) {});
+  return buffer_ptr {ptr, size};
+}
+
+void set_view(camera_id id, const mat4& value) {
+  details::g_state.cameras[id].view = value;
+}
+
+void set_view_rect(camera_id id, const vec4i& value) {
+  details::g_state.cameras[id].viewport = value;
+}
+
+void set_view_buffer(camera_id id , framebuf_handle value) {
+  details::g_state.cameras[id].frame_buffer = value;
+}
+
+void set_projection(camera_id id, const mat4& value) {
+  details::g_state.cameras[id].projection = value;
+}
+
+void set_clear(camera_id id, clear_flag::flags value) {
+  details::g_state.cameras[id].clear_flags = value;
+}
+
+void set_clear_color(camera_id id, const color& value) {
+  details::g_state.cameras[id].clear_color = value;
+}
+
+void set_scissor(vec4i rect) {
+  details::draw_unit &draw = details::g_state.frame.get_draw();
+  draw.scissor = rect;
+}
+
+void set_options(options::flags flags) {
+  details::draw_unit &draw = details::g_state.frame.get_draw();
+  draw.options = flags;
 }
 
 }

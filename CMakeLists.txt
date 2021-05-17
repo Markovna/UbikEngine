@@ -19,9 +19,9 @@ set(BASE_SRC
 
 set(CORE_SRC
         src/core/ecs.h src/core/ecs.cpp
-        src/core/plugins_registry.h src/core/plugins_registry.cpp src/core/world.cpp src/core/world.h src/core/engine.cpp src/core/engine.h src/core/renderer.cpp src/core/renderer.h
-        src/core/input_system.cpp src/core/input_system.h src/core/game.cpp
-        src/core/assets/assets.cpp src/core/assets/assets.h src/core/assets/texture.cpp src/core/assets/texture.h src/core/assets/shader.cpp src/core/assets/shader.h)
+        src/core/plugins_registry.h src/core/plugins_registry.cpp src/core/world.h src/core/engine.cpp src/core/engine.h src/core/renderer.cpp src/core/renderer.h
+        src/core/input_system.cpp src/core/input_system.h
+        src/core/assets/assets.cpp src/core/assets/assets.h src/core/assets/texture.cpp src/core/assets/texture.h src/core/assets/shader.cpp src/core/assets/shader.h src/core/components/mesh_component.cpp src/core/components/mesh_component.h src/core/components/camera_component.cpp src/core/components/camera_component.h src/core/world.cpp)
 
 set(GFX_SRC
         src/gfx/gfx.cpp src/gfx/gfx.h src/gfx/gfx_config.h src/gfx/gfx_details.cpp src/gfx/gfx_details.h src/gfx/renderer_api.h src/gfx/renderer_api_gl.h src/gfx/renderer_api_gl.cpp
@@ -33,7 +33,7 @@ set(PLATFORM_SRC
         )
 
 add_library(engine STATIC
-        ${BASE_SRC} ${CORE_SRC} ${GFX_SRC} ${PLATFORM_SRC}
+        ${BASE_SRC} ${CORE_SRC} ${GFX_SRC} ${PLATFORM_SRC} src/core/game.cpp
         )
 
 target_link_libraries(engine PRIVATE
@@ -43,8 +43,29 @@ target_link_libraries(engine PRIVATE
         stb_image)
 target_include_directories(engine PRIVATE src)
 
-set(ENGINE_LIBS engine glfw glad spdlog stb_image)
+set(ENGINE_LIBS
+        engine
+        glfw
+        glad
+        spdlog
+        stb_image)
+
 set(ENGINE_INCLUDES src)
+
+# ----------------------------------------- #
+# ----------- Engine shared lib ----------- #
+# ----------------------------------------- #
+
+add_library(engine_shared SHARED
+        ${BASE_SRC} ${CORE_SRC} ${GFX_SRC} ${PLATFORM_SRC}
+        )
+
+target_link_libraries(engine_shared PUBLIC
+        glfw
+        glad
+        spdlog
+        stb_image)
+target_include_directories(engine_shared PRIVATE src)
 
 # ----------------------------------------- #
 # ----------- Sandbox executable ---------- #
@@ -56,13 +77,18 @@ add_executable(game
         ${SANDBOX_DIR}/src/load_libraries.cpp
         ${SANDBOX_DIR}/src/spin_plugin.cpp ${SANDBOX_DIR}/src/spin_plugin.h
         ${SANDBOX_DIR}/src/sandbox_plugin.cpp ${SANDBOX_DIR}/src/sandbox_plugin.h)
+
 target_link_libraries(game PRIVATE ${ENGINE_LIBS})
 target_include_directories(game PRIVATE ${ENGINE_INCLUDES})
+
+# ----------------------------------------- #
+# -------------- Sandbox libs ------------- #
+# ----------------------------------------- #
 
 add_library(spin_plugin SHARED
         ${SANDBOX_DIR}/src/spin_plugin.cpp ${SANDBOX_DIR}/src/spin_plugin.h
         )
-target_link_libraries(spin_plugin PRIVATE ${ENGINE_LIBS})
+target_link_libraries(spin_plugin PRIVATE engine_shared)
 target_include_directories(spin_plugin PRIVATE ${ENGINE_INCLUDES})
 
 set_target_properties(spin_plugin
@@ -76,7 +102,7 @@ add_library(sandbox_plugin SHARED
         ${SANDBOX_DIR}/src/spin_plugin.cpp ${SANDBOX_DIR}/src/spin_plugin.h
         ${SANDBOX_DIR}/src/sandbox_plugin.cpp ${SANDBOX_DIR}/src/sandbox_plugin.h
         )
-target_link_libraries(sandbox_plugin PRIVATE ${ENGINE_LIBS})
+target_link_libraries(sandbox_plugin PRIVATE engine_shared)
 target_include_directories(sandbox_plugin PRIVATE ${ENGINE_INCLUDES})
 
 set_target_properties(sandbox_plugin
@@ -92,7 +118,7 @@ set_target_properties(sandbox_plugin
 
 add_executable(editor src/editor/editor.cpp src/platform/file_watcher.h src/platform/file_watcher.cpp src/editor/library_registry.cpp src/editor/library_registry.h)
 
-target_link_libraries(editor PRIVATE ${ENGINE_LIBS} efsw)
+target_link_libraries(editor PRIVATE engine_shared efsw)
 target_include_directories(editor PRIVATE ${ENGINE_INCLUDES})
 
 

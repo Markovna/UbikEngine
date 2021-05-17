@@ -6,10 +6,14 @@
 #include "gfx/gfx.h"
 #include "platform/window.h"
 #include "base/window_event.h"
+#include "core/assets/assets.h"
 
 extern void load_plugins(plugins_registry*);
 
 int main(int argv, char* argc[]) {
+
+  assets::init(std::filesystem::current_path().c_str());
+
   window window({512, 512});
   gfx::init({.window_handle = window.get_handle(), .resolution = window.get_resolution()});
 
@@ -21,6 +25,7 @@ int main(int argv, char* argc[]) {
   load_plugins(engine.plugins);
 
   engine.start();
+  vec4 viewport;
 
   bool running = true;
   while (running) {
@@ -37,7 +42,10 @@ int main(int argv, char* argc[]) {
 
     engine.update();
 
-    renderer::render(engine.world);
+    vec2i resolution = window.get_resolution();
+    viewport.z = (float) resolution.x;
+    viewport.w = (float) resolution.y;
+    renderer::render(engine.world, viewport, gfx::framebuf_handle::invalid(), camera_component::kind_t::Game);
 
     gfx::frame();
   }
@@ -48,4 +56,6 @@ int main(int argv, char* argc[]) {
   delete engine.world;
 
   gfx::shutdown();
+
+  assets::shutdown();
 }

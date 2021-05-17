@@ -6,6 +6,11 @@ namespace assets {
 
 namespace details {
 
+context* get_context() {
+  static context inst;
+  return &inst;
+}
+
 bool read_file(const std::filesystem::path &path, std::ostream &stream) {
   std::string content;
   std::ifstream file;
@@ -23,5 +28,11 @@ bool read_file(const std::filesystem::path &path, std::ostream &stream) {
 }
 
 }
+
+void init(const char *project_path) {
+  details::get_context()->project_path = project_path;
+}
+
+void shutdown() {}
 
 }

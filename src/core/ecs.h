@@ -91,7 +91,7 @@ uint32_t next_index();
 
 }
 
-static constexpr entity null = details::entity_traits::index_mask | details::entity_traits::generation_mask;
+static constexpr entity invalid = details::entity_traits::index_mask | details::entity_traits::generation_mask;
 
 template<class Component>
 struct component_info {
@@ -272,7 +272,7 @@ private:
 
 struct registry {
 private:
-    static constexpr size_t invalid_idx = details::entity_traits::get_index(null);
+    static constexpr size_t invalid_idx = details::entity_traits::get_index(invalid);
 
     template<class Component>
     using pool_t = details::component_pool<Component>;

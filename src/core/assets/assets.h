@@ -7,6 +7,9 @@
 #include <sstream>
 #include <filesystem>
 
+class texture;
+class shader;
+
 namespace assets {
 
 template<class T>
@@ -14,7 +17,13 @@ std::unique_ptr<T> load_asset(const std::istream&);
 
 namespace details {
 
-static bool read_file(const std::filesystem::path& path, std::ostream& stream);
+struct context {
+  std::string project_path;
+};
+
+context* get_context();
+
+bool read_file(const std::filesystem::path& path, std::ostream& stream);
 
 template<class T>
 class registry {
@@ -29,8 +38,11 @@ class registry {
       return it->second;
     }
 
+    std::filesystem::path full_path(get_context()->project_path);
+    full_path.append(path);
+
     std::stringstream stream;
-    read_file(path, stream);
+    read_file(full_path, stream);
 
     key key = table_.insert({ ::assets::load_asset<T>(stream), 0 });
     path_to_keys_.insert({path, key});
@@ -128,6 +140,14 @@ class handle {
   }
 
  private:
+  handle(registry* registry, key key)
+      : registry_(registry)
+      , key_(key)
+  {
+    if (registry_)
+      registry_->inc_ref_count(key_);
+  }
+
   void release() {
     registry_ = nullptr;
   }
@@ -137,28 +157,28 @@ class handle {
     std::swap(key_, other.key_);
   }
 
-  explicit handle(registry* registry, key key)
-      : registry_(registry)
-      , key_(key)
-  {
-    if (registry_)
-      registry_->inc_ref_count(key_);
-  }
-
-  friend handle load(const std::string& path);
+  template<class A>
+  friend handle<A> load(const std::string& path);
 
  private:
   registry* registry_;
   key key_;
 };
 
+void init(const char* project_path);
+
+void shutdown();
+
 template<class T>
 handle<T> load(const std::string& path) {
-  details::registry<T> reg = details::get_registry<T>();
-  return { &reg, reg.load(path) };
+  details::registry<T>* reg = details::get_registry<T>();
+  return { reg, reg->load(path) };
 }
 
 }
+
+using texture_handle = assets::handle<texture>;
+using shader_handle = assets::handle<shader>;
 
 
 

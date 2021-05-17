@@ -3,6 +3,7 @@
 #include "core/input_system.h"
 #include "core/world.h"
 #include "core/plugins_registry.h"
+#include "core/assets/assets.h"
 #include "gfx/gfx.h"
 #include "platform/window.h"
 #include "library_registry.h"
@@ -24,10 +25,14 @@ int main(int argc, char* argv[]) {
 
   library_registry libs(libs_folder.c_str(), temp_folder.c_str());
 
+  assets::init(argv[1]);
+
   window window({512, 512});
   gfx::init({.window_handle = window.get_handle(), .resolution = window.get_resolution()});
 
-  engine engine;
+  vec4 viewport {};
+
+  engine engine {};
   engine.world = new world;
   engine.plugins = new plugins_registry;
   engine.input = new input_system;
@@ -55,7 +60,10 @@ int main(int argc, char* argv[]) {
 
     engine.update();
 
-    renderer::render(engine.world);
+    vec2i resolution = window.get_resolution();
+    viewport.z = (float) resolution.x;
+    viewport.w = (float) resolution.y;
+    renderer::render(engine.world, viewport, gfx::framebuf_handle::invalid(), camera_component::kind_t::Game);
 
     gfx::frame();
   }
@@ -68,6 +76,9 @@ int main(int argc, char* argv[]) {
   delete engine.world;
 
   gfx::shutdown();
+
+  assets::shutdown();
+
   return 0;
 }
 
