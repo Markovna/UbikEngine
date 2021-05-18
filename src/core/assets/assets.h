@@ -17,12 +17,6 @@ std::unique_ptr<T> load_asset(const std::istream&);
 
 namespace details {
 
-struct context {
-  std::string project_path;
-};
-
-context* get_context();
-
 bool read_file(const std::filesystem::path& path, std::ostream& stream);
 
 template<class T>
@@ -33,24 +27,21 @@ class registry {
  public:
   using key = typename container::key_type;
 
-  key load(const std::string &path) {
+  key load(const std::filesystem::path& path) {
     if (auto it = path_to_keys_.find(path); it != path_to_keys_.end()) {
       return it->second;
     }
 
-    std::filesystem::path full_path(get_context()->project_path);
-    full_path.append(path);
-
     std::stringstream stream;
-    read_file(full_path, stream);
+    read_file(path, stream);
 
     key key = table_.insert({ ::assets::load_asset<T>(stream), 0 });
-    path_to_keys_.insert({path, key});
+    path_to_keys_.insert({path.c_str(), key});
     return key;
   }
 
   T *get(key key) { return table_[key].first.get(); }
-  const T *get(key key) const { return table_[key].first.get(); }
+  [[nodiscard]] const T *get(key key) const { return table_[key].first.get(); }
 
   void inc_ref_count(key key) { table_[key].second++; }
   void dec_ref_count(key key) {
@@ -75,11 +66,22 @@ class registry {
   std::unordered_map<std::string, key> path_to_keys_ = {};
 };
 
+struct context {
+  std::string project_path;
+  std::unique_ptr<registry<texture>> texture_registry;
+  std::unique_ptr<registry<shader>> shader_registry;
+};
+
+context* get_context();
+
 template<class T>
-registry<T>* get_registry() {
-  static registry<T> inst;
-  return &inst;
-}
+registry<T>* get_registry();
+
+template<>
+registry<texture>* get_registry();
+
+template<>
+registry<shader>* get_registry();
 
 }
 
@@ -171,8 +173,11 @@ void shutdown();
 
 template<class T>
 handle<T> load(const std::string& path) {
+  std::filesystem::path full_path(details::get_context()->project_path);
+  full_path.append(path);
+
   details::registry<T>* reg = details::get_registry<T>();
-  return { reg, reg->load(path) };
+  return { reg, reg->load(full_path) };
 }
 
 }
