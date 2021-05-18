@@ -68,8 +68,8 @@ class registry {
 
 struct context {
   std::string project_path;
-  std::unique_ptr<registry<texture>> texture_registry;
-  std::unique_ptr<registry<shader>> shader_registry;
+  registry<texture> texture_registry;
+  registry<shader> shader_registry;
 };
 
 context* get_context();
@@ -160,7 +160,7 @@ class handle {
   }
 
   template<class A>
-  friend handle<A> load(const std::string& path);
+  friend handle<A> load(const char* path);
 
  private:
   registry* registry_;
@@ -172,7 +172,7 @@ void init(const char* project_path);
 void shutdown();
 
 template<class T>
-handle<T> load(const std::string& path) {
+handle<T> load(const char* path) {
   std::filesystem::path full_path(details::get_context()->project_path);
   full_path.append(path);
 

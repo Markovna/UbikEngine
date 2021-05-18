@@ -30,12 +30,12 @@ bool read_file(const std::filesystem::path &path, std::ostream &stream) {
 
 template<>
 registry<texture>* get_registry() {
-  return g_context->texture_registry.get();
+  return &g_context->texture_registry;
 }
 
 template<>
 registry<shader>* get_registry() {
-  return g_context->shader_registry.get();
+  return &g_context->shader_registry;
 }
 
 }
@@ -43,8 +43,6 @@ registry<shader>* get_registry() {
 void init(const char *project_path) {
   details::g_context = new details::context();
   details::g_context->project_path = project_path;
-  details::g_context->texture_registry = std::make_unique<details::registry<texture>>();
-  details::g_context->shader_registry = std::make_unique<details::registry<shader>>();
 }
 
 void shutdown() {
