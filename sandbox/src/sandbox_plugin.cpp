@@ -40,17 +40,9 @@ class test : public plugin_base {
   }
 
   void update(engine *e) override {
-    count++;
-
-    if (count > 180) {
-      some_plugin *pl = e->plugins->get_plugin<some_plugin>("some_plugin");
-      if (pl) {
-        int c = pl->foo();
-        pl->start(e);
-        logger::core::Info("test::update {}", c);
-
-      }
-      count = 0;
+    auto mesh_view = e->world->view<mesh_component>();
+    for (ecs::entity id : mesh_view) {
+      mesh_view.get(id).set_color(color::white());
     }
   }
 };

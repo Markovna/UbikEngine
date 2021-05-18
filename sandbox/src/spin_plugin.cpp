@@ -5,22 +5,6 @@
 #include "core/input_system.h"
 #include "core/world.h"
 
-//class test_plugin : public plugin_base {
-// public:
-//  int count = 0;
-//
-//  void update(engine*) override {
-//    count++;
-//
-//    if (count > 180) {
-//      logger::core::Info("test_plugin::update !!! ");
-//      count = 0;
-//    }
-//  }
-//  void start(engine*) override {}
-//  void stop(engine*) override {}
-//};
-
 class spin_plugin : public plugin_base {
  public:
   static int ver;
@@ -31,6 +15,7 @@ class spin_plugin : public plugin_base {
 
   void update(engine*) override {
     count++;
+
 
     if (count > 180) {
       logger::core::Info("spin_plugin::update (ver.{}) {}", ver, counter++);
@@ -74,6 +59,7 @@ int some_plugin::foo() {
 void some_plugin::start(engine *e) { logger::core::Info("some_plugin::start {}", count); }
 
 void some_plugin::update(engine *e) {
+
   count++;
   if (count > 180) {
     count = 0;
