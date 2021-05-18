@@ -51,6 +51,9 @@ class mesh_component {
     return shader_.get();
   }
 
+  [[nodiscard]] color color() const { return color_; }
+  void set_color(const struct color& c) { color_ = c; }
+
   mesh_component() = default;
   ~mesh_component() = default;
 
@@ -61,6 +64,7 @@ class mesh_component {
   mesh_component& operator=(mesh_component&&) noexcept = default;
 
  private:
+  struct color color_ = color::white();
   texture_handle main_texture_ = assets::load<texture>("assets/textures/container.jpg");
   texture_handle second_texture_ = assets::load<texture>("assets/textures/seal.png");
   shader_handle shader_ = assets::load<shader>("assets/shaders/TestShader.shader");

@@ -48,7 +48,7 @@ void renderer::render(world* world, vec4 viewport, gfx::framebuf_handle fb_handl
 
       gfx::set_uniform(mesh.GetMainTextureUniform(), mesh.GetMainTexture()->handle(), 0);
       gfx::set_uniform(mesh.GetSecondTextureUniform(), mesh.GetSecondTexture()->handle(), 1);
-      gfx::set_uniform(mesh.GetColorUniform(), color::white());
+      gfx::set_uniform(mesh.GetColorUniform(), mesh.color());
 
       gfx::set_transform((mat4) model);
       gfx::set_buffer(mesh.GetVertexBuf());
