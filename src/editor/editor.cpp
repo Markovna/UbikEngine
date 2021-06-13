@@ -60,8 +60,8 @@ int main(int argc, char* argv[]) {
 
   engine.start();
 
-  ::asset data;
-  engine.world->save_entity_to_asset(data, engine.world->root());
+  asset data;
+  engine.world->save_to_asset(data);
   std::cout << data.dump(2) << "\n";
 
   bool running = true;

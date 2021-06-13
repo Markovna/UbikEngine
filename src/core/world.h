@@ -59,9 +59,10 @@ class world : ecs::registry {
   entity create_entity(const transform& local = {}, entity parent = entity::invalid(), entity next = entity::invalid());
   void destroy_entity(entity entity);
 
-  entity create_entity_from_asset(const asset& asset, entity parent = entity::invalid(), entity next = entity::invalid());
-  void save_entity_to_asset(asset& asset, entity entity);
+  entity load_from_asset(const asset& asset, entity parent = entity::invalid(), entity next = entity::invalid());
 
+  void save_to_asset(asset& asset);
+  void save_to_asset(asset& asset, entity entity);
 
   void set_parent(entity ent, entity parent, entity next = entity::invalid());
 

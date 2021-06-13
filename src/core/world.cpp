@@ -81,7 +81,7 @@ void world::set_parent(entity ent, entity parent, entity next) {
   set_world_transform(ent, world);
 }
 
-entity world::create_entity_from_asset(const asset& asset, entity parent, entity next) {
+entity world::load_from_asset(const asset& asset, entity parent, entity next) {
   entity entity { ecs::registry::create() };
   ecs::registry::emplace<link_component>(entity.id);
 
@@ -94,13 +94,13 @@ entity world::create_entity_from_asset(const asset& asset, entity parent, entity
 
   if (asset.contains("children")) {
     for (const ::asset& child_asset : asset["children"]) {
-      create_entity_from_asset(child_asset, entity);
+      load_from_asset(child_asset, entity);
     }
   }
   return entity;
 }
 
-void world::save_entity_to_asset(asset& asset, entity e) {
+void world::save_to_asset(asset& asset, entity e) {
   asset["__type"] = "entity";
   asset["__guid"] = guid::generate();
 
@@ -111,9 +111,13 @@ void world::save_entity_to_asset(asset& asset, entity e) {
   entity child_e = child(e);
   while (child_e) {
     ::asset& child_asset = asset["children"].emplace_back();
-    save_entity_to_asset(child_asset, child_e);
+    save_to_asset(child_asset, child_e);
     child_e = next(child_e);
   }
+}
+
+void world::save_to_asset(asset &asset) {
+  save_to_asset(asset, root_);
 }
 
 void serialization<transform_component>::from_asset(const asset& asset, transform_component* comp) {
