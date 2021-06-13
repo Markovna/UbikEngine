@@ -297,7 +297,7 @@ void set_transform(const mat4& val) {
   draw.transform = val;
 }
 
-shader_handle create_shader(const std::string &source) {
+shader_handle create_shader(const char* source) {
   shader_handle handle(details::g_state.shader_handles.get());
   auto& command = details::g_state.frame.emplace_command<details::create_shader_command>();
   command.handle = handle;

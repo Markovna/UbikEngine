@@ -7,13 +7,12 @@ template<>
 std::unique_ptr<shader> load_asset(const std::istream& stream) {
   std::stringstream ss;
   ss << stream.rdbuf();
-  std::string source(ss.str());
-  return std::make_unique<shader>(source);
+  return std::make_unique<shader>(ss.str().c_str());
 }
 
 }
 
-shader::shader(const std::string &source)
+shader::shader(const char* source)
   : handle_(gfx::create_shader(source))
 {}
 

@@ -7,7 +7,7 @@
 
 class shader {
  public:
-  explicit shader(const std::string& source);
+  explicit shader(const char* source);
 
   shader(const shader&) = delete;
   shader& operator=(const shader&) = delete;

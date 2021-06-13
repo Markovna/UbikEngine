@@ -82,6 +82,11 @@ public:
         dense_.pop_back();
     }
 
+    void clear() {
+      sparse_.clear();
+      dense_.clear();
+    }
+
 private:
     std::vector<page_t> sparse_;
     std::vector<T> dense_;
