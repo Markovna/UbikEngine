@@ -14,5 +14,5 @@ class some_plugin : public plugin_base {
   int foo();
 };
 
-extern "C" void load_spin_plugin(plugins_registry* reg);
-extern "C" void unload_spin_plugin(plugins_registry *reg);
+extern "C" void load_spin_plugin(engine*);
+extern "C" void unload_spin_plugin(engine*);

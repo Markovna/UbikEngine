@@ -33,21 +33,24 @@ class spin_plugin : public plugin_base {
 
 int spin_plugin::ver = 13;
 
-void load_spin_plugin(plugins_registry *reg) {
+void load_spin_plugin(engine *engine) {
   logger::core::Info("load_spin_plugin {}", spin_plugin::ver);
-  spin_plugin* plugin = reg->add_plugin<spin_plugin>("spin_plugin");
+
+  spin_plugin *plugin = engine->plugins->add_plugin<spin_plugin>("spin_plugin");
   plugin->counter = 200;
 
-  reg->add_plugin<some_plugin>("some_plugin");
+  engine->plugins->add_plugin<some_plugin>("some_plugin");
+
 }
 
-void unload_spin_plugin(plugins_registry *reg) {
+void unload_spin_plugin(engine *engine) {
   logger::core::Info("unload_spin_plugin {}", spin_plugin::ver);
 
-  spin_plugin* plugin = reg->get_plugin<spin_plugin>("spin_plugin");
+  spin_plugin* plugin = engine->plugins->get_plugin<spin_plugin>("spin_plugin");
 
-  reg->remove_plugin("spin_plugin");
-  reg->remove_plugin("some_plugin");
+  engine->plugins->remove_plugin("spin_plugin");
+  engine->plugins->remove_plugin("some_plugin");
+
 }
 
 int some_plugin::foo() {
