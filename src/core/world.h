@@ -1,16 +1,21 @@
 #pragma once
 
+#include <vector>
+
 #include "base/math.h"
-#include "base/int_set.h"
+
 #include "core/ecs.h"
-#include "gfx/gfx.h"
+#include "core/components/component.h"
+#include "core/serialization.h"
+
+using entity_id = ecs::entity;
 
 struct entity {
-  uint32_t id = ecs::invalid;
+  entity_id id = ecs::invalid;
 
   [[nodiscard]] bool is_valid() const { return id != ecs::invalid; }
 
-  static entity invalid() {
+  static const entity& invalid() {
     static const entity invalid{};
     return invalid;
   }
@@ -21,55 +26,44 @@ struct entity {
   explicit operator bool() const { return is_valid(); }
 };
 
-struct link_component {
+struct link_component : public component<link_component> {
   entity parent;
   entity next;
   entity prev;
   entity child;
   entity child_last;
-  uint32_t children_size;
+  uint32_t children_size = 0;
 };
 
-struct transform_component {
+struct transform_component : public component<transform_component> {
   transform local;
   mutable transform world;
   mutable bool dirty = false;
 };
 
+template<>
+struct serialization<transform_component> {
+  void from_asset(const asset&, transform_component*);
+  void to_asset(asset&, const transform_component*);
+};
+
 class world : ecs::registry {
  public:
-  static std::unique_ptr<world> Create() { return std::make_unique<world>(); }
+  static std::unique_ptr<world> create() { return std::make_unique<world>(); }
 
   world() : root_({ecs::registry::create()}) {
     ecs::registry::emplace<transform_component>(root_.id);
     ecs::registry::emplace<link_component>(root_.id);
   }
 
-  entity create_entity(const transform& local = {}, entity parent = entity::invalid(), entity next = entity::invalid()) {
-    entity entity { ecs::registry::create() };
-    ecs::registry::emplace<transform_component>(entity.id).local = local;
-    ecs::registry::emplace<link_component>(entity.id);
+  entity create_entity(const transform& local = {}, entity parent = entity::invalid(), entity next = entity::invalid());
+  void destroy_entity(entity entity);
 
-    set_parent(entity, parent, next);
-    return entity;
-  }
+  entity create_entity_from_asset(const asset& asset, entity parent = entity::invalid(), entity next = entity::invalid());
+  void save_entity_to_asset(asset& asset, entity entity);
 
-  void destroy_entity(entity entity) {
 
-    set_parent_impl(entity, entity::invalid(), entity::invalid());
-
-    while (children_size(entity)) {
-      destroy_entity(child(entity));
-    }
-
-    ecs::registry::destroy(entity.id);
-  }
-
-  void set_parent(entity ent, entity parent, entity next = entity::invalid()) {
-    transform world = world_transform(ent);
-    set_parent_impl(ent, parent ? parent : root_, next);
-    set_world_transform(ent, world);
-  }
+  void set_parent(entity ent, entity parent, entity next = entity::invalid());
 
   [[nodiscard]] entity parent(entity ent) const {
     entity parent = ecs::registry::get<link_component>(ent.id).parent;
@@ -153,14 +147,14 @@ class world : ecs::registry {
   }
 
   template<class Component, class ...Args>
-  Component& add_component(entity entity, Args &&... args) {
+  Component& add_component(entity entity, Args&&... args) {
     return ecs::registry::emplace<Component>(entity.id, std::forward<Args>(args)...);
   }
 
   template<class Component>
   void remove_component(entity entity) {
-    static_assert(!std::is_same_v<Component, transform_component>, "Trying to remove TransformComponent");
-    static_assert(!std::is_same_v<Component, link_component>, "Trying to remove LinkComponent");
+    static_assert(!std::is_same_v<Component, transform_component>, "Trying to remove transform_component");
+    static_assert(!std::is_same_v<Component, link_component>, "Trying to remove link_component");
 
     ecs::registry::remove<Component>(entity.id);
   }
@@ -194,11 +188,6 @@ class world : ecs::registry {
   ecs::component_view<Component...> view() {
     return ecs::registry::view<Component...>();
   }
-
-//  template<typename Func>
-//  void visit(entity entity, Func func) const {
-//    ecs::registry::visit(entity.id, func);
-//  }
 
  private:
   void set_parent_impl(entity ent, entity parent, entity next);

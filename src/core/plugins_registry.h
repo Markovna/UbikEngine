@@ -2,6 +2,7 @@
 
 #include "base/log.h"
 #include "base/slot_map.h"
+#include "../../sandbox/src/sandbox_plugin.h"
 
 #include <string>
 #include <vector>
@@ -53,4 +54,5 @@ class plugins_registry {
   container plugins_;
   std::unordered_map<std::string, key> names_map_;
 };
+
 

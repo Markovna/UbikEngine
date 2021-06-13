@@ -1,9 +1,12 @@
 #pragma once
 
+#include "gfx/gfx.h"
+#include "core/assets/texture.h"
+#include "core/assets/shader.h"
+#include "core/components/component.h"
+#include "core/serialization.h"
+
 #include <cstdint>
-#include <gfx/gfx.h>
-#include <core/assets/texture.h>
-#include <core/assets/shader.h>
 
 float* GetVertices();
 uint32_t* GetIndices(uint32_t& count);
@@ -17,7 +20,7 @@ gfx::uniform_handle GetColorUniform();
 
 
 //TODO:
-class mesh_component {
+class mesh_component : public component<mesh_component> {
  public:
   gfx::uniform_handle GetMainTextureUniform() const {
     return ::GetMainTextureUniform();
@@ -64,10 +67,18 @@ class mesh_component {
   mesh_component& operator=(mesh_component&&) noexcept = default;
 
  private:
+  friend serialization<mesh_component>;
+
+ private:
   struct color color_ = color::white();
   texture_handle main_texture_ = assets::load<texture>("assets/textures/container.jpg");
   texture_handle second_texture_ = assets::load<texture>("assets/textures/seal.png");
   shader_handle shader_ = assets::load<shader>("assets/shaders/TestShader.shader");
 };
 
+template<>
+struct serialization<mesh_component> {
+  void from_asset(const asset&, mesh_component*);
+  void to_asset(asset&, const mesh_component*);
+};
 

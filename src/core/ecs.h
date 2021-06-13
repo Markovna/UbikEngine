@@ -1,13 +1,17 @@
 #pragma once
 
+#include "base/guid.h"
 #include "base/sparse_set.h"
 
-#include <array>
-#include <assert.h>
+#include <bitset>
+#include <unordered_map>
+#include <cassert>
 
 namespace ecs {
 
 using entity = uint32_t;
+
+static constexpr size_t MAX_COMPONENTS = 256;
 
 namespace details {
 
@@ -77,6 +81,11 @@ public:
         entities::erase(entity);
     }
 
+    void clear() {
+      components_.clear();
+      entities::clear();
+    }
+
     [[nodiscard]] Component& get(entity entity) { return components_[entities::index(entity)]; }
     [[nodiscard]] const Component& get(entity entity) const { return components_[entities::index(entity)]; }
 
@@ -87,20 +96,9 @@ private:
     std::vector<Component> components_;
 };
 
-uint32_t next_index();
-
 }
 
 static constexpr entity invalid = details::entity_traits::index_mask | details::entity_traits::generation_mask;
-
-template<class Component>
-struct component_info {
-public:
-    static uint32_t index() {
-        static uint32_t index = details::next_index();
-        return index;
-    }
-};
 
 template<class ...>
 class component_view;
@@ -245,203 +243,245 @@ public:
       return std::get<pool_t<Component>*>(pools_)->get(entity);
     }
 
-    template<class T1, class T2, class ...Comp>
-    std::tuple<T1&, T2&, Comp&...> get(entity entity) const {
-      return std::tuple<T1&, T2&, Comp&...>{get<T1>(entity), get<T2>(entity), get<Comp>(entity)...};
+    template<class Component1, class Component2, class ...Args>
+    std::tuple<Component1&, Component2&, Args&...> get(entity entity) const {
+      return std::tuple<Component1&, Component2&, Args&...>{get<Component1>(entity), get<Component2>(entity), get<Args>(entity)...};
     }
-
-//    template<class ...Comp>
-//    auto get(entity entity) const {
-//        assert(contains(entity));
-//
-//        if constexpr (sizeof...(Comp) == 0) {
-//            return get<Components...>(entity);
-//        }
-//        else if constexpr (sizeof...(Comp) == 1) {
-//            return (std::get<pool_t<Comp> *>(pools_)->get(entity), ...);
-//        }
-//        else {
-//            return std::tuple<Comp&...>{get<Comp>(entity)...};
-//        }
-//    }
 
 private:
     const std::tuple<pool_t<Components>*...> pools_;
     const sparse_set<entity>* entities_;
 };
 
+template<class Component>
+using pool_t = details::component_pool<Component>;
+using pool_ptr = std::unique_ptr<sparse_set<entity>>;
+using entity_traits = details::entity_traits;
+using component_id_t = guid;
+
+struct pool_info {
+  using remove_ptr_t = void (*)(sparse_set<entity>*, ecs::entity);
+  using get_ptr_t = void* (*)(sparse_set<entity>*, ecs::entity);
+
+  pool_ptr ptr;
+  component_id_t id;
+  remove_ptr_t remove_ptr;
+  get_ptr_t get_ptr;
+};
+
+class component_ids {
+ private:
+  using pool_iterator = std::vector<pool_info>::const_iterator;
+
+ public:
+  class iterator {
+   public:
+    using value_type = guid;
+
+   public:
+    iterator(entity entity, pool_iterator curr, pool_iterator last);
+
+    iterator& operator++();
+    iterator operator++(int);
+
+    [[nodiscard]] bool operator==(const iterator& other) const;
+    [[nodiscard]] bool operator!=(const iterator& other) const;
+
+    [[nodiscard]] value_type operator*() const;
+
+   private:
+    [[nodiscard]] bool check() const;
+
+   private:
+    pool_iterator curr_;
+    pool_iterator last_;
+    entity entity_;
+  };
+
+ public:
+  component_ids(entity entity, pool_iterator curr, pool_iterator last)
+    : entity_(entity), curr_(curr), last_(last) {}
+
+  [[nodiscard]] iterator begin() const { return { entity_, curr_, last_ }; }
+  [[nodiscard]] iterator end() const { return { entity_, last_, last_ }; }
+
+ private:
+  entity entity_;
+  pool_iterator curr_;
+  pool_iterator last_;
+};
+
+template<class Component>
+static inline component_id_t component_id() { return Component::id(); }
+
+template<class Component>
+static void remove_pool_impl(sparse_set<entity>* ptr, ecs::entity entity) {
+  static_cast<pool_t<Component>*>(ptr)->erase(entity);
+}
+
+template<class Component>
+static void* get_component_impl(sparse_set<entity>* ptr, ecs::entity entity) {
+  return static_cast<pool_t<Component>*>(ptr)->try_get(entity);
+}
+
 struct registry {
 private:
-    static constexpr size_t invalid_idx = details::entity_traits::get_index(invalid);
+  static constexpr size_t invalid_idx = details::entity_traits::index_mask;
 
-    template<class Component>
-    using pool_t = details::component_pool<Component>;
-    using pool_ptr = std::unique_ptr<sparse_set<entity>>;
-    using entity_traits = details::entity_traits;
+  template<class Component>
+  [[nodiscard]] uint32_t component_index() const {
+    auto it = guid_to_pool_idx_.find(component_id<Component>());
+    return it != guid_to_pool_idx_.end() ? it->second : std::numeric_limits<uint32_t>::max();
+  }
 
-    struct pool_info {
-        using remove_ptr_t = void (*)(sparse_set<entity>*, ecs::entity);
-        pool_ptr ptr;
-//        meta::TypeId type_id;
-        remove_ptr_t remove_ptr;
+  template<class Component>
+  pool_t<Component>& assure() {
+    component_id_t id = component_id<Component>();
 
-        void remove(ecs::entity entity) {
-            remove_ptr(ptr.get(), entity);
-        }
-    };
+    if (auto it = guid_to_pool_idx_.find(id); it != guid_to_pool_idx_.end())
+      return *static_cast<pool_t<Component>*>(pools_[it->second].ptr.get());
 
-    template<class Component>
-    pool_t<Component>& assure() {
-        uint32_t idx = component_info<Component>::index();
-        if (idx >= pools_.size()) {
-            pools_.resize(idx+1);
-        }
+    guid_to_pool_idx_[id] = pools_.size();
+    pool_t<Component>* pool = new pool_t<Component>;
+    pool_info& p = pools_.emplace_back( pool_info {
+        .ptr = {},
+        .id = id,
+        .remove_ptr = &remove_pool_impl<Component>,
+        .get_ptr = &get_component_impl<Component>
+      });
+    p.ptr.reset(pool);
+    return *pool;
+  }
 
-        auto& [ptr, remove_ptr] = pools_[idx];
+  template<class Component>
+  const pool_t<Component>* get_pool() const {
+    uint32_t index = component_index<Component>();
+    return index < pools_.size() ?
+      static_cast<pool_t<Component>*>(pools_[index].ptr.get()) : nullptr;
+  }
 
-        if (!ptr) {
-            ptr.reset(new pool_t<Component>);
-//            id = meta::GetType<Component>().ID();
-            remove_ptr = [] (sparse_set<entity>* ptr, ecs::entity entity) {
-                static_cast<pool_t<Component>*>(ptr)->erase(entity);
-            };
-        }
-
-        return *static_cast<pool_t<Component>*>(ptr.get());
-    }
-
-    template<class Component>
-    const pool_t<Component>* get_pool() const {
-        uint32_t idx = component_info<Component>::index();
-        assert(idx < pools_.size());
-        return pools_[idx].ptr ? static_cast<pool_t<Component>*>(pools_[idx].ptr.get()) : nullptr;
-    }
-
-    template<class Component>
-    pool_t<Component>* get_pool() {
-        uint32_t idx = component_info<Component>::index();
-        assert(idx < pools_.size());
-        return pools_[idx].ptr ? static_cast<pool_t<Component>*>(pools_[idx].ptr.get()) : nullptr;
-    }
+  template<class Component>
+  pool_t<Component>* get_pool() {
+    return const_cast<pool_t<Component>*>(static_cast<const registry&>(*this).get_pool<Component>());
+  }
 
 public:
-    entity create() {
-        entity entity{};
-        if (free_idx_ == invalid_idx) {
-            entity_traits::set_index(entity, entities_.size());
-            entity_traits::set_generation(entity, {});
-            entities_.push_back(entity);
-        }
-        else {
-            ::ecs::entity free = entities_[free_idx_];
-            entity_traits::set_index(entity, free_idx_);
-            entity_traits::set_generation(entity, entity_traits::get_generation(free));
-            entities_[free_idx_] = entity;
-            free_idx_ = entity_traits::get_index(free);
-        }
-        assert(valid(entity));
-        return entity;
+  entity create() {
+    entity entity{};
+    if (free_idx_ == invalid_idx) {
+      entity_traits::set_index(entity, entities_.size());
+      entity_traits::set_generation(entity, {});
+      entities_.push_back(entity);
     }
-
-    void destroy(entity entity) {
-        assert(valid(entity));
-        remove_all(entity);
-        auto index = details::entity_traits::get_index(entity);
-        details::entity_traits::set_index(entities_[index], free_idx_);
-        details::entity_traits::set_generation(entities_[index], entity_traits::get_generation(entities_[index]) + 1);
-        free_idx_ = details::entity_traits::get_index(entity);
+    else {
+      ::ecs::entity free = entities_[free_idx_];
+      entity_traits::set_index(entity, free_idx_);
+      entity_traits::set_generation(entity, entity_traits::get_generation(free));
+      entities_[free_idx_] = entity;
+      free_idx_ = entity_traits::get_index(free);
     }
+    assert(valid(entity));
+    return entity;
+  }
 
-    [[nodiscard]] bool valid(entity entity) const {
-        auto index = entity_traits::get_index(entity);
-        return index < entities_.size() && entities_[index] == entity;
-    }
+  void destroy(entity entity) {
+    assert(valid(entity));
+    remove_all(entity);
+    auto index = details::entity_traits::get_index(entity);
+    details::entity_traits::set_index(entities_[index], free_idx_);
+    details::entity_traits::set_generation(entities_[index], entity_traits::get_generation(entities_[index]) + 1);
+    free_idx_ = details::entity_traits::get_index(entity);
+  }
 
-//    template<typename Func>
-//    void visit(entity_t entity, Func func) const {
-//        for (auto& pool : pools_) {
-//            if (pool.ptr && pool.ptr->contains(entity)) {
-//                func(pool.type_id);
-//            }
-//        }
-//    }
+  [[nodiscard]] bool valid(entity entity) const {
+    auto index = entity_traits::get_index(entity);
+    return index < entities_.size() && entities_[index] == entity;
+  }
 
-    template<class Component, class ...Args>
-    Component& emplace(entity entity, Args &&... args) {
-        assert(valid(entity));
-        return assure<Component>().emplace(entity, std::forward<Args>(args)...);
-    }
+  template<class Component, class ...Args>
+  Component& emplace(entity entity, Args &&... args) {
+    assert(valid(entity));
+    return assure<Component>().emplace(entity, std::forward<Args>(args)...);
+  }
 
-    template<class Component>
-    void remove(entity entity) {
-        assert(has<Component>(entity));
-        get_pool<Component>()->erase(entity);
-    }
+  template<class Component>
+  void remove(entity entity) {
+    assert(has<Component>(entity));
+    get_pool<Component>()->erase(entity);
+  }
 
-    void remove_all(entity entity) {
-        assert(valid(entity));
-        for (auto& pool : pools_) {
-            if (pool.ptr && pool.ptr->contains(entity)) {
-                pool.remove(entity);
-            }
+  void remove_all(entity entity) {
+    assert(valid(entity));
+    for (auto& pool : pools_) {
+        if (pool.ptr && pool.ptr->contains(entity)) {
+            pool.remove_ptr(pool.ptr.get(), entity);
         }
     }
+  }
 
-    template<class Component>
-    Component& get(entity entity) {
-        assert(has<Component>(entity));
-        pool_t<Component>* pool_ptr = get_pool<Component>();
-        assert(pool_ptr);
-        return pool_ptr->get(entity);
-    }
+  template<class Component>
+  const Component& get(entity entity) const {
+    assert(has<Component>(entity));
+    return get_pool<Component>()->get(entity);
+  }
 
-    template<class Component>
-    const Component& get(entity entity) const {
-        assert(has<Component>(entity));
-        const pool_t<Component>* pool_ptr = get_pool<Component>();
-        assert(pool_ptr);
-        return pool_ptr->get(entity);
-    }
+  template<class Component>
+  Component& get(entity entity) {
+    return const_cast<Component&>(static_cast<const registry&>(*this).get<Component>(entity));
+  }
 
-    template<class Component>
-    Component* try_get(entity entity) {
-        assert(valid(entity));
-        if (auto pool = get_pool<Component>(); pool) {
-            return pool->try_get(entity);
-        }
-        return nullptr;
-    }
+  [[nodiscard]] const void* try_get(entity entity, component_id_t id) const {
+    auto it = guid_to_pool_idx_.find(id);
+    if (it == guid_to_pool_idx_.end())
+      return nullptr;
 
-    template<class Component>
-    const Component* try_get(entity entity) const {
-        assert(valid(entity));
-        if (auto pool = get_pool<Component>(); pool) {
-            return pool->try_get(entity);
-        }
-        return nullptr;
-    }
+    const pool_info& pool = pools_[it->second];
+    return pool.get_ptr(pool.ptr.get(), entity);
+  }
 
-    template<class Component>
-    [[nodiscard]] bool has(entity entity) const {
-        assert(valid(entity));
-        auto idx = component_info<Component>::index();
-        return idx < pools_.size() && pools_[idx].ptr && pools_[idx].ptr->contains(entity);
-    }
+  void* try_get(entity entity, component_id_t id)  {
+    return const_cast<void*>(static_cast<const registry&>(*this).try_get(entity, id));
+  }
 
-    template<class ...Component>
-    component_view<Component...> view() {
-        return component_view<Component...>(assure<Component>()...);
-    }
+  template<class Component>
+  const Component* try_get(entity entity) const {
+    assert(valid(entity));
+    const pool_t<Component>* pool = get_pool<Component>();
+    return pool ? pool->try_get(entity) : nullptr;
+  }
 
-    template<class Component>
-    size_t size() const {
-        auto idx = component_info<Component>::index();
-        return idx < pools_.size() && pools_[idx].ptr && pools_[idx].ptr->size();
-    }
+  template<class Component>
+  Component* try_get(entity entity) {
+    return const_cast<Component*>(static_cast<const registry&>(*this).try_get<Component>(entity));
+  }
+
+  template<class Component>
+  [[nodiscard]] bool has(entity entity) const {
+    assert(valid(entity));
+    const pool_t<Component>* pool = get_pool<Component>();
+    return pool && pool->contains(entity);
+  }
+
+  template<class ...Component>
+  component_view<Component...> view() {
+      return component_view<Component...>(assure<Component>()...);
+  }
+
+  template<class Component>
+  [[nodiscard]] size_t size() const {
+    pool_t<Component>* pool = get_pool<Component>();
+    return pool ? pool->size() : 0;
+  }
+
+  component_ids get_components(entity entity) {
+    return { entity, pools_.begin(), pools_.end() };
+  }
 
 private:
     std::vector<pool_info> pools_{};
     std::vector<entity> entities_{};
+    std::unordered_map<component_id_t , uint32_t> guid_to_pool_idx_{};
+
     size_t free_idx_{invalid_idx};
 };
 

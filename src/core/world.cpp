@@ -1,4 +1,5 @@
 #include "world.h"
+#include "meta/type.h"
 
 void world::set_parent_impl(entity ent, entity parent, entity next) {
   link_component& comp = component<link_component>(ent);
@@ -53,3 +54,103 @@ void world::set_parent_impl(entity ent, entity parent, entity next) {
     next_comp.prev = ent;
   }
 }
+
+entity world::create_entity(const transform &local, entity parent, entity next) {
+  entity entity { ecs::registry::create() };
+  ecs::registry::emplace<transform_component>(entity.id).local = local;
+  ecs::registry::emplace<link_component>(entity.id);
+
+  set_parent(entity, parent, next);
+  return entity;
+}
+
+void world::destroy_entity(entity entity) {
+
+  set_parent_impl(entity, entity::invalid(), entity::invalid());
+
+  while (children_size(entity)) {
+    destroy_entity(child(entity));
+  }
+
+  ecs::registry::destroy(entity.id);
+}
+
+void world::set_parent(entity ent, entity parent, entity next) {
+  transform world = world_transform(ent);
+  set_parent_impl(ent, parent ? parent : root_, next);
+  set_world_transform(ent, world);
+}
+
+entity world::create_entity_from_asset(const asset& asset, entity parent, entity next) {
+  entity entity { ecs::registry::create() };
+  ecs::registry::emplace<link_component>(entity.id);
+
+  for (const ::asset& comp_asset : asset["components"]) {
+    std::string name = comp_asset["__type"].get<std::string>();
+    meta::get_type(name.c_str()).load(comp_asset, meta::get_type(name.c_str()).instantiate(this, entity));
+  }
+
+  set_parent(entity, parent, next);
+
+  if (asset.contains("children")) {
+    for (const ::asset& child_asset : asset["children"]) {
+      create_entity_from_asset(child_asset, entity);
+    }
+  }
+  return entity;
+}
+
+void world::save_entity_to_asset(asset& asset, entity e) {
+  asset["__type"] = "entity";
+  asset["__guid"] = guid::generate();
+
+  for (component_base::id_t id : ecs::registry::get_components(e.id)) {
+    meta::get_type(id).save(asset["components"], ecs::registry::try_get(e.id, id));
+  }
+
+  entity child_e = child(e);
+  while (child_e) {
+    ::asset& child_asset = asset["children"].emplace_back();
+    save_entity_to_asset(child_asset, child_e);
+    child_e = next(child_e);
+  }
+}
+
+void serialization<transform_component>::from_asset(const asset& asset, transform_component* comp) {
+  auto& pos = asset["position"];
+  comp->local.position.x = pos["x"];
+  comp->local.position.y = pos["y"];
+  comp->local.position.z = pos["z"];
+
+  auto& rot = asset["rotation"];
+  comp->local.rotation.x = rot["x"];
+  comp->local.rotation.y = rot["y"];
+  comp->local.rotation.z = rot["z"];
+  comp->local.rotation.w = rot["w"];
+
+  auto& scale = asset["scale"];
+  comp->local.scale.x = scale["x"];
+  comp->local.scale.y = scale["y"];
+  comp->local.scale.z = scale["z"];
+
+  comp->dirty = true;
+}
+
+void serialization<transform_component>::to_asset(asset& asset, const transform_component* comp) {
+  auto& pos = asset["position"];
+  pos["x"] = comp->local.position.x;
+  pos["y"] = comp->local.position.y;
+  pos["z"] = comp->local.position.z;
+
+  auto& rot = asset["rotation"];
+  rot["x"] = comp->local.rotation.x;
+  rot["y"] = comp->local.rotation.y;
+  rot["z"] = comp->local.rotation.z;
+  rot["w"] = comp->local.rotation.w;
+
+  auto& scale = asset["scale"];
+  scale["x"] = comp->local.scale.x;
+  scale["y"] = comp->local.scale.y;
+  scale["z"] = comp->local.scale.z;
+}
+

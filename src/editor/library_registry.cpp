@@ -21,7 +21,7 @@ library_registry::library_registry(const char *libs_folder, const char *temp_fol
     std::filesystem::create_directory(temp_folder_);
 }
 
-void *library_registry::load(const char *name, plugins_registry *registry) {
+void *library_registry::load(const char *name, engine* engine) {
   assert(name_to_lib_info_.count(name) == 0 && "Library has been already loaded");
 
   fs::path src_lib_path = os::find_lib(libs_folder_.c_str(), name);
@@ -39,16 +39,16 @@ void *library_registry::load(const char *name, plugins_registry *registry) {
     info.tmp_filename = tmp_lib_path;
     info.symbols = lib;
 
-    load_plugin(lib, name, registry);
+    load_plugin(lib, name, engine);
   }
   return lib;
 }
 
-void library_registry::check_reload(plugins_registry *registry) {
+void library_registry::check_reload(engine *engine) {
   for (std::string& name : reloaded_) {
     lib_info& info = name_to_lib_info_[name];
 
-    unload_plugin(info.symbols, info.name.c_str(), registry);
+    unload_plugin(info.symbols, info.name.c_str(), engine);
 
     // unload lib
     os::unload_lib(info.symbols);
@@ -70,17 +70,17 @@ void library_registry::check_reload(plugins_registry *registry) {
       info.tmp_filename = tmp_lib_path;
       info.symbols = lib;
 
-      load_plugin(lib, name.c_str(), registry);
+      load_plugin(lib, name.c_str(), engine);
     }
   }
   reloaded_.clear();
 }
 
-void library_registry::unload(const char *name, plugins_registry *registry) {
+void library_registry::unload(const char *name, engine *engine) {
   lib_info& info = name_to_lib_info_[name];
 
   // find and invoke unload function
-  unload_plugin(info.symbols, name, registry);
+  unload_plugin(info.symbols, name, engine);
 
   // unload lib
   os::unload_lib(info.symbols);
@@ -92,14 +92,14 @@ void library_registry::unload(const char *name, plugins_registry *registry) {
   name_to_lib_info_.erase(info.name);
 }
 
-void library_registry::unload_all(plugins_registry* registry) {
+void library_registry::unload_all(engine* engine) {
   std::vector<std::string> names;
   for (auto& [name, _] : name_to_lib_info_) {
     names.push_back(name);
   }
 
   for (auto& name : names) {
-    unload(name.c_str(), registry);
+    unload(name.c_str(), engine);
   }
 }
 
@@ -132,8 +132,8 @@ void library_registry::on_file_changed(const std::string &dir,
   }
 }
 
-void library_registry::load_plugin(void* lib, const char* name, plugins_registry* registry) {
-  using load_func = void (*)(plugins_registry*);
+void library_registry::load_plugin(void* lib, const char* name, engine* engine) {
+  using load_func = void (*)(struct engine*);
 
   char load_function_name[50] = "load_";
   std::strcat(load_function_name, name);
@@ -142,12 +142,12 @@ void library_registry::load_plugin(void* lib, const char* name, plugins_registry
   if (!load) {
     logger::core::Error("Couldn't find load function for {}", name);
   } else {
-    load(registry);
+    load(engine);
   }
 }
 
-void library_registry::unload_plugin(void* lib, const char* name, plugins_registry* registry) {
-  using unload_func = void (*)(plugins_registry*);
+void library_registry::unload_plugin(void* lib, const char* name, engine* engine) {
+  using unload_func = void (*)(struct engine*);
 
   char unload_function_name[50] = "unload_";
   std::strcat(unload_function_name, name);
@@ -156,6 +156,6 @@ void library_registry::unload_plugin(void* lib, const char* name, plugins_regist
   if (!load) {
     logger::core::Error("Couldn't find unload function for {}", name);
   } else {
-    load(registry);
+    load(engine);
   }
 }

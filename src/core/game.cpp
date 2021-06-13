@@ -8,7 +8,7 @@
 #include "base/window_event.h"
 #include "core/assets/assets.h"
 
-extern void load_plugins(plugins_registry*);
+extern void load_plugins(engine*);
 
 int main(int argv, char* argc[]) {
 
@@ -22,7 +22,7 @@ int main(int argv, char* argc[]) {
   engine.plugins = new plugins_registry;
   engine.input = new input_system;
 
-  load_plugins(engine.plugins);
+  load_plugins(&engine);
 
   engine.start();
   vec4 viewport;

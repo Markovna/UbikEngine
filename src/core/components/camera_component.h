@@ -1,11 +1,14 @@
 #pragma once
 
-#include <cstdint>
 #include "base/color.h"
-#include "gfx/gfx.h"
 #include "base/int_set.h"
+#include "gfx/gfx.h"
+#include "core/components/component.h"
+#include "core/serialization.h"
 
-struct camera_component {
+#include <cstdint>
+
+struct camera_component : public component<camera_component> {
  private:
   using clear_flag = gfx::clear_flag::flags;
 
@@ -36,4 +39,10 @@ struct camera_component {
   color clear_color = color::black();
   clear_flag clear_flags = gfx::clear_flag::Color | gfx::clear_flag::Depth;
   kind_t kind = Game;
+};
+
+template<>
+struct serialization<camera_component> {
+  void from_asset(const asset&, camera_component*);
+  void to_asset(asset&, const camera_component*);
 };
