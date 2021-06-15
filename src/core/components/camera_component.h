@@ -43,6 +43,6 @@ struct camera_component : public component<camera_component> {
 
 template<>
 struct serialization<camera_component> {
-  void from_asset(const asset&, camera_component*);
-  void to_asset(asset&, const camera_component*);
+  static void from_asset(const asset&, camera_component&);
+  static void to_asset(asset&, const camera_component&);
 };

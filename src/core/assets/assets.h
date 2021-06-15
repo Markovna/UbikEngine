@@ -2,6 +2,8 @@
 
 #include "base/slot_map.h"
 #include "base/log.h"
+#include "base/guid.h"
+#include "core/serialization.h"
 
 #include <unordered_map>
 #include <sstream>
@@ -22,7 +24,13 @@ bool read_file(const std::filesystem::path& path, std::ostream& stream);
 template<class T>
 class registry {
  private:
-  using container = stdext::slot_map<std::pair<std::unique_ptr<T>, uint32_t>>;
+  struct info {
+    guid id {};
+    std::unique_ptr<T> ptr {};
+    uint32_t ref_count {};
+  };
+
+  using container = stdext::slot_map<info>;
 
  public:
   using key = typename container::key_type;
@@ -35,19 +43,23 @@ class registry {
     std::stringstream stream;
     read_file(path, stream);
 
-    key key = table_.insert({ ::assets::load_asset<T>(stream), 0 });
+    key key = table_.insert({
+      .ptr = ::assets::load_asset<T>(stream),
+      .ref_count = 0
+    });
+
     path_to_keys_.insert({path.c_str(), key});
     return key;
   }
 
-  T *get(key key) { return table_[key].first.get(); }
-  [[nodiscard]] const T *get(key key) const { return table_[key].first.get(); }
+  T *get(key key) { return table_[key].ptr.get(); }
+  [[nodiscard]] const T *get(key key) const { return table_[key].ptr.get(); }
 
-  void inc_ref_count(key key) { table_[key].second++; }
+  void inc_ref_count(key key) { table_[key].ref_count++; }
   void dec_ref_count(key key) {
-    assert(table_[key].second > 0);
+    assert(table_[key].ref_count > 0);
 
-    uint32_t count = --table_[key].second;
+    uint32_t count = --table_[key].ref_count;
     if (count == 0) {
       table_.erase(key);
 
@@ -64,6 +76,7 @@ class registry {
  private:
   container table_ = {};
   std::unordered_map<std::string, key> path_to_keys_ = {};
+  std::unordered_map<guid, key> id_to_keys_ = {};
 };
 
 struct context {
@@ -162,7 +175,7 @@ class handle {
   template<class A>
   friend handle<A> load(const char* path);
 
- private:
+ public:
   registry* registry_;
   key key_;
 };
@@ -184,6 +197,21 @@ handle<T> load(const char* path) {
 
 using texture_handle = assets::handle<texture>;
 using shader_handle = assets::handle<shader>;
+
+
+template <class T>
+struct serialization<assets::handle<T>> {
+
+  void from_asset(const asset&, assets::handle<T>*) {
+
+  }
+
+  void to_asset(asset& asset, const assets::handle<T>* handle) {
+//    asset["id"] =
+  }
+
+};
+
 
 
 

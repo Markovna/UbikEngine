@@ -3,6 +3,8 @@
 #include <cmath>
 #include <limits>
 
+#include "core/serialization.h"
+
 struct vec2;
 struct vec3;
 struct vec4;
@@ -178,3 +180,27 @@ inline approximately(T x, T y, int ulp = 1) {
 }
 
 }
+
+template<>
+struct serialization<vec4> {
+  static void from_asset(const asset&, vec4&);
+  static void to_asset(asset&, const vec4&);
+};
+
+template<>
+struct serialization<vec3> {
+  static void from_asset(const asset&, vec3&);
+  static void to_asset(asset&, const vec3&);
+};
+
+template<>
+struct serialization<quat> {
+  static void from_asset(const asset&, quat&);
+  static void to_asset(asset&, const quat&);
+};
+
+template<>
+struct serialization<transform> {
+  static void from_asset(const asset&, transform&);
+  static void to_asset(asset&, const transform&);
+};

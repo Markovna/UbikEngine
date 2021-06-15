@@ -78,7 +78,7 @@ class mesh_component : public component<mesh_component> {
 
 template<>
 struct serialization<mesh_component> {
-  void from_asset(const asset&, mesh_component*);
-  void to_asset(asset&, const mesh_component*);
+  static void from_asset(const asset&, mesh_component&);
+  static void to_asset(asset&, const mesh_component&);
 };
 

@@ -10,18 +10,19 @@ struct entity;
 
 namespace meta::details {
 
-using save_ptr_t = void (*)(asset&, const void*);
-using load_ptr_t = void (*)(const asset&, void*);
-using instantiate_ptr_t = void* (*)(world*, const entity&);
+using to_asset_fn = void (*)(asset&, const void*);
+using from_asset_fn = void (*)(const asset&, void*);
+using instantiate_fn = void* (*)(world&, const entity&);
 
 struct type_info {
   static const type_info& invalid();
 
   guid id;
   std::string name;
-  save_ptr_t save_ptr;
-  load_ptr_t load_ptr;
-  instantiate_ptr_t instantiate_ptr;
+
+  to_asset_fn to_asset;
+  from_asset_fn from_asset;
+  instantiate_fn instantiate;
 };
 
 template<class T>

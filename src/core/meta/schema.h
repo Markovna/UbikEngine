@@ -13,6 +13,7 @@ struct schema_info {
 
 void load_schemas(const char* path);
 
+guid get_schema_id(const char *name);
 const schema_info& get_schema(const char* name);
 
 }

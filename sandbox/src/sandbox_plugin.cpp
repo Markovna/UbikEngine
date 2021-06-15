@@ -203,7 +203,7 @@ class test : public plugin_base {
   void update(engine *e) override {
     auto mesh_view = e->world->view<mesh_component, custom_component>();
     for (ecs::entity id : mesh_view) {
-      mesh_view.get<mesh_component>(id).set_color(color::green());
+      mesh_view.get<mesh_component>(id).set_color(color::red());
     }
   }
 };
@@ -225,14 +225,22 @@ void unload_sandbox_plugin(engine* engine) {
 
 }
 
-void serialization<custom_component>::from_asset(const asset &asset, custom_component *comp) {
-  comp->a = asset["a"];
-  comp->b = asset["b"];
-  comp->c.a = asset["c"]["a"];
+void serialization<custom_component>::from_asset(const asset &asset, custom_component& comp) {
+  assets::get(asset, "a", comp.a);
+  assets::get(asset, "b", comp.b);
+  assets::get(asset, "c", comp.c);
 }
 
-void serialization<custom_component>::to_asset(asset &asset, const custom_component *comp) {
-  asset["a"] = comp->a;
-  asset["b"] = comp->b;
-  asset["c"]["a"] = comp->c.a;
+void serialization<custom_component>::to_asset(asset &asset, const custom_component& comp) {
+  assets::set(asset, "a", comp.a);
+  assets::set(asset, "b", comp.b);
+  assets::set(asset, "c", comp.c);
+}
+
+void serialization<inner_type>::from_asset(const asset &asset, inner_type& val) {
+  assets::get(asset, "a", val.a);
+}
+
+void serialization<inner_type>::to_asset(asset &asset, const inner_type& val) {
+  assets::set(asset, "a", val.a);
 }

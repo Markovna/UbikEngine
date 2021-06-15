@@ -16,16 +16,16 @@ class type {
   [[nodiscard]] typeid_t id() const { return id_; }
   [[nodiscard]] const char* name() const { return details::get_type(id_).name.c_str(); }
 
-  void* instantiate(world* w, const entity& e) const {
-    return details::get_type(id_).instantiate_ptr(w, e);
+  void* instantiate(world& w, const entity& e) const {
+    return details::get_type(id_).instantiate(w, e);
   }
 
-  void save(asset& asset, const void* obj) const {
-    details::get_type(id_).save_ptr(asset, obj);
+  void to_asset(asset& asset, const void* obj) const {
+    details::get_type(id_).to_asset(asset, obj);
   }
 
-  void load(const asset& asset, void* obj) const {
-    details::get_type(id_).load_ptr(asset, obj);
+  void from_asset(const asset& asset, void* obj) const {
+    details::get_type(id_).from_asset(asset, obj);
   }
 
  private:

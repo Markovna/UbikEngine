@@ -101,18 +101,10 @@ gfx::uniform_handle GetColorUniform() {
   return uniform_handle;
 }
 
-void serialization<mesh_component>::from_asset(const asset& asset, mesh_component* comp) {
-  auto& col = asset["color"];
-  comp->color_.r = col["r"];
-  comp->color_.g = col["g"];
-  comp->color_.b = col["b"];
-  comp->color_.a = col["a"];
+void serialization<mesh_component>::from_asset(const asset& asset, mesh_component& comp) {
+  assets::get(asset, "color", comp.color_);
 }
 
-void serialization<mesh_component>::to_asset(asset& asset, const mesh_component* comp) {
-  auto& col = asset["color"];
-  col["r"] = comp->color_.r;
-  col["g"] = comp->color_.g;
-  col["b"] = comp->color_.b;
-  col["a"] = comp->color_.a;
+void serialization<mesh_component>::to_asset(asset& asset, const mesh_component& comp) {
+  assets::set(asset, "color", comp.color_);
 }

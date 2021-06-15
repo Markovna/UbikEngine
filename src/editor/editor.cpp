@@ -37,6 +37,16 @@ int main(int argc, char* argv[]) {
 
   meta::load_schemas(schema_dir);
 
+  register_type(color);
+  register_type(transform);
+  register_type(vec2);
+  register_type(vec3);
+  register_type(vec4);
+  register_type(vec2i);
+  register_type(vec3i);
+  register_type(vec4i);
+  register_type(quat);
+
   register_type(link_component);
   register_type(transform_component);
   register_type(camera_component);

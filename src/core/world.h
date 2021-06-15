@@ -43,8 +43,8 @@ struct transform_component : public component<transform_component> {
 
 template<>
 struct serialization<transform_component> {
-  void from_asset(const asset&, transform_component*);
-  void to_asset(asset&, const transform_component*);
+  static void from_asset(const asset&, transform_component&);
+  static void to_asset(asset&, const transform_component&);
 };
 
 class world : ecs::registry {

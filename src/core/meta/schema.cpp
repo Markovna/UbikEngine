@@ -51,6 +51,12 @@ void load_schemas(const char *path) {
   }
 }
 
+guid get_schema_id(const char *name) {
+  context &c = get_context();
+  auto it = c.schemas.find(std::string(name));
+  return it != c.schemas.end() ? it->second.guid : guid::invalid();
+}
+
 const schema_info &get_schema(const char *name) {
   context &c = get_context();
   return c.schemas[std::string(name)];
