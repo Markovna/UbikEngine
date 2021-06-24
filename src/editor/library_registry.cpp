@@ -7,8 +7,6 @@
 #include <iostream>
 #include <fstream>
 
-namespace fs = std::filesystem;
-
 library_registry::library_registry(const char *libs_folder, const char *temp_folder)
     : libs_folder_(libs_folder)
     , temp_folder_(temp_folder)
@@ -17,8 +15,8 @@ library_registry::library_registry(const char *libs_folder, const char *temp_fol
   file_watcher_.add_path(libs_folder_.c_str(), false);
   file_watcher_.connect(this, &library_registry::on_file_changed);
 
-  if (!std::filesystem::exists(temp_folder_))
-    std::filesystem::create_directory(temp_folder_);
+  if (!fs::exists(temp_folder_))
+    fs::create_directory(temp_folder_);
 }
 
 void *library_registry::load(const char *name, engine* engine) {
@@ -110,7 +108,7 @@ static uint32_t get_random() {
   return dist(mt);
 }
 
-std::filesystem::path library_registry::copy_to_temp(const fs::path &src, const fs::path &temp_folder) {
+fs::path library_registry::copy_to_temp(const fs::path &src, const fs::path &temp_folder) {
   fs::path tmp_lib_path(temp_folder);
   tmp_lib_path.append(std::to_string(get_random()));
   tmp_lib_path.replace_extension(src.extension());

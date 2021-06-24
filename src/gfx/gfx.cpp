@@ -297,11 +297,13 @@ void set_transform(const mat4& val) {
   draw.transform = val;
 }
 
-shader_handle create_shader(const char* source) {
+shader_handle create_shader(const char* vertex_src, const char* fragment_src, attribute::binding_pack bindings) {
   shader_handle handle(details::g_state.shader_handles.get());
   auto& command = details::g_state.frame.emplace_command<details::create_shader_command>();
   command.handle = handle;
-  command.source = source;
+  command.vertex_src = vertex_src;
+  command.fragment_src = fragment_src;
+  command.bindings = bindings;
   return handle;
 }
 

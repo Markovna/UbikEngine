@@ -1,11 +1,14 @@
 #pragma once
 
-#include "base/slot_map.h"
 #include "base/log.h"
 #include "base/guid.h"
-#include "core/serialization.h"
+#include "base/slot_map.h"
+#include "asset_loader.h"
+#include "asset.h"
+#include "platform/file_system.h"
 
 #include <unordered_map>
+#include <fstream>
 #include <sstream>
 #include <filesystem>
 
@@ -14,20 +17,15 @@ class shader;
 
 namespace assets {
 
-template<class T>
-std::unique_ptr<T> load_asset(const std::istream&);
-
 namespace details {
-
-bool read_file(const std::filesystem::path& path, std::ostream& stream);
 
 template<class T>
 class registry {
  private:
   struct info {
-    guid id {};
-    std::unique_ptr<T> ptr {};
-    uint32_t ref_count {};
+    guid id{};
+    std::unique_ptr<T> ptr{};
+    uint32_t use_count{};
   };
 
   using container = stdext::slot_map<info>;
@@ -35,35 +33,68 @@ class registry {
  public:
   using key = typename container::key_type;
 
-  key load(const std::filesystem::path& path) {
+//  key load(guid id) {
+//    if (auto it = id_to_keys_.find(id); it != id_to_keys_.end()) {
+//      return it->second;
+//    }
+//
+//    fs::path path { id.str() };
+//    path.replace_extension(".import");
+//
+//    fs::paths::import()
+//
+//  }
+
+  guid get_guid(const fs::path &path) {
+    asset meta = assets::read(fs::concat(path, ".meta"));
+    std::string guid;
+    assets::get(meta, "__guid", guid);
+    return guid::from_string(guid);
+  }
+
+  key load(const fs::path &path) {
     if (auto it = path_to_keys_.find(path); it != path_to_keys_.end()) {
       return it->second;
     }
 
-    std::stringstream stream;
-    read_file(path, stream);
+    fs::path absolute_path { fs::absolute(path) };
 
-    key key = table_.insert({
-      .ptr = ::assets::load_asset<T>(stream),
-      .ref_count = 0
-    });
+    guid guid = get_guid(absolute_path);
+    fs::path asset_path { fs::append(fs::paths::import(), guid.str()) };
 
+    std::ifstream stream = fs::read_file(asset_path);
+    key key {
+      table_.insert({
+        .ptr = ::assets::loader::load<T>(stream),
+        .id = guid,
+        .use_count = 0
+      })
+    };
+
+    id_to_keys_.insert({guid, key});
     path_to_keys_.insert({path.c_str(), key});
     return key;
+  }
+
+  guid id(key key) const {
+    if (auto it = table_.find(key); it != table_.end()) {
+      return it->second.id;
+    }
+    return guid::invalid();
   }
 
   T *get(key key) { return table_[key].ptr.get(); }
   [[nodiscard]] const T *get(key key) const { return table_[key].ptr.get(); }
 
-  void inc_ref_count(key key) { table_[key].ref_count++; }
-  void dec_ref_count(key key) {
-    assert(table_[key].ref_count > 0);
+  void inc_use_count(key key) { table_[key].use_count++; }
+  void dec_use_count(key key) {
+    assert(table_[key].use_count > 0);
 
-    uint32_t count = --table_[key].ref_count;
+    uint32_t count = --table_[key].use_count;
     if (count == 0) {
       table_.erase(key);
 
-      auto it = std::find_if(path_to_keys_.begin(), path_to_keys_.end(), [&](const auto& pair){
+      auto it = std::find_if(path_to_keys_.begin(), path_to_keys_.end(), [&](const auto &pair) {
         return pair.second == key;
       });
 
@@ -79,22 +110,11 @@ class registry {
   std::unordered_map<guid, key> id_to_keys_ = {};
 };
 
-struct context {
-  std::string project_path;
-  registry<texture> texture_registry;
-  registry<shader> shader_registry;
-};
-
-context* get_context();
-
 template<class T>
-registry<T>* get_registry();
-
-template<>
-registry<texture>* get_registry();
-
-template<>
-registry<shader>* get_registry();
+registry<T>* get_registry() {
+  static registry<T> inst;
+  return &inst;
+}
 
 }
 
@@ -117,7 +137,7 @@ class handle {
     , key_(other.key)
   {
     if (registry_)
-      registry_->inc_ref_count(key_);
+      registry_->inc_use_count(key_);
   }
 
   handle(handle&& other) noexcept
@@ -145,12 +165,14 @@ class handle {
   const T* operator->() const { return get(); }
   const T& operator*() const { return *get(); }
 
+  [[nodiscard]] guid id() const { return registry_->id(key_); }
+
   T* get() { return registry_->get(key_); }
   const T* get() const { return registry_->get(key_); }
 
   void reset() {
     if (registry_)
-      registry_->dec_ref_count(key_);
+      registry_->dec_use_count(key_);
     release();
   }
 
@@ -160,7 +182,7 @@ class handle {
       , key_(key)
   {
     if (registry_)
-      registry_->inc_ref_count(key_);
+      registry_->inc_use_count(key_);
   }
 
   void release() {
@@ -180,37 +202,22 @@ class handle {
   key key_;
 };
 
-void init(const char* project_path);
-
-void shutdown();
+void init();
 
 template<class T>
 handle<T> load(const char* path) {
-  std::filesystem::path full_path(details::get_context()->project_path);
-  full_path.append(path);
-
   details::registry<T>* reg = details::get_registry<T>();
-  return { reg, reg->load(full_path) };
+  return { reg, reg->load(path) };
 }
+
+template<class T>
+handle<T> load(guid id);
 
 }
 
 using texture_handle = assets::handle<texture>;
 using shader_handle = assets::handle<shader>;
 
-
-template <class T>
-struct serialization<assets::handle<T>> {
-
-  void from_asset(const asset&, assets::handle<T>*) {
-
-  }
-
-  void to_asset(asset& asset, const assets::handle<T>* handle) {
-//    asset["id"] =
-  }
-
-};
 
 
 

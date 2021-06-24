@@ -1,793 +1,170 @@
 {
-    "__guid": "3b0f279e212a4a19b701ef9a004083c4",
-    "__type": "entity",
-    "children": [
+  "__guid": "ec31cf12ee4d4052bbc2b70a5c4eaf43",
+  "__type": "entity",
+  "children": [
+    {
+      "__guid": "7c169e9685af480e8f86149736b596bb",
+      "__type": "entity",
+      "children": [
         {
-            "__guid": "9842a18a80934495b4ef131a41cd783b",
-            "__type": "entity",
-            "components": [
+          "__guid": "f45419410d264f8facc483424f25de81",
+          "__type": "entity",
+          "children": [
+            {
+              "__guid": "845fd8f45fab41358e6780c043dff98e",
+              "__type": "entity",
+              "components": [
                 {
-                    "__guid": "ad2f330108734c3796091e949a5e3987",
-                    "__type": "transform_component",
-                    "position": {
-                        "x": 0.0,
-                        "y": 0.0,
-                        "z": 0.0
-                    },
-                    "rotation": {
-                        "w": 1.0,
-                        "x": 0.0,
-                        "y": 0.0,
-                        "z": 0.0
-                    },
-                    "scale": {
-                        "x": 1.0,
-                        "y": 1.0,
-                        "z": 1.0
-                    }
+                  "__guid": "3aa18714958646dc96a5eae335952fa7",
+                  "__type": "transform_component",
+                  "position": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "rotation": {
+                    "w": 1.0,
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "scale": {
+                    "x": 1.0,
+                    "y": 1.0,
+                    "z": 1.0
+                  }
                 },
                 {
-                    "__guid": "052e1bc387f24ff38c61111c3534979f",
-                    "__type": "mesh_component",
-                    "color": {
-                        "a": 1.0,
-                        "b": 1.0,
-                        "g": 1.0,
-                        "r": 1.0
-                    }
+                  "__guid": "45c6f2a08f9d48c8bc83331d83b28f45",
+                  "__type": "mesh_component",
+                  "color": {
+                    "a": 1.0,
+                    "b": 1.0,
+                    "g": 1.0,
+                    "r": 1.0
+                  }
+                },
+                {
+                  "__guid": "0645b4043b0c459cb8322846e2194ea5",
+                  "__type": "custom_component",
+                  "a": 42,
+                  "b": 0.0,
+                  "c": {
+                    "a": 0.0
+                  }
                 }
-            ]
-        },
-        {
-            "__guid": "3ff64d0796c8404c8f24dcd649530f38",
-            "__type": "entity",
-            "components": [
-                {
-                    "__guid": "719f9dab3a10474393496ab984de753a",
-                    "__type": "transform_component",
-                    "position": {
-                        "x": 0.699999988079071,
-                        "y": 0.0,
-                        "z": 3.0
-                    },
-                    "rotation": {
-                        "w": 1.0,
-                        "x": 0.0,
-                        "y": 0.0,
-                        "z": 0.0
-                    },
-                    "scale": {
-                        "x": 1.0,
-                        "y": 1.0,
-                        "z": 1.0
-                    }
-                },
-                {
-                    "__guid": "0904fd5b4e0741c1baebc56a9ef6d496",
-                    "__type": "mesh_component",
-                    "color": {
-                        "a": 1.0,
-                        "b": 1.0,
-                        "g": 1.0,
-                        "r": 1.0
-                    }
-                }
-            ]
-        },
-        {
-            "__guid": "ac573f06c1074f5eaddcfaee0566562f",
-            "__type": "entity",
-            "components": [
-                {
-                    "__guid": "f33976e154af4ef89980563b64f25a6b",
-                    "__type": "transform_component",
-                    "position": {
-                        "x": -0.699999988079071,
-                        "y": 0.0,
-                        "z": 3.0
-                    },
-                    "rotation": {
-                        "w": 1.0,
-                        "x": 0.0,
-                        "y": 0.0,
-                        "z": 0.0
-                    },
-                    "scale": {
-                        "x": 1.0,
-                        "y": 1.0,
-                        "z": 1.0
-                    }
-                },
-                {
-                    "__guid": "18b94633905449739c7b68642c753f3b",
-                    "__type": "mesh_component",
-                    "color": {
-                        "a": 1.0,
-                        "b": 1.0,
-                        "g": 1.0,
-                        "r": 1.0
-                    }
-                },
-                {
-                    "__guid": "9c67baf587df4f8ea2b6f1de541321e9",
-                    "__type": "custom_component",
-                    "a": 42,
-                    "b": 0.0,
-                    "c": {
-                        "a": 0.0
-                    }
-                }
-            ]
-        },
-        {
-            "__guid": "c53fc64413d54b3887f1c6a77446d85d",
-            "__type": "entity",
-            "components": [
-                {
-                    "__guid": "f4090cb013dd46168780d8f9a2622a2e",
-                    "__type": "transform_component",
-                    "position": {
-                        "x": 1.399999976158142,
-                        "y": 0.0,
-                        "z": 5.0
-                    },
-                    "rotation": {
-                        "w": 1.0,
-                        "x": 0.0,
-                        "y": 0.0,
-                        "z": 0.0
-                    },
-                    "scale": {
-                        "x": 1.0,
-                        "y": 1.0,
-                        "z": 1.0
-                    }
-                },
-                {
-                    "__guid": "74758251eda246b097efa205196ccbf7",
-                    "__type": "mesh_component",
-                    "color": {
-                        "a": 1.0,
-                        "b": 1.0,
-                        "g": 1.0,
-                        "r": 1.0
-                    }
-                }
-            ]
-        },
-        {
-            "__guid": "e3ba77d13ecb4b2180e819d003c817df",
-            "__type": "entity",
-            "components": [
-                {
-                    "__guid": "62daa7b57d96445c8158bcae3de166ff",
-                    "__type": "transform_component",
-                    "position": {
-                        "x": -1.399999976158142,
-                        "y": 0.0,
-                        "z": 5.0
-                    },
-                    "rotation": {
-                        "w": 1.0,
-                        "x": 0.0,
-                        "y": 0.0,
-                        "z": 0.0
-                    },
-                    "scale": {
-                        "x": 1.0,
-                        "y": 1.0,
-                        "z": 1.0
-                    }
-                },
-                {
-                    "__guid": "b2c21a1496b24e698340d982095e0de2",
-                    "__type": "mesh_component",
-                    "color": {
-                        "a": 1.0,
-                        "b": 1.0,
-                        "g": 1.0,
-                        "r": 1.0
-                    }
-                },
-                {
-                    "__guid": "51d95565dcec49fe97d0b2a1d6ccf41a",
-                    "__type": "custom_component",
-                    "a": 42,
-                    "b": 0.0,
-                    "c": {
-                        "a": 0.0
-                    }
-                }
-            ]
-        },
-        {
-            "__guid": "4a206da3edc641eab7d364a17fcc31a8",
-            "__type": "entity",
-            "components": [
-                {
-                    "__guid": "b98375195efa468c85bbede933e0c47e",
-                    "__type": "transform_component",
-                    "position": {
-                        "x": 2.0999999046325684,
-                        "y": 0.0,
-                        "z": 7.0
-                    },
-                    "rotation": {
-                        "w": 1.0,
-                        "x": 0.0,
-                        "y": 0.0,
-                        "z": 0.0
-                    },
-                    "scale": {
-                        "x": 1.0,
-                        "y": 1.0,
-                        "z": 1.0
-                    }
-                },
-                {
-                    "__guid": "e85d03ac596f4b6894a8451e729d374c",
-                    "__type": "mesh_component",
-                    "color": {
-                        "a": 1.0,
-                        "b": 1.0,
-                        "g": 1.0,
-                        "r": 1.0
-                    }
-                }
-            ]
-        },
-        {
-            "__guid": "41834d2bdd124b6e902987efafaf9faf",
-            "__type": "entity",
-            "components": [
-                {
-                    "__guid": "3687c4b6143b4b01869b5b516699c0b9",
-                    "__type": "transform_component",
-                    "position": {
-                        "x": -2.0999999046325684,
-                        "y": 0.0,
-                        "z": 7.0
-                    },
-                    "rotation": {
-                        "w": 1.0,
-                        "x": 0.0,
-                        "y": 0.0,
-                        "z": 0.0
-                    },
-                    "scale": {
-                        "x": 1.0,
-                        "y": 1.0,
-                        "z": 1.0
-                    }
-                },
-                {
-                    "__guid": "c1b8e5f635d749b59cd6275283c2b209",
-                    "__type": "mesh_component",
-                    "color": {
-                        "a": 1.0,
-                        "b": 1.0,
-                        "g": 1.0,
-                        "r": 1.0
-                    }
-                },
-                {
-                    "__guid": "f1dc0375710b4d6ba9967fd624d1bb87",
-                    "__type": "custom_component",
-                    "a": 42,
-                    "b": 0.0,
-                    "c": {
-                        "a": 0.0
-                    }
-                }
-            ]
-        },
-        {
-            "__guid": "5df157ee73e74197929ab6c428b0776b",
-            "__type": "entity",
-            "components": [
-                {
-                    "__guid": "e26e453b2e6f41c9a8553e5e98ad9c65",
-                    "__type": "transform_component",
-                    "position": {
-                        "x": 2.799999952316284,
-                        "y": 0.0,
-                        "z": 9.0
-                    },
-                    "rotation": {
-                        "w": 1.0,
-                        "x": 0.0,
-                        "y": 0.0,
-                        "z": 0.0
-                    },
-                    "scale": {
-                        "x": 1.0,
-                        "y": 1.0,
-                        "z": 1.0
-                    }
-                },
-                {
-                    "__guid": "f526aa94c6a54073ac73312f8137b5eb",
-                    "__type": "mesh_component",
-                    "color": {
-                        "a": 1.0,
-                        "b": 1.0,
-                        "g": 1.0,
-                        "r": 1.0
-                    }
-                }
-            ]
-        },
-        {
-            "__guid": "68133392ff1e4db2b9bfe62877666ce9",
-            "__type": "entity",
-            "components": [
-                {
-                    "__guid": "56769d9ff90b45eb9722356b9673c41a",
-                    "__type": "transform_component",
-                    "position": {
-                        "x": -2.799999952316284,
-                        "y": 0.0,
-                        "z": 9.0
-                    },
-                    "rotation": {
-                        "w": 1.0,
-                        "x": 0.0,
-                        "y": 0.0,
-                        "z": 0.0
-                    },
-                    "scale": {
-                        "x": 1.0,
-                        "y": 1.0,
-                        "z": 1.0
-                    }
-                },
-                {
-                    "__guid": "ad281a24cea64c28ac8b926743d9670d",
-                    "__type": "mesh_component",
-                    "color": {
-                        "a": 1.0,
-                        "b": 1.0,
-                        "g": 1.0,
-                        "r": 1.0
-                    }
-                },
-                {
-                    "__guid": "7dc8c7bfc8734cbf8172bda46b26301b",
-                    "__type": "custom_component",
-                    "a": 42,
-                    "b": 0.0,
-                    "c": {
-                        "a": 0.0
-                    }
-                }
-            ]
-        },
-        {
-            "__guid": "45e08587c0d144e492442e22498343e6",
-            "__type": "entity",
-            "components": [
-                {
-                    "__guid": "2ea88ef42a4742d9bde7c2bfc48ae1d9",
-                    "__type": "transform_component",
-                    "position": {
-                        "x": 3.5,
-                        "y": 0.0,
-                        "z": 11.0
-                    },
-                    "rotation": {
-                        "w": 1.0,
-                        "x": 0.0,
-                        "y": 0.0,
-                        "z": 0.0
-                    },
-                    "scale": {
-                        "x": 1.0,
-                        "y": 1.0,
-                        "z": 1.0
-                    }
-                },
-                {
-                    "__guid": "5f716912b6f64f16a2849a4670153ae5",
-                    "__type": "mesh_component",
-                    "color": {
-                        "a": 1.0,
-                        "b": 1.0,
-                        "g": 1.0,
-                        "r": 1.0
-                    }
-                }
-            ]
-        },
-        {
-            "__guid": "fe4d5da82422487aa6c79d9550c2f6be",
-            "__type": "entity",
-            "components": [
-                {
-                    "__guid": "0ba3f8f6e78d412da421c7199cc47f79",
-                    "__type": "transform_component",
-                    "position": {
-                        "x": -3.5,
-                        "y": 0.0,
-                        "z": 11.0
-                    },
-                    "rotation": {
-                        "w": 1.0,
-                        "x": 0.0,
-                        "y": 0.0,
-                        "z": 0.0
-                    },
-                    "scale": {
-                        "x": 1.0,
-                        "y": 1.0,
-                        "z": 1.0
-                    }
-                },
-                {
-                    "__guid": "56baafd3e4874d67af5c4d224542159d",
-                    "__type": "mesh_component",
-                    "color": {
-                        "a": 1.0,
-                        "b": 1.0,
-                        "g": 1.0,
-                        "r": 1.0
-                    }
-                },
-                {
-                    "__guid": "25af98d5d556485aace1a9c91694c900",
-                    "__type": "custom_component",
-                    "a": 42,
-                    "b": 0.0,
-                    "c": {
-                        "a": 0.0
-                    }
-                }
-            ]
-        },
-        {
-            "__guid": "9179e3698c724e199947e4b0312609f0",
-            "__type": "entity",
-            "components": [
-                {
-                    "__guid": "5888debb24334f89b3d5e2b4cc8d8a71",
-                    "__type": "transform_component",
-                    "position": {
-                        "x": 4.199999809265137,
-                        "y": 0.0,
-                        "z": 13.0
-                    },
-                    "rotation": {
-                        "w": 1.0,
-                        "x": 0.0,
-                        "y": 0.0,
-                        "z": 0.0
-                    },
-                    "scale": {
-                        "x": 1.0,
-                        "y": 1.0,
-                        "z": 1.0
-                    }
-                },
-                {
-                    "__guid": "8f8d4326293948c1ba79e77abb64a6d1",
-                    "__type": "mesh_component",
-                    "color": {
-                        "a": 1.0,
-                        "b": 1.0,
-                        "g": 1.0,
-                        "r": 1.0
-                    }
-                }
-            ]
-        },
-        {
-            "__guid": "71224c63fd884028b327679453ae7c1c",
-            "__type": "entity",
-            "components": [
-                {
-                    "__guid": "adfc5d48ff2648bf8b3073fb979915c9",
-                    "__type": "transform_component",
-                    "position": {
-                        "x": -4.199999809265137,
-                        "y": 0.0,
-                        "z": 13.0
-                    },
-                    "rotation": {
-                        "w": 1.0,
-                        "x": 0.0,
-                        "y": 0.0,
-                        "z": 0.0
-                    },
-                    "scale": {
-                        "x": 1.0,
-                        "y": 1.0,
-                        "z": 1.0
-                    }
-                },
-                {
-                    "__guid": "5411302664d94e1583f3f7809ba557a4",
-                    "__type": "mesh_component",
-                    "color": {
-                        "a": 1.0,
-                        "b": 1.0,
-                        "g": 1.0,
-                        "r": 1.0
-                    }
-                },
-                {
-                    "__guid": "38ebb3eef35744ba92a2570dc5709947",
-                    "__type": "custom_component",
-                    "a": 42,
-                    "b": 0.0,
-                    "c": {
-                        "a": 0.0
-                    }
-                }
-            ]
-        },
-        {
-            "__guid": "33dc1b9098784814b0d743ae2000e8eb",
-            "__type": "entity",
-            "components": [
-                {
-                    "__guid": "0727d57a2aa9405e9e5f073340d1593d",
-                    "__type": "transform_component",
-                    "position": {
-                        "x": 4.900000095367432,
-                        "y": 0.0,
-                        "z": 15.0
-                    },
-                    "rotation": {
-                        "w": 1.0,
-                        "x": 0.0,
-                        "y": 0.0,
-                        "z": 0.0
-                    },
-                    "scale": {
-                        "x": 1.0,
-                        "y": 1.0,
-                        "z": 1.0
-                    }
-                },
-                {
-                    "__guid": "bccf44e391f74a998d8032643afc1351",
-                    "__type": "mesh_component",
-                    "color": {
-                        "a": 1.0,
-                        "b": 1.0,
-                        "g": 1.0,
-                        "r": 1.0
-                    }
-                }
-            ]
-        },
-        {
-            "__guid": "8477cb2b6bd044d1802153e8c5550baf",
-            "__type": "entity",
-            "components": [
-                {
-                    "__guid": "293d8d3815f24cacac53243a78bf6b2a",
-                    "__type": "transform_component",
-                    "position": {
-                        "x": -4.900000095367432,
-                        "y": 0.0,
-                        "z": 15.0
-                    },
-                    "rotation": {
-                        "w": 1.0,
-                        "x": 0.0,
-                        "y": 0.0,
-                        "z": 0.0
-                    },
-                    "scale": {
-                        "x": 1.0,
-                        "y": 1.0,
-                        "z": 1.0
-                    }
-                },
-                {
-                    "__guid": "ea703609c3594b9294cd1146bbeccee3",
-                    "__type": "mesh_component",
-                    "color": {
-                        "a": 1.0,
-                        "b": 1.0,
-                        "g": 1.0,
-                        "r": 1.0
-                    }
-                },
-                {
-                    "__guid": "c3ce3e4a329143a6ba13de72433cf9f1",
-                    "__type": "custom_component",
-                    "a": 42,
-                    "b": 0.0,
-                    "c": {
-                        "a": 0.0
-                    }
-                }
-            ]
-        },
-        {
-            "__guid": "91e554e37e54417285d5a380928d1bea",
-            "__type": "entity",
-            "components": [
-                {
-                    "__guid": "41f2943c8bd941cfb8dad31a8b473e6d",
-                    "__type": "transform_component",
-                    "position": {
-                        "x": 5.599999904632568,
-                        "y": 0.0,
-                        "z": 17.0
-                    },
-                    "rotation": {
-                        "w": 1.0,
-                        "x": 0.0,
-                        "y": 0.0,
-                        "z": 0.0
-                    },
-                    "scale": {
-                        "x": 1.0,
-                        "y": 1.0,
-                        "z": 1.0
-                    }
-                },
-                {
-                    "__guid": "f717370f7ee3491bb4c3e5a6b2a67f22",
-                    "__type": "mesh_component",
-                    "color": {
-                        "a": 1.0,
-                        "b": 1.0,
-                        "g": 1.0,
-                        "r": 1.0
-                    }
-                }
-            ]
-        },
-        {
-            "__guid": "1fb91e1f84c64d5f8315ea374d0f865f",
-            "__type": "entity",
-            "components": [
-                {
-                    "__guid": "785df50ff5044214a35cc6f0bf2edc82",
-                    "__type": "transform_component",
-                    "position": {
-                        "x": -5.599999904632568,
-                        "y": 0.0,
-                        "z": 17.0
-                    },
-                    "rotation": {
-                        "w": 1.0,
-                        "x": 0.0,
-                        "y": 0.0,
-                        "z": 0.0
-                    },
-                    "scale": {
-                        "x": 1.0,
-                        "y": 1.0,
-                        "z": 1.0
-                    }
-                },
-                {
-                    "__guid": "e9feadf0fce043cda549f0eb6d74148e",
-                    "__type": "mesh_component",
-                    "color": {
-                        "a": 1.0,
-                        "b": 1.0,
-                        "g": 1.0,
-                        "r": 1.0
-                    }
-                },
-                {
-                    "__guid": "c3e0193002e748088ba31dbb424e30f3",
-                    "__type": "custom_component",
-                    "a": 42,
-                    "b": 0.0,
-                    "c": {
-                        "a": 0.0
-                    }
-                }
-            ]
-        },
-        {
-            "__guid": "2db6d9c28bf94ed495f5792ef94de12b",
-            "__type": "entity",
-            "components": [
-                {
-                    "__guid": "61a6091c812e4b0784c0368d05e655df",
-                    "__type": "transform_component",
-                    "position": {
-                        "x": 6.299999713897705,
-                        "y": 0.0,
-                        "z": 19.0
-                    },
-                    "rotation": {
-                        "w": 1.0,
-                        "x": 0.0,
-                        "y": 0.0,
-                        "z": 0.0
-                    },
-                    "scale": {
-                        "x": 1.0,
-                        "y": 1.0,
-                        "z": 1.0
-                    }
-                },
-                {
-                    "__guid": "ed345271456b4442900d29481ff3e64f",
-                    "__type": "mesh_component",
-                    "color": {
-                        "a": 1.0,
-                        "b": 1.0,
-                        "g": 1.0,
-                        "r": 1.0
-                    }
-                }
-            ]
-        },
-        {
-            "__guid": "fcdb97d336ba49c6b03c62b57ee595d8",
-            "__type": "entity",
-            "components": [
-                {
-                    "__guid": "41073d7347db45dcbad82ea91dd663d5",
-                    "__type": "transform_component",
-                    "position": {
-                        "x": -6.299999713897705,
-                        "y": 0.0,
-                        "z": 19.0
-                    },
-                    "rotation": {
-                        "w": 1.0,
-                        "x": 0.0,
-                        "y": 0.0,
-                        "z": 0.0
-                    },
-                    "scale": {
-                        "x": 1.0,
-                        "y": 1.0,
-                        "z": 1.0
-                    }
-                },
-                {
-                    "__guid": "8ad4c91ae29e461597f59e9ff09f77ae",
-                    "__type": "mesh_component",
-                    "color": {
-                        "a": 1.0,
-                        "b": 1.0,
-                        "g": 1.0,
-                        "r": 1.0
-                    }
-                },
-                {
-                    "__guid": "39f3500530aa439daf4346def1afb842",
-                    "__type": "custom_component",
-                    "a": 42,
-                    "b": 0.0,
-                    "c": {
-                        "a": 0.0
-                    }
-                }
-            ]
-        }
-    ],
-    "components": [
-        {
-            "__guid": "17af790d085540cfb3b1d4a04e931e06",
-            "__type": "transform_component",
-            "position": {
+              ]
+            }
+          ],
+          "components": [
+            {
+              "__guid": "93840018cba74a0fae1ceb60dccd2232",
+              "__type": "transform_component",
+              "position": {
                 "x": 0.0,
                 "y": 0.0,
                 "z": 0.0
-            },
-            "rotation": {
+              },
+              "rotation": {
                 "w": 1.0,
                 "x": 0.0,
                 "y": 0.0,
                 "z": 0.0
-            },
-            "scale": {
+              },
+              "scale": {
                 "x": 1.0,
                 "y": 1.0,
                 "z": 1.0
+              }
             }
+          ]
+        },
+        {
+          "__guid": "27ecd72065344e0a950b72237e80e4bf",
+          "__type": "entity",
+          "components": [
+            {
+              "__guid": "7d27c56f4b88423ba3d05d5a614b5a4d",
+              "__type": "transform_component",
+              "position": {
+                "x": 0.0,
+                "y": -2.0,
+                "z": -3.0
+              },
+              "rotation": {
+                "w": 1.0,
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+              }
+            },
+            {
+              "__guid": "762c2cfbf5af4fd7bf991095d3c6a209",
+              "__type": "camera_component",
+              "clear_flags": 6,
+              "far": 100.0,
+              "fov": 60.0,
+              "near": 0.10000000149011612,
+              "normalized_rect": {
+                "w": 1.0,
+                "x": 0.0,
+                "y": 0.0,
+                "z": 1.0
+              },
+              "orthogonal_size": 1.0
+            }
+          ]
         }
-    ]
+      ],
+      "components": [
+        {
+          "__guid": "449e345e256341e890b377a380b0dcd4",
+          "__type": "transform_component",
+          "position": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "rotation": {
+            "w": 1.0,
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "scale": {
+            "x": 1.0,
+            "y": 1.0,
+            "z": 1.0
+          }
+        }
+      ]
+    }
+  ],
+  "components": [
+    {
+      "__guid": "cb010da1b14942328d6daaac945d5682",
+      "__type": "transform_component",
+      "position": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "rotation": {
+        "w": 1.0,
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "scale": {
+        "x": 1.0,
+        "y": 1.0,
+        "z": 1.0
+      }
+    }
+  ]
 }

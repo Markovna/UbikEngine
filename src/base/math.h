@@ -182,25 +182,25 @@ inline approximately(T x, T y, int ulp = 1) {
 }
 
 template<>
-struct serialization<vec4> {
+struct serializer<vec4> {
   static void from_asset(const asset&, vec4&);
   static void to_asset(asset&, const vec4&);
 };
 
 template<>
-struct serialization<vec3> {
+struct serializer<vec3> {
   static void from_asset(const asset&, vec3&);
   static void to_asset(asset&, const vec3&);
 };
 
 template<>
-struct serialization<quat> {
+struct serializer<quat> {
   static void from_asset(const asset&, quat&);
   static void to_asset(asset&, const quat&);
 };
 
 template<>
-struct serialization<transform> {
+struct serializer<transform> {
   static void from_asset(const asset&, transform&);
   static void to_asset(asset&, const transform&);
 };

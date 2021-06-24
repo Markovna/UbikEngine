@@ -16,7 +16,7 @@ public:
 
     [[nodiscard]] bool has_free() const { return next_ != invalid; }
 
-    T next() {
+    T alloc() {
         T& idx = registry_[next_];
         std::swap(idx, next_);
         return idx;

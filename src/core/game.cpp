@@ -1,3 +1,4 @@
+
 #include "core/engine.h"
 #include "core/input_system.h"
 #include "core/world.h"
@@ -8,26 +9,35 @@
 #include "gfx/gfx.h"
 #include "platform/window.h"
 #include "base/window_event.h"
-#include "core/assets/assets.h"
+#include "core/assets/asset_handle.h"
 #include "core/meta/registration.h"
 #include "core/meta/schema.h"
 
 extern void load_plugins(engine*);
 
-int main(int argv, char* argc[]) {
+int main(int argc, char* argv[]) {
 
-  char schema_dir[256];
-  std::strcpy(schema_dir, std::filesystem::current_path().c_str());
-  std::strcat(schema_dir, "/schema");
+  fs::paths::project(fs::current_path().c_str());
+  logger::init(fs::absolute("log").c_str());
 
-  meta::load_schemas(schema_dir);
+  meta::load_schemas(fs::absolute("schema").c_str());
+
+  register_type(color);
+  register_type(transform);
+  register_type(vec2);
+  register_type(vec3);
+  register_type(vec4);
+  register_type(vec2i);
+  register_type(vec3i);
+  register_type(vec4i);
+  register_type(quat);
 
   register_type(link_component);
   register_type(transform_component);
   register_type(camera_component);
   register_type(mesh_component);
 
-  assets::init(std::filesystem::current_path().c_str());
+  assets::init();
 
   window window({512, 512});
   gfx::init({.window_handle = window.get_handle(), .resolution = window.get_resolution()});
@@ -40,7 +50,7 @@ int main(int argv, char* argc[]) {
   load_plugins(&engine);
 
   engine.start();
-  vec4 viewport;
+  vec4 viewport {};
 
   bool running = true;
   while (running) {
@@ -71,6 +81,5 @@ int main(int argv, char* argc[]) {
   delete engine.world;
 
   gfx::shutdown();
-
-  assets::shutdown();
+  return 0;
 }

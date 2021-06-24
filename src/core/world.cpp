@@ -121,7 +121,7 @@ void world::save_to_asset(asset &asset) {
   save_to_asset(asset, root_);
 }
 
-void serialization<transform_component>::from_asset(const asset& asset, transform_component& comp) {
+void serializer<transform_component>::from_asset(const asset& asset, transform_component& comp) {
   assets::get(asset, "position", comp.local.position);
   assets::get(asset, "rotation", comp.local.rotation);
   assets::get(asset, "scale", comp.local.scale);
@@ -129,7 +129,7 @@ void serialization<transform_component>::from_asset(const asset& asset, transfor
   comp.dirty = true;
 }
 
-void serialization<transform_component>::to_asset(asset& asset, const transform_component& comp) {
+void serializer<transform_component>::to_asset(asset& asset, const transform_component& comp) {
   assets::set(asset, "position", comp.local.position);
   assets::set(asset, "rotation", comp.local.rotation);
   assets::set(asset, "scale", comp.local.scale);

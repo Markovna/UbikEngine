@@ -282,7 +282,7 @@ vertexbuf_handle create_vertex_buffer(buffer_ptr ptr, uint32_t size, vertex_layo
 indexbuf_handle create_index_buffer(buffer_ptr ptr, uint32_t size);
 framebuf_handle create_frame_buffer(std::initializer_list<texture_handle>);
 uniform_handle create_uniform(const char* c_str);
-shader_handle create_shader(const char* source);
+shader_handle create_shader(const char* vertex_src, const char* fragment_src, attribute::binding_pack bindings);
 texture_handle create_texture(uint32_t width, uint32_t height, texture_format::type, buffer_ptr ref = {});
 texture_handle create_texture(uint32_t width, uint32_t height, texture_format::type, texture_wrap wrap, texture_filter filter, texture_flags::mask, buffer_ptr ptr);
 

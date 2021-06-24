@@ -1,4 +1,5 @@
 #include "mesh_component.h"
+#include "base/guid.h"
 
 float *GetVertices() {
   static float vertices[] = {
@@ -101,10 +102,16 @@ gfx::uniform_handle GetColorUniform() {
   return uniform_handle;
 }
 
-void serialization<mesh_component>::from_asset(const asset& asset, mesh_component& comp) {
+void serializer<mesh_component>::from_asset(const asset& asset, mesh_component& comp) {
   assets::get(asset, "color", comp.color_);
+
+//  std::string id;
+//  assets::get(asset, "main_texture", id);
+//  comp.main_texture_ = assets::load<texture>(guid::from_string(id.c_str()));
 }
 
-void serialization<mesh_component>::to_asset(asset& asset, const mesh_component& comp) {
+void serializer<mesh_component>::to_asset(asset& asset, const mesh_component& comp) {
   assets::set(asset, "color", comp.color_);
+//  assets::set(asset, "main_texture", comp.main_texture_.id());
+
 }

@@ -21,14 +21,14 @@ const color& color::blue() {
   return col;
 }
 
-void serialization<color>::from_asset(const asset& asset, color& color) {
+void serializer<color>::from_asset(const asset& asset, color& color) {
   assets::get(asset, "r", color.r);
   assets::get(asset, "g", color.g);
   assets::get(asset, "b", color.b);
   assets::get(asset, "a", color.a);
 }
 
-void serialization<color>::to_asset(asset& asset, const color& color) {
+void serializer<color>::to_asset(asset& asset, const color& color) {
   assets::set(asset, "r", color.r);
   assets::set(asset, "g", color.g);
   assets::set(asset, "b", color.b);

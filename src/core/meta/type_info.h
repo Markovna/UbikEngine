@@ -3,7 +3,7 @@
 #include <string>
 
 #include "base/guid.h"
-#include "core/serialization.h"
+#include "core/assets/asset.h"
 
 struct world;
 struct entity;

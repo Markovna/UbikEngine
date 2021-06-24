@@ -23,7 +23,7 @@ class renderer_api {
                                   vertex_layout layout) = 0;
   virtual void CreateIndexBuffer(indexbuf_handle, const void *data, uint32_t data_size, uint32_t size) = 0;
   virtual void CreateFrameBuffer(framebuf_handle, texture_handle *, uint32_t num, bool destroy_tex) = 0;
-  virtual void CreateShader(shader_handle, const std::string &source) = 0;
+  virtual void CreateShader(shader_handle, const std::string& vertex_src, const std::string& fragment_src, const attribute::binding_pack& bindings) = 0;
   virtual void CreateUniform(uniform_handle, char *name) = 0;
   virtual void CreateTexture(texture_handle,
                              const void *data,

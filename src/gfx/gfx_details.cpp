@@ -44,9 +44,10 @@ void create_texture_execute(frame_command *frame_command, renderer_api *api) {
                      cmd.filter,
                      cmd.flags);
 }
+
 void create_shader_execute(frame_command *frame_command, renderer_api *api) {
   create_shader_command &cmd = std::get<create_shader_command>(*frame_command);
-  api->CreateShader(cmd.handle, cmd.source);
+  api->CreateShader(cmd.handle, cmd.vertex_src, cmd.fragment_src, cmd.bindings);
 }
 void destroy_index_buffer_execute(frame_command *cmd, renderer_api *api) {
   api->Destroy(std::get<destroy_index_buffer_command>(*cmd).handle);
@@ -167,62 +168,6 @@ bool gfx::details::shader_type::try_parse(std::string_view str, gfx::details::sh
     return true;
   }
   return false;
-}
-void gfx::details::pre_process_shader(const std::string &source,
-                                      std::string &vertex_shader,
-                                      std::string &fragment_shader,
-                                      gfx::attribute::binding_pack &bindings) {
-  {
-    static const std::string typeToken = "#type";
-    size_t pos = source.find(typeToken, 0);
-    shader_type::type type;
-
-    while (pos != std::string::npos) {
-      size_t eol = source.find_first_of('\n', pos);
-      size_t begin = pos + typeToken.size() + 1;
-      std::string typeStr = source.substr(begin, eol - begin);
-      uint64_t nextLinePos = eol + 1;
-      pos = source.find(typeToken, nextLinePos);
-
-      if (shader_type::try_parse(typeStr, type)) {
-        std::string str = (pos == std::string::npos) ?
-                          source.substr(nextLinePos) :
-                          source.substr(nextLinePos, pos - nextLinePos);
-        if (type == shader_type::Vertex) {
-          vertex_shader = std::move(str);
-        } else if (type == shader_type::Fragment) {
-          fragment_shader = std::move(str);
-        }
-      }
-    }
-  }
-
-  {
-    static const std::string token = "#binding";
-    size_t pos = vertex_shader.find(token, 0);
-    int loc = 0;
-    const char* location_template_str = "layout (location = #)";
-    const size_t location_str_pos = 19;
-    while (pos != std::string::npos) {
-      size_t eol = vertex_shader.find_first_of('\n', pos);
-      size_t begin = pos + token.size() + 1;
-      std::string binding_type = vertex_shader.substr(begin, eol - begin);
-
-      std::string location_str(location_template_str);
-      location_str.replace(location_str_pos, 1, std::to_string(loc));
-      vertex_shader.replace(pos, eol - pos, location_str);
-
-      attribute::binding::type binding;
-      if (attribute::binding::try_parse(binding_type, binding)) {
-        attribute::set_pack(bindings, binding, loc);
-      } else {
-        logger::core::Error("Can't parse {}", binding_type);
-      }
-
-      pos = vertex_shader.find(token, pos);
-      loc++;
-    }
-  }
 }
 
 const gfx::details::texture_format_info *gfx::details::get_texture_formats() {

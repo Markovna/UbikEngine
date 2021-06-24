@@ -24,6 +24,7 @@ public:
     void swap(guid &);
 
     static guid from_string(const char*);
+    static guid from_string(const std::string&);
     static guid generate();
     static guid invalid() noexcept;
 

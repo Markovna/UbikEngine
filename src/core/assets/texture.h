@@ -1,7 +1,7 @@
 #pragma once
 
 #include "gfx/gfx.h"
-#include "assets.h"
+#include "core/assets/asset_loader.h"
 
 class texture {
  public:
@@ -45,10 +45,10 @@ class texture {
   uint32_t width_, height_;
 };
 
-namespace assets {
+namespace assets::loader {
 
 template<>
-std::unique_ptr<texture> load_asset(const std::istream&);
+std::unique_ptr<texture> load(std::istream&);
 
 }
 

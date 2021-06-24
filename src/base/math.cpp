@@ -451,53 +451,53 @@ float math::length(const vec3 &vec) {
 }
 
 
-void serialization<vec4>::from_asset(const asset& asset, vec4& value) {
+void serializer<vec4>::from_asset(const asset& asset, vec4& value) {
   assets::get(asset, "x", value.x);
   assets::get(asset, "y", value.y);
   assets::get(asset, "z", value.z);
   assets::get(asset, "w", value.w);
 }
 
-void serialization<vec4>::to_asset(asset& asset, const vec4& value) {
+void serializer<vec4>::to_asset(asset& asset, const vec4& value) {
   assets::set(asset, "x", value.x);
   assets::set(asset, "y", value.y);
   assets::set(asset, "z", value.z);
   assets::set(asset, "w", value.w);
 }
 
-void serialization<vec3>::from_asset(const asset& asset, vec3& value) {
+void serializer<vec3>::from_asset(const asset& asset, vec3& value) {
   assets::get(asset, "x", value.x);
   assets::get(asset, "y", value.y);
   assets::get(asset, "z", value.z);
 }
 
-void serialization<vec3>::to_asset(asset& asset, const vec3& value) {
+void serializer<vec3>::to_asset(asset& asset, const vec3& value) {
   assets::set(asset, "x", value.x);
   assets::set(asset, "y", value.y);
   assets::set(asset, "z", value.z);
 }
 
-void serialization<quat>::from_asset(const asset& asset, quat& value) {
+void serializer<quat>::from_asset(const asset& asset, quat& value) {
   assets::get(asset, "x", value.x);
   assets::get(asset, "y", value.y);
   assets::get(asset, "z", value.z);
   assets::get(asset, "w", value.w);
 }
 
-void serialization<quat>::to_asset(asset& asset, const quat& value) {
+void serializer<quat>::to_asset(asset& asset, const quat& value) {
   assets::set(asset, "x", value.x);
   assets::set(asset, "y", value.y);
   assets::set(asset, "z", value.z);
   assets::set(asset, "w", value.w);
 }
 
-void serialization<transform>::from_asset(const asset& asset, transform& value) {
+void serializer<transform>::from_asset(const asset& asset, transform& value) {
   assets::get(asset, "position", value.position);
   assets::get(asset, "rotation", value.rotation);
   assets::get(asset, "scale", value.scale);
 }
 
-void serialization<transform>::to_asset(asset& asset, const transform& value) {
+void serializer<transform>::to_asset(asset& asset, const transform& value) {
   assets::set(asset, "position", value.position);
   assets::set(asset, "rotation", value.rotation);
   assets::set(asset, "scale", value.scale);

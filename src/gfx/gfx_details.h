@@ -178,7 +178,9 @@ struct create_texture_command {
 
 struct create_shader_command {
   shader_handle handle;
-  std::string source;
+  std::string vertex_src;
+  std::string fragment_src;
+  attribute::binding_pack bindings;
 };
 
 struct destroy_index_buffer_command {
@@ -223,12 +225,6 @@ struct frame_command : public std::variant<
     destroy_shader_command
     > {
 };
-
-void pre_process_shader(
-    const std::string &source,
-    std::string& vertex_shader,
-    std::string& fragment_shader,
-    attribute::binding_pack& bindings);
 
 class frame {
  public:

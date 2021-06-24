@@ -1,20 +1,27 @@
 #include "shader.h"
 
-
-namespace assets {
+#include <sstream>
 
 template<>
-std::unique_ptr<shader> load_asset(const std::istream& stream) {
-  std::stringstream ss;
-  ss << stream.rdbuf();
-  return std::make_unique<shader>(ss.str().c_str());
-}
+std::unique_ptr<shader> assets::loader::load(std::istream& stream) {
+  gfx::attribute::binding_pack bindings;
 
-}
+  stream.read((char*) &bindings, sizeof(bindings));
 
-shader::shader(const char* source)
-  : handle_(gfx::create_shader(source))
-{}
+  size_t vertex_size;
+  stream.read((char*) &vertex_size, sizeof(vertex_size));
+
+  char vertex_src[vertex_size];
+  stream.read(vertex_src, vertex_size);
+
+  size_t fragment_size;
+  stream.read((char*) &fragment_size, sizeof(fragment_size));
+
+  char fragment_src[fragment_size];
+  stream.read(fragment_src, fragment_size);
+
+  return std::unique_ptr<shader>(new shader(vertex_src, fragment_src, bindings));
+}
 
 shader::shader(shader&& other) noexcept
   : handle_()
@@ -35,5 +42,9 @@ shader::~shader() {
 void shader::swap(shader &other) {
   std::swap(handle_, other.handle_);
 }
+
+shader::shader(const char *vertex_src, const char *fragment_scr, gfx::attribute::binding_pack &binding_pack)
+  : handle_(gfx::create_shader(vertex_src, fragment_scr, binding_pack))
+{}
 
 

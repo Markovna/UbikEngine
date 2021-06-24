@@ -1,44 +1,12 @@
 #include "gfx/gfx_details.h"
 #include "texture.h"
 
+#include <memory>
+#include "base/log.h"
+
 #include "stb_image.h"
 
 namespace assets {
-
-class texture_loader {
- public:
-  texture_loader(const texture_loader& loader) = delete;
-  texture_loader& operator=(const texture_loader& loader) = delete;
-
-  texture_loader(texture_loader&& loader) noexcept = delete;
-  texture_loader& operator=(texture_loader&& loader) noexcept = delete;
-
-  explicit texture_loader(const std::istream &in) {
-    stbi_set_flip_vertically_on_load(true);
-    std::stringstream ss;
-    ss << in.rdbuf();
-    std::string str = ss.str();
-    data_ = stbi_load_from_memory(reinterpret_cast<const stbi_uc *>(str.c_str()), str.length(), &width_, &height_, &channels_, 0);
-  }
-
-  ~texture_loader() {
-    if (data_) {
-      stbi_image_free(data_);
-      data_ = nullptr;
-    }
-  }
-
-  explicit operator bool() const { return data_; }
-
-  [[nodiscard]] int height() const noexcept { return height_; }
-  [[nodiscard]] int width() const noexcept { return width_; }
-  [[nodiscard]] int channels() const noexcept { return channels_; }
-  [[nodiscard]] const uint8_t* data() const noexcept { return data_; }
-
- private:
-  uint8_t* data_;
-  int width_, height_, channels_;
-};
 
 static gfx::texture_format::type to_format(uint32_t channels) {
   if (channels == 1) return gfx::texture_format::R8;
@@ -47,24 +15,25 @@ static gfx::texture_format::type to_format(uint32_t channels) {
 }
 
 template<>
-std::unique_ptr<texture> load_asset(const std::istream& stream) {
-  texture_loader loader(stream);
-  if (loader) {
-    const uint8_t* data = loader.data();
-    uint32_t width = loader.width();
-    uint32_t height = loader.height();
-    auto format = to_format(loader.channels());
-    return std::unique_ptr<texture>(new texture(
-        gfx::copy(data, sizeof(uint8_t) * width * height * gfx::details::get_texture_formats()[format].channels),
-        width, height,
-        format,
-        gfx::texture_wrap{}, gfx::texture_filter{},
-        gfx::texture_flags::None
-    ));
-  }
+std::unique_ptr<texture> assets::loader::load(std::istream& stream) {
 
-  logger::core::Error("Failed to load texture");
-  return nullptr;
+  uint32_t width, height, channels;
+
+  stream.read((char*) &width, sizeof(width));
+  stream.read((char*) &height, sizeof(height));
+  stream.read((char*) &channels, sizeof(channels));
+
+  uint32_t size = width * height * channels;
+  uint8_t buffer[size];
+  stream.read((char*) buffer, size);
+
+  return std::make_unique<texture>(
+      gfx::copy(buffer, size),
+      width, height,
+      to_format(channels),
+      gfx::texture_wrap{}, gfx::texture_filter{},
+      gfx::texture_flags::None
+  );
 }
 
 }

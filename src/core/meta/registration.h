@@ -19,7 +19,7 @@ template<class Component>
 static void to_asset_impl(::asset& asset, const void *ptr) {
   if constexpr (has_to_asset<Component>::value) {
     ::asset& comp_asset = asset.emplace_back();
-    serialization<Component>::to_asset(comp_asset, *static_cast<const Component*>(ptr));
+    serializer<Component>::to_asset(comp_asset, *static_cast<const Component*>(ptr));
     comp_asset["__type"] = ::meta::details::get_type<Component>().name;
     comp_asset["__guid"] = guid::generate();
   }
@@ -28,7 +28,7 @@ static void to_asset_impl(::asset& asset, const void *ptr) {
 template<class Component>
 static void from_asset_impl(const asset &asset, void *ptr) {
   if constexpr (has_from_asset<Component>::value) {
-    serialization<Component>::from_asset(asset, *static_cast<Component*>(ptr));
+    serializer<Component>::from_asset(asset, *static_cast<Component*>(ptr));
   }
 }
 

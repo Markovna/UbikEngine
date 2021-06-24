@@ -3,6 +3,7 @@
 #include "gfx/gfx.h"
 #include "core/assets/texture.h"
 #include "core/assets/shader.h"
+#include "core/assets/asset_handle.h"
 #include "core/components/component.h"
 #include "core/serialization.h"
 
@@ -67,7 +68,7 @@ class mesh_component : public component<mesh_component> {
   mesh_component& operator=(mesh_component&&) noexcept = default;
 
  private:
-  friend serialization<mesh_component>;
+  friend serializer<mesh_component>;
 
  private:
   struct color color_ = color::white();
@@ -77,7 +78,7 @@ class mesh_component : public component<mesh_component> {
 };
 
 template<>
-struct serialization<mesh_component> {
+struct serializer<mesh_component> {
   static void from_asset(const asset&, mesh_component&);
   static void to_asset(asset&, const mesh_component&);
 };

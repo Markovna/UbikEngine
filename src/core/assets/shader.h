@@ -1,13 +1,13 @@
 #pragma once
 
 #include "gfx/gfx.h"
-#include "assets.h"
+#include "core/assets/asset_loader.h"
 
 #include <string>
 
 class shader {
  public:
-  explicit shader(const char* source);
+  shader(const char* vertex_src, const char* fragment_scr, gfx::attribute::binding_pack&);
 
   shader(const shader&) = delete;
   shader& operator=(const shader&) = delete;
@@ -26,10 +26,10 @@ class shader {
   gfx::shader_handle handle_;
 };
 
-namespace assets {
+namespace assets::loader {
 
 template<>
-std::unique_ptr<shader> load_asset(const std::istream&);
+std::unique_ptr<shader> load(std::istream&);
 
 }
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "platform/file_watcher.h"
+#include "platform/file_system.h"
 
 #include <filesystem>
 #include <unordered_map>
@@ -25,7 +26,7 @@ class library_registry {
   void load_plugin(void*, const char*, engine*);
   void unload_plugin(void*, const char*, engine*);
 
-  static std::filesystem::path copy_to_temp(const std::filesystem::path& src, const std::filesystem::path& temp_folder);
+  static fs::path copy_to_temp(const fs::path& src, const fs::path& temp_folder);
   void on_file_changed(const std::string& dir, const std::string& filename, file_action action, const std::string& old_name);
 
  private:
@@ -39,8 +40,8 @@ class library_registry {
   std::unordered_map<std::string, lib_info> name_to_lib_info_;
   std::unordered_map<std::string, std::string> filename_to_name_;
 
-  std::filesystem::path libs_folder_;
-  std::filesystem::path temp_folder_;
+  fs::path libs_folder_;
+  fs::path temp_folder_;
   file_watcher file_watcher_;
 
   // TODO: mutex

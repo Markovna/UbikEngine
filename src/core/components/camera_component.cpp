@@ -5,7 +5,7 @@ int_set<uint32_t, gfx::static_config::kCamerasCapacity> &camera_component::regis
   return idx_registry;
 }
 
-void serialization<camera_component>::to_asset(asset& asset, const camera_component& comp) {
+void serializer<camera_component>::to_asset(asset& asset, const camera_component& comp) {
   assets::set(asset, "fov", comp.fov);
   assets::set(asset, "near", comp.near);
   assets::set(asset, "far", comp.far);
@@ -14,7 +14,7 @@ void serialization<camera_component>::to_asset(asset& asset, const camera_compon
   assets::set(asset, "clear_flags", comp.clear_flags);
 }
 
-void serialization<camera_component>::from_asset(const asset& asset, camera_component& comp) {
+void serializer<camera_component>::from_asset(const asset& asset, camera_component& comp) {
   assets::get(asset, "fov", comp.fov);
   assets::get(asset, "near", comp.near);
   assets::get(asset, "far", comp.far);

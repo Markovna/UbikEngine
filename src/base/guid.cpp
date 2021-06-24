@@ -109,6 +109,9 @@ std::istream &operator>>(std::istream &in, guid &guid) {
     return in;
 }
 
+guid guid::from_string(const std::string& str) {
+  return from_string(str.c_str());
+}
 
 guid guid::from_string(const char* str) {
   guid result;
@@ -127,7 +130,7 @@ guid guid::from_string(const char* str) {
       valid &= char2hex(str[i], b0);
     } else {
       valid &= char2hex(str[i], b1);
-      result.bytes_[index++] = (b1 << 4u) + b0;
+      result.bytes_[index++] = (b0 << 4u) + b1;
     }
 
     if (!valid)

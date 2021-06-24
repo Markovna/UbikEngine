@@ -3,18 +3,19 @@
 #include "core/input_system.h"
 #include "core/world.h"
 #include "core/plugins_registry.h"
-#include "core/assets/assets.h"
+#include "core/assets/asset_handle.h"
 #include "core/meta/registration.h"
 #include "core/meta/schema.h"
 #include "core/serialization.h"
 #include "gfx/gfx.h"
 #include "platform/window.h"
+#include "platform/file_system.h"
 #include "library_registry.h"
 
 #include "core/components/mesh_component.h"
 #include "core/components/camera_component.h"
+#include "tools/asset_compiler.h"
 
-#include <filesystem>
 #include <vector>
 
 int main(int argc, char* argv[]) {
@@ -22,20 +23,17 @@ int main(int argc, char* argv[]) {
       "spin_plugin", "sandbox_plugin"
   };
 
-  std::filesystem::path project_path(argv[1]);
-  std::filesystem::path libs_folder(project_path);
-  libs_folder.append("libs");
+  fs::paths::project(argv[1]);
+  logger::init(fs::append(fs::paths::cache(), "log").c_str());
 
-  std::filesystem::path temp_folder(project_path);
-  temp_folder.append("temp");
+  assets::compile_asset("assets/textures/container.jpg");
+  assets::compile_asset("assets/textures/seal.png");
+  assets::compile_asset("assets/shaders/TestShader.shader");
+  assets::compile_asset("assets/shaders/GUIShader.shader");
 
-  library_registry libs(libs_folder.c_str(), temp_folder.c_str());
+  library_registry libs(fs::append(fs::paths::cache(), "libs").c_str(), fs::append(fs::paths::cache(), "libs_tmp").c_str());
 
-  char schema_dir[256];
-  std::strcpy(schema_dir, argv[1]);
-  std::strcat(schema_dir, "/schema");
-
-  meta::load_schemas(schema_dir);
+  meta::load_schemas(fs::absolute("schema").c_str());
 
   register_type(color);
   register_type(transform);
@@ -52,12 +50,10 @@ int main(int argc, char* argv[]) {
   register_type(camera_component);
   register_type(mesh_component);
 
-  assets::init(argv[1]);
+  assets::init();
 
   window window({512, 512});
   gfx::init({.window_handle = window.get_handle(), .resolution = window.get_resolution()});
-
-  vec4 viewport {};
 
   engine engine {};
   engine.world = new world;
@@ -69,10 +65,7 @@ int main(int argc, char* argv[]) {
   }
 
   engine.start();
-
-  asset data;
-  engine.world->save_to_asset(data);
-  std::cout << data.dump(2) << "\n";
+  vec4 viewport {};
 
   bool running = true;
   while (running) {
@@ -107,9 +100,6 @@ int main(int argc, char* argv[]) {
   delete engine.world;
 
   gfx::shutdown();
-
-  assets::shutdown();
-
   return 0;
 }
 

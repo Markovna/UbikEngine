@@ -16,7 +16,7 @@ struct camera_component : public component<camera_component> {
   static int_set<uint32_t, gfx::static_config::kCamerasCapacity>& registry();
 
   static uint32_t next_id() {
-    return registry().next();
+    return registry().alloc();
   }
 
   static void free_id(uint32_t id) {
@@ -42,7 +42,7 @@ struct camera_component : public component<camera_component> {
 };
 
 template<>
-struct serialization<camera_component> {
+struct serializer<camera_component> {
   static void from_asset(const asset&, camera_component&);
   static void to_asset(asset&, const camera_component&);
 };

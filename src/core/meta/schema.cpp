@@ -1,9 +1,9 @@
 #include "schema.h"
 #include "base/log.h"
 #include "core/serialization.h"
+#include "platform/file_system.h"
 
 #include <unordered_map>
-#include <filesystem>
 #include <fstream>
 
 namespace meta {
@@ -20,10 +20,10 @@ context& get_context() {
 void load_schemas(const char *path) {
   logger::core::Info("Load schemas from {}", path);
 
-  std::filesystem::path schema_folder(path);
+  fs::path schema_folder(path);
 
-  for (const auto &entry : std::filesystem::directory_iterator(schema_folder)) {
-    const std::filesystem::path &schema_path = entry.path();
+  for (const auto &entry : fs::directory_iterator(schema_folder)) {
+    const fs::path &schema_path = entry.path();
     if (schema_path.extension().string() != ".schema")
       continue;
 

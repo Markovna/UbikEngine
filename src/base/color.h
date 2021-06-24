@@ -13,7 +13,7 @@ struct color {
 };
 
 template<>
-struct serialization<color> {
+struct serializer<color> {
   static void from_asset(const asset&, color&);
   static void to_asset(asset&, const color&);
 };

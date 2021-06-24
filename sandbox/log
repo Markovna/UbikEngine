@@ -1,0 +1,20 @@
+[2021-06-24 19:17:44.457] [CORE] [info] Load schemas from /Users/kamila/CLionProjects/UbikEngine/sandbox/schema
+[2021-06-24 19:17:44.458] [CORE] [info] Start parsing schema /Users/kamila/CLionProjects/UbikEngine/sandbox/schema/custom_component.schema...
+[2021-06-24 19:17:44.459] [CORE] [info] Schema custom_component added (035759474e524c0da47323b84ff95f79)
+[2021-06-24 19:17:44.459] [CORE] [info] Start parsing schema /Users/kamila/CLionProjects/UbikEngine/sandbox/schema/transform_component.schema...
+[2021-06-24 19:17:44.459] [CORE] [info] Schema transform_component added (87ae40b0a68149ca90b2e24a7a31b28a)
+[2021-06-24 19:17:44.459] [CORE] [info] Start parsing schema /Users/kamila/CLionProjects/UbikEngine/sandbox/schema/mesh_component.schema...
+[2021-06-24 19:17:44.460] [CORE] [info] Schema mesh_component added (65be77a1419d47f8ac87caf4dceedcea)
+[2021-06-24 19:17:44.460] [CORE] [info] Start parsing schema /Users/kamila/CLionProjects/UbikEngine/sandbox/schema/camera_component.schema...
+[2021-06-24 19:17:44.460] [CORE] [info] Schema camera_component added (03de6c3c0ef841aca3426b984a8a9344)
+[2021-06-24 19:17:44.479] [CORE] [info] Start parsing schema /Users/kamila/CLionProjects/UbikEngine/sandbox/schema/link_component.schema...
+[2021-06-24 19:17:44.480] [CORE] [info] Schema link_component added (db26518534164e769d2d0ddf1a050f59)
+[2021-06-24 19:17:44.955] [CORE] [info] load_spin_plugin 13
+[2021-06-24 19:17:44.955] [CORE] [info] plugins_registry::add_plugin spin_plugin
+[2021-06-24 19:17:44.955] [CORE] [info] plugins_registry::add_plugin some_plugin
+[2021-06-24 19:17:44.955] [CORE] [info] load_sandbox_plugin
+[2021-06-24 19:17:44.955] [CORE] [info] plugins_registry::add_plugin test
+[2021-06-24 19:17:44.955] [CORE] [info] some_plugin::start 100
+[2021-06-24 19:17:44.955] [CORE] [info] test::start  
+[2021-06-24 19:17:46.433] [CORE] [info] some_plugin::update
+[2021-06-24 19:17:46.986] [CORE] [info] ~spin_plugin (ver.13)

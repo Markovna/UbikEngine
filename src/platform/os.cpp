@@ -2,7 +2,6 @@
 #include <dlfcn.h>
 #include <cstring>
 #include <iostream>
-#include <filesystem>
 
 namespace os {
 
@@ -27,15 +26,15 @@ std::string to_lib_name(const char* name) {
   return "lib" + std::string(name) + ".dylib";
 }
 
-std::filesystem::path find_lib(const char *path, const char *name) {
+fs::path find_lib(const char *path, const char *name) {
   std::string filename(to_lib_name(name));
 
-  std::filesystem::path filepath(path);
+  fs::path filepath(path);
   filepath.append(filename);
-  if (std::filesystem::exists(filepath))
+  if (fs::exists(filepath))
     return filepath;
 
-  return std::filesystem::path();
+  return fs::path();
 }
 
 }

@@ -24,7 +24,7 @@ namespace gfx::details {
 
 #define _CHECK_GL_ERRORS(__func) \
     __func;                            \
-    CheckErrors(logger::Format("\n{0}:{1}", __FILE__, __LINE__))
+    CheckErrors(logger::format("\n{0}:{1}", __FILE__, __LINE__))
 
 static void CheckErrors(const std::string_view msg) {
     GLenum err = glGetError();
@@ -186,34 +186,6 @@ void GLRendererAPI::UpdateIndexBuffer(indexbuf_handle handle, uint32_t offset, c
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffers_[handle.index()].id);
     CHECK_ERRORS(glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, offset, data_size, data));
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-}
-
-void GLRendererAPI::CreateShader(shader_handle handle, const std::string &source) {
-    std::string vertex_shader, fragment_shader;
-    attribute::binding_pack binding;
-    pre_process_shader(source, vertex_shader, fragment_shader, binding);
-
-    uint32_t id = glCreateProgram();
-
-    auto vertex_shader_id = CompileShader(shader_type::Vertex, vertex_shader);
-    glAttachShader(id, vertex_shader_id);
-    glDeleteShader(vertex_shader_id);
-
-
-    auto fragment_shader_id = CompileShader(shader_type::Fragment, fragment_shader);
-    glAttachShader(id, fragment_shader_id);
-    glDeleteShader(fragment_shader_id);
-
-    CHECK_ERRORS(glLinkProgram(id));
-    CheckLinkStatus(id);
-
-    Shader& shader = shaders_[handle.index()];
-    shader.id = id;
-    shader.attributes_mask = binding.mask;
-    std::memcpy(shader.attribute_locations, binding.locations, attribute::binding::Count);
-    shader.model_location = glGetUniformLocation(id, "model");
-    shader.view_location = glGetUniformLocation(id, "view");
-    shader.proj_location = glGetUniformLocation(id, "projection");
 }
 
 static const TextureFormatInfo& GetTextureFormat(texture_format::type format) {
@@ -598,6 +570,33 @@ void GLRendererAPI::RenderFrame(const frame& frame) {
 }
 
 void GLRendererAPI::Destroy(uniform_handle) {
+}
+
+void GLRendererAPI::CreateShader(shader_handle handle,
+                                 const std::string &vertex_src,
+                                 const std::string &fragment_src,
+                                 const attribute::binding_pack &bindings) {
+  uint32_t id = glCreateProgram();
+
+  auto vertex_shader_id = CompileShader(shader_type::Vertex, vertex_src);
+  glAttachShader(id, vertex_shader_id);
+  glDeleteShader(vertex_shader_id);
+
+
+  auto fragment_shader_id = CompileShader(shader_type::Fragment, fragment_src);
+  glAttachShader(id, fragment_shader_id);
+  glDeleteShader(fragment_shader_id);
+
+  CHECK_ERRORS(glLinkProgram(id));
+  CheckLinkStatus(id);
+
+  Shader& shader = shaders_[handle.index()];
+  shader.id = id;
+  shader.attributes_mask = bindings.mask;
+  std::memcpy(shader.attribute_locations, bindings.locations, attribute::binding::Count);
+  shader.model_location = glGetUniformLocation(id, "model");
+  shader.view_location = glGetUniformLocation(id, "view");
+  shader.proj_location = glGetUniformLocation(id, "projection");
 }
 
 void GLContext::MakeCurrent() {
