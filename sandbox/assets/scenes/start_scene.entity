@@ -1,21 +1,140 @@
 {
-  "__guid": "ec31cf12ee4d4052bbc2b70a5c4eaf43",
+  "__guid": "ee967de2d7c74899a8b1eac10c59e8b4",
   "__type": "entity",
   "children": [
     {
-      "__guid": "7c169e9685af480e8f86149736b596bb",
+      "__guid": "09732268f1374f3f8f58f1310f3fb8ce",
       "__type": "entity",
       "children": [
         {
-          "__guid": "f45419410d264f8facc483424f25de81",
+          "__guid": "2acb649e7f344314a5f4e7891175f329",
           "__type": "entity",
           "children": [
             {
-              "__guid": "845fd8f45fab41358e6780c043dff98e",
+              "__guid": "59f157e222464a59a91f7dce9e11450f",
               "__type": "entity",
+              "children": [
+                {
+                  "__guid": "e523838cda994a4fa75224a0dfa581fc",
+                  "__type": "entity",
+                  "children": [
+                    {
+                      "__guid": "c71e5e17bdb84a9cbc72653a2b8a524c",
+                      "__type": "entity",
+                      "components": [
+                        {
+                          "__guid": "b51d909e3bd8499d880132a47a73562e",
+                          "__type": "transform_component",
+                          "position": {
+                            "x": 0.0,
+                            "y": 0.0,
+                            "z": 0.0
+                          },
+                          "rotation": {
+                            "w": 1.0,
+                            "x": 0.0,
+                            "y": 0.0,
+                            "z": 0.0
+                          },
+                          "scale": {
+                            "x": 1.0,
+                            "y": 1.0,
+                            "z": 1.0
+                          }
+                        },
+                        {
+                          "__guid": "cdd603881c0f455fb82f0cef4b4a7265",
+                          "__type": "mesh_component",
+                          "color": {
+                            "a": 1.0,
+                            "b": 1.0,
+                            "g": 1.0,
+                            "r": 1.0
+                          },
+                          "main_texture": "2531a21125da4b1386512e1269b1b252",
+                          "second_texture": "2531a25525da4b1218519e2269b1b111",
+                          "shader": "4054252338da4b1386512e1269a3a115"
+                        },
+                        {
+                          "__guid": "2a0a438af9a647bbb932b0a9d94e6334",
+                          "__type": "custom_component",
+                          "a": 42,
+                          "b": 0.0,
+                          "c": {
+                            "a": 0.0
+                          }
+                        }
+                      ]
+                    }
+                  ],
+                  "components": [
+                    {
+                      "__guid": "06c1a52524aa402ea6d7b7e5851e5dda",
+                      "__type": "transform_component",
+                      "position": {
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "rotation": {
+                        "w": 1.0,
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "scale": {
+                        "x": 1.0,
+                        "y": 1.0,
+                        "z": 1.0
+                      }
+                    }
+                  ]
+                },
+                {
+                  "__guid": "bf03416892c641b9999d98ef9f47e899",
+                  "__type": "entity",
+                  "components": [
+                    {
+                      "__guid": "5133a24db3d54c6aa886dd3819570734",
+                      "__type": "transform_component",
+                      "position": {
+                        "x": 0.0,
+                        "y": -2.0,
+                        "z": -3.0
+                      },
+                      "rotation": {
+                        "w": 1.0,
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 0.0
+                      },
+                      "scale": {
+                        "x": 1.0,
+                        "y": 1.0,
+                        "z": 1.0
+                      }
+                    },
+                    {
+                      "__guid": "89e577db2fee4e2dbb86d6538c033305",
+                      "__type": "camera_component",
+                      "clear_flags": 6,
+                      "far": 100.0,
+                      "fov": 60.0,
+                      "near": 0.10000000149011612,
+                      "normalized_rect": {
+                        "w": 1.0,
+                        "x": 0.0,
+                        "y": 0.0,
+                        "z": 1.0
+                      },
+                      "orthogonal_size": 1.0
+                    }
+                  ]
+                }
+              ],
               "components": [
                 {
-                  "__guid": "3aa18714958646dc96a5eae335952fa7",
+                  "__guid": "ac4bef13228c408ab2b86a8b526e04ba",
                   "__type": "transform_component",
                   "position": {
                     "x": 0.0,
@@ -33,32 +152,13 @@
                     "y": 1.0,
                     "z": 1.0
                   }
-                },
-                {
-                  "__guid": "45c6f2a08f9d48c8bc83331d83b28f45",
-                  "__type": "mesh_component",
-                  "color": {
-                    "a": 1.0,
-                    "b": 1.0,
-                    "g": 1.0,
-                    "r": 1.0
-                  }
-                },
-                {
-                  "__guid": "0645b4043b0c459cb8322846e2194ea5",
-                  "__type": "custom_component",
-                  "a": 42,
-                  "b": 0.0,
-                  "c": {
-                    "a": 0.0
-                  }
                 }
               ]
             }
           ],
           "components": [
             {
-              "__guid": "93840018cba74a0fae1ceb60dccd2232",
+              "__guid": "feab490dccc841dd894d91b509fac947",
               "__type": "transform_component",
               "position": {
                 "x": 0.0,
@@ -76,54 +176,13 @@
                 "y": 1.0,
                 "z": 1.0
               }
-            }
-          ]
-        },
-        {
-          "__guid": "27ecd72065344e0a950b72237e80e4bf",
-          "__type": "entity",
-          "components": [
-            {
-              "__guid": "7d27c56f4b88423ba3d05d5a614b5a4d",
-              "__type": "transform_component",
-              "position": {
-                "x": 0.0,
-                "y": -2.0,
-                "z": -3.0
-              },
-              "rotation": {
-                "w": 1.0,
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "scale": {
-                "x": 1.0,
-                "y": 1.0,
-                "z": 1.0
-              }
-            },
-            {
-              "__guid": "762c2cfbf5af4fd7bf991095d3c6a209",
-              "__type": "camera_component",
-              "clear_flags": 6,
-              "far": 100.0,
-              "fov": 60.0,
-              "near": 0.10000000149011612,
-              "normalized_rect": {
-                "w": 1.0,
-                "x": 0.0,
-                "y": 0.0,
-                "z": 1.0
-              },
-              "orthogonal_size": 1.0
             }
           ]
         }
       ],
       "components": [
         {
-          "__guid": "449e345e256341e890b377a380b0dcd4",
+          "__guid": "8d1d958f57c64d808954732dc0180a0c",
           "__type": "transform_component",
           "position": {
             "x": 0.0,
@@ -147,7 +206,7 @@
   ],
   "components": [
     {
-      "__guid": "cb010da1b14942328d6daaac945d5682",
+      "__guid": "435beca01cae48c9aeae46300e6aa016",
       "__type": "transform_component",
       "position": {
         "x": 0.0,

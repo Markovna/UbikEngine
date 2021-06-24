@@ -72,9 +72,9 @@ class mesh_component : public component<mesh_component> {
 
  private:
   struct color color_ = color::white();
-  texture_handle main_texture_ = assets::load<texture>("assets/textures/container.jpg");
-  texture_handle second_texture_ = assets::load<texture>("assets/textures/seal.png");
-  shader_handle shader_ = assets::load<shader>("assets/shaders/TestShader.shader");
+  texture_handle main_texture_;
+  texture_handle second_texture_;
+  shader_handle shader_;
 };
 
 template<>

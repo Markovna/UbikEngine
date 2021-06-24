@@ -67,6 +67,10 @@ int main(int argc, char* argv[]) {
   engine.start();
   vec4 viewport {};
 
+  asset data;
+  engine.world->save_to_asset(data);
+  assets::write(data, fs::absolute("test.entity"));
+
   bool running = true;
   while (running) {
 

@@ -33,17 +33,30 @@ class registry {
  public:
   using key = typename container::key_type;
 
-//  key load(guid id) {
-//    if (auto it = id_to_keys_.find(id); it != id_to_keys_.end()) {
-//      return it->second;
-//    }
-//
-//    fs::path path { id.str() };
-//    path.replace_extension(".import");
-//
-//    fs::paths::import()
-//
-//  }
+  key load(guid guid) {
+    if (auto it = id_to_keys_.find(guid); it != id_to_keys_.end()) {
+      return it->second;
+    }
+
+    fs::path asset_path { fs::append(fs::paths::import(), guid.str()) };
+    asset meta = assets::read(fs::concat(asset_path, ".asset"));
+
+    std::string path;
+    assets::get(meta, "path", path);
+
+    std::ifstream stream = fs::read_file(asset_path);
+    key key {
+        table_.insert({
+                          .ptr = ::assets::loader::load<T>(stream),
+                          .id = guid,
+                          .use_count = 0
+                      })
+    };
+
+    id_to_keys_.insert({guid, key});
+    path_to_keys_.insert({path.c_str(), key});
+    return key;
+  }
 
   guid get_guid(const fs::path &path) {
     asset meta = assets::read(fs::concat(path, ".meta"));
@@ -78,7 +91,7 @@ class registry {
 
   guid id(key key) const {
     if (auto it = table_.find(key); it != table_.end()) {
-      return it->second.id;
+      return it->id;
     }
     return guid::invalid();
   }
@@ -165,7 +178,9 @@ class handle {
   const T* operator->() const { return get(); }
   const T& operator*() const { return *get(); }
 
-  [[nodiscard]] guid id() const { return registry_->id(key_); }
+  [[nodiscard]] guid id() const {
+    return registry_ ? registry_->id(key_) : guid::invalid();
+  }
 
   T* get() { return registry_->get(key_); }
   const T* get() const { return registry_->get(key_); }
@@ -197,6 +212,9 @@ class handle {
   template<class A>
   friend handle<A> load(const char* path);
 
+  template<class A>
+  friend handle<A> load(guid id);
+
  public:
   registry* registry_;
   key key_;
@@ -211,7 +229,17 @@ handle<T> load(const char* path) {
 }
 
 template<class T>
-handle<T> load(guid id);
+handle<T> load(guid id) {
+  details::registry<T>* reg = details::get_registry<T>();
+  return { reg, reg->load(id) };
+}
+
+template<class T>
+handle<T> resolve(const asset& asset, const char* key) {
+  std::string id;
+  assets::get(asset, key, id);
+  return assets::load<T>(guid::from_string(id.c_str()));
+}
 
 }
 
