@@ -18,4 +18,6 @@ bool compile_asset<shader>(const fs::path& path, const asset&, const fs::path& o
 
 void compile_asset(const char* path);
 
+void compile_assets(const char* directory);
+
 }

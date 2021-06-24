@@ -26,10 +26,7 @@ int main(int argc, char* argv[]) {
   fs::paths::project(argv[1]);
   logger::init(fs::append(fs::paths::cache(), "log").c_str());
 
-  assets::compile_asset("assets/textures/container.jpg");
-  assets::compile_asset("assets/textures/seal.png");
-  assets::compile_asset("assets/shaders/TestShader.shader");
-  assets::compile_asset("assets/shaders/GUIShader.shader");
+  assets::compile_assets(fs::paths::project().c_str());
 
   library_registry libs(fs::append(fs::paths::cache(), "libs").c_str(), fs::append(fs::paths::cache(), "libs_tmp").c_str());
 

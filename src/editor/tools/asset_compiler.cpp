@@ -2,6 +2,8 @@
 #include "core/assets/texture.h"
 #include "stb_image.h"
 
+#include <iostream>
+
 namespace assets {
 
 template<>
@@ -64,6 +66,32 @@ void compile_asset(const char *path)  {
         meta,
         output_path
     );
+  }
+}
+
+void compile_assets(const char *directory) {
+  std::vector<fs::path> files;
+
+  for(auto it = fs::recursive_directory_iterator(directory); it != fs::recursive_directory_iterator(); ++it ) {
+    if (it->path() == fs::paths::cache()) {
+      it.disable_recursion_pending();
+      continue;
+    }
+
+    if (fs::is_directory(it->path())) {
+      continue;
+    }
+
+    if (it->path().extension() != ".meta") {
+      continue;
+    }
+
+
+    files.push_back(fs::append(it->path().parent_path(), it->path().stem()));
+  }
+
+  for (auto& file : files) {
+    compile_asset(file.c_str());
   }
 }
 
