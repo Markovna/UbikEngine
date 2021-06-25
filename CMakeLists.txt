@@ -8,6 +8,7 @@ add_subdirectory(thirdparty/glad glad)
 add_subdirectory(thirdparty/spdlog spdlog)
 add_subdirectory(thirdparty/stb_image stb_image)
 add_subdirectory(thirdparty/efsw efsw)
+add_subdirectory(thirdparty/imgui imgui)
 
 # ----------------------------------------- #
 # ----------- Engine static lib ----------- #
@@ -16,7 +17,7 @@ add_subdirectory(thirdparty/efsw efsw)
 set(BASE_SRC
         src/base/slot_map.h src/base/delegate.h src/base/event.h src/base/key_codes.h src/base/mouse_codes.h src/base/color.h src/base/color.cpp src/base/math.h src/base/math.cpp src/base/cursor.h src/base/iterator_range.h src/base/profiler.h src/base/profiler.cpp src/base/macro.h src/base/log.h src/base/log.cpp
         src/base/guid.cpp
-        src/base/detector.h)
+        src/base/detector.h src/base/timer.cpp src/base/timer.h)
 
 set(CORE_SRC
         src/core/ecs.h src/core/ecs.cpp
@@ -119,9 +120,14 @@ set_target_properties(sandbox_plugin
 # ----------- Editor executable ----------- #
 # ----------------------------------------- #
 
-add_executable(editor src/editor/editor.cpp src/platform/file_watcher.h src/platform/file_watcher.cpp src/editor/library_registry.cpp src/editor/library_registry.h src/editor/tools/asset_compiler.h src/editor/tools/asset_compiler.cpp)
+add_executable(editor
+        src/editor/editor.cpp
+        src/platform/file_watcher.h src/platform/file_watcher.cpp
+        src/editor/library_registry.cpp src/editor/library_registry.h
+        src/editor/tools/asset_compiler.h src/editor/tools/asset_compiler.cpp
+        src/editor/gui/imgui_renderer.cpp src/editor/gui/imgui_renderer.h src/editor/gui/gui.h src/editor/gui/gui.cpp)
 
-target_link_libraries(editor PRIVATE engine_shared efsw)
+target_link_libraries(editor PRIVATE engine_shared efsw imgui)
 target_include_directories(editor PRIVATE ${ENGINE_INCLUDES})
 
 

@@ -11,10 +11,14 @@
 #include "platform/window.h"
 #include "platform/file_system.h"
 #include "library_registry.h"
+#include "core/assets/shader.h"
 
 #include "core/components/mesh_component.h"
 #include "core/components/camera_component.h"
-#include "tools/asset_compiler.h"
+
+#include "editor/gui/gui.h"
+#include "editor/gui/imgui_renderer.h"
+#include "editor/tools/asset_compiler.h"
 
 #include <vector>
 
@@ -49,13 +53,24 @@ int main(int argc, char* argv[]) {
 
   assets::init();
 
-  window window({512, 512});
+  window window({1024, 512});
   gfx::init({.window_handle = window.get_handle(), .resolution = window.get_resolution()});
+
+  std::unique_ptr<gui_renderer> gui_renderer = gui_renderer::create(&window);
 
   engine engine {};
   engine.world = new world;
   engine.plugins = new plugins_registry;
   engine.input = new input_system;
+
+  engine.input->on_resize.connect(gui_renderer.get(), &gui_renderer::on_resize);
+  engine.input->on_key_press.connect(gui_renderer.get(), &gui_renderer::on_key_pressed);
+  engine.input->on_key_release.connect(gui_renderer.get(), &gui_renderer::on_key_released);
+  engine.input->on_mouse_down.connect(gui_renderer.get(), &gui_renderer::on_mouse_down);
+  engine.input->on_mouse_move.connect(gui_renderer.get(), &gui_renderer::on_mouse_move);
+  engine.input->on_mouse_up.connect(gui_renderer.get(), &gui_renderer::on_mouse_up);
+  engine.input->on_scroll.connect(gui_renderer.get(), &gui_renderer::on_scroll);
+  engine.input->on_text.connect(gui_renderer.get(), &gui_renderer::on_text_input);
 
   for (auto& plugin_name : plugin_names) {
     libs.load(plugin_name.c_str(), &engine);
@@ -63,10 +78,6 @@ int main(int argc, char* argv[]) {
 
   engine.start();
   vec4 viewport {};
-
-  asset data;
-  engine.world->save_to_asset(data);
-  assets::write(data, fs::absolute("test.entity"));
 
   bool running = true;
   while (running) {
@@ -83,6 +94,9 @@ int main(int argc, char* argv[]) {
       engine.input->push_event(event);
     }
 
+    gui_renderer->begin_frame();
+    gui::begin_dockspace();
+
     engine.update();
 
     vec2i resolution = window.get_resolution();
@@ -90,10 +104,22 @@ int main(int argc, char* argv[]) {
     viewport.w = (float) resolution.y;
     renderer::render(engine.world, viewport, gfx::framebuf_handle::invalid(), camera_component::kind_t::Game);
 
+    window.set_cursor(gui_renderer->cursor());
+    gui_renderer->end_frame();
+
     gfx::frame();
   }
 
   libs.unload_all(&engine);
+
+  engine.input->on_resize.disconnect(gui_renderer.get(), &gui_renderer::on_resize);
+  engine.input->on_key_press.disconnect(gui_renderer.get(), &gui_renderer::on_key_pressed);
+  engine.input->on_key_release.disconnect(gui_renderer.get(), &gui_renderer::on_key_released);
+  engine.input->on_mouse_down.disconnect(gui_renderer.get(), &gui_renderer::on_mouse_down);
+  engine.input->on_mouse_move.disconnect(gui_renderer.get(), &gui_renderer::on_mouse_move);
+  engine.input->on_mouse_up.disconnect(gui_renderer.get(), &gui_renderer::on_mouse_up);
+  engine.input->on_scroll.disconnect(gui_renderer.get(), &gui_renderer::on_scroll);
+  engine.input->on_text.disconnect(gui_renderer.get(), &gui_renderer::on_text_input);
 
   engine.stop();
   delete engine.input;

@@ -10,9 +10,9 @@ class texture {
       uint32_t width,
       uint32_t height,
       gfx::texture_format::type,
-      gfx::texture_wrap,
-      gfx::texture_filter,
-      gfx::texture_flags::mask
+      gfx::texture_wrap = {},
+      gfx::texture_filter = {},
+      gfx::texture_flags::mask = {}
       );
   
   texture(

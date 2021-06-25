@@ -300,6 +300,9 @@ void set_buffer(indexbuf_handle, uint32_t offset = 0, uint32_t num = 0);
 
 void set_transform(const mat4&);
 
+void update_vertex_buffer(vertexbuf_handle, buffer_ptr ptr, uint32_t offset = 0);
+void update_index_buffer(indexbuf_handle, buffer_ptr ptr, uint32_t offset = 0);
+
 void set_view(camera_id, const mat4&);
 void set_view_rect(camera_id, const vec4i& rect);
 void set_view_buffer(camera_id, framebuf_handle);

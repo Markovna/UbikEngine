@@ -288,8 +288,8 @@ void set_buffer(vertexbuf_handle handle, uint32_t offset, uint32_t num) {
 void set_buffer(indexbuf_handle handle, uint32_t offset, uint32_t num) {
   details::draw_unit &draw = details::g_state.frame.get_draw();
   draw.ib_handle = handle;
-  draw.vb_offset = offset;
-  draw.vb_size = num;
+  draw.ib_offset = offset;
+  draw.ib_size = num;
 }
 
 void set_transform(const mat4& val) {
@@ -392,6 +392,20 @@ void set_scissor(vec4i rect) {
 void set_options(options::flags flags) {
   details::draw_unit &draw = details::g_state.frame.get_draw();
   draw.options = flags;
+}
+
+void update_vertex_buffer(vertexbuf_handle handle, buffer_ptr ptr, uint32_t offset) {
+  auto& command = details::g_state.frame.emplace_command<details::update_vertex_buffer_command>();
+  command.handle = handle;
+  command.ptr = std::move(ptr);
+  command.offset = offset;
+}
+
+void update_index_buffer(indexbuf_handle handle, buffer_ptr ptr, uint32_t offset) {
+  auto& command = details::g_state.frame.emplace_command<details::update_index_buffer_command>();
+  command.handle = handle;
+  command.ptr = std::move(ptr);
+  command.offset = offset;
 }
 
 }
