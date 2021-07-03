@@ -6,7 +6,7 @@ struct input_system;
 
 class engine {
  public:
-//  engine();
+  engine() = default;
   void start();
   void update();
   void stop();

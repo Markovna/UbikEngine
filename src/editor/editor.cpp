@@ -19,12 +19,13 @@
 #include "editor/gui/gui.h"
 #include "editor/gui/imgui_renderer.h"
 #include "editor/tools/asset_compiler.h"
+#include "editor_gui_i.h"
 
 #include <vector>
 
 int main(int argc, char* argv[]) {
   const std::vector<std::string> plugin_names = {
-      "spin_plugin", "sandbox_plugin"
+      "spin_plugin", "sandbox_plugin", "game_view_gui"
   };
 
   fs::paths::project(argv[1]);
@@ -77,7 +78,6 @@ int main(int argc, char* argv[]) {
   }
 
   engine.start();
-  vec4 viewport {};
 
   bool running = true;
   while (running) {
@@ -99,10 +99,9 @@ int main(int argc, char* argv[]) {
 
     engine.update();
 
-    vec2i resolution = window.get_resolution();
-    viewport.z = (float) resolution.x;
-    viewport.w = (float) resolution.y;
-    renderer::render(engine.world, viewport, gfx::framebuf_handle::invalid(), camera_component::kind_t::Game);
+    for (editor_gui_i& plugin : engine.plugins->view<editor_gui_i>()) {
+      plugin.gui(&engine, gui_renderer.get());
+    }
 
     window.set_cursor(gui_renderer->cursor());
     gui_renderer->end_frame();

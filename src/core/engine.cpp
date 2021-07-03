@@ -1,20 +1,21 @@
 #include "engine.h"
 #include "plugins_registry.h"
+#include "engine_i.h"
 
 void engine::update() {
-  for (auto& plugin : *plugins) {
-      plugin->update(this);
+  for (engine_i& plugin : plugins->view<engine_i>()) {
+    plugin.update(this);
   }
 }
 
 void engine::start() {
-  for (auto& plugin : *plugins) {
-      plugin->start(this);
+  for (engine_i& plugin : plugins->view<engine_i>()) {
+    plugin.start(this);
   }
 }
 
 void engine::stop() {
-  for (auto& plugin : *plugins) {
-      plugin->stop(this);
+  for (engine_i& plugin : plugins->view<engine_i>()) {
+    plugin.stop(this);
   }
 }

@@ -2,10 +2,11 @@
 #include "core/plugins_registry.h"
 #include "base/log.h"
 #include "core/engine.h"
+#include "core/engine_i.h"
 #include "core/input_system.h"
 #include "core/world.h"
 
-class spin_plugin : public plugin_base {
+class spin_plugin : public plugin<engine_i> {
  public:
   static int ver;
   int count = 0;
@@ -36,20 +37,20 @@ int spin_plugin::ver = 13;
 void load_spin_plugin(engine *engine) {
   logger::core::Info("load_spin_plugin {}", spin_plugin::ver);
 
-  spin_plugin *plugin = engine->plugins->add_plugin<spin_plugin>("spin_plugin");
+  spin_plugin *plugin = engine->plugins->add<spin_plugin>("spin_plugin");
   plugin->counter = 200;
 
-  engine->plugins->add_plugin<some_plugin>("some_plugin");
+  engine->plugins->add<some_plugin>("some_plugin");
 
 }
 
 void unload_spin_plugin(engine *engine) {
   logger::core::Info("unload_spin_plugin {}", spin_plugin::ver);
 
-  spin_plugin* plugin = engine->plugins->get_plugin<spin_plugin>("spin_plugin");
+  spin_plugin* plugin = engine->plugins->get<spin_plugin>("spin_plugin");
 
-  engine->plugins->remove_plugin("spin_plugin");
-  engine->plugins->remove_plugin("some_plugin");
+  engine->plugins->remove("spin_plugin");
+  engine->plugins->remove("some_plugin");
 
 }
 

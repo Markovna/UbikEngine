@@ -3,7 +3,6 @@
 #include "base/guid.h"
 #include "base/sparse_set.h"
 
-#include <bitset>
 #include <unordered_map>
 #include <cassert>
 
@@ -11,12 +10,10 @@ namespace ecs {
 
 using entity = uint32_t;
 
-static constexpr size_t MAX_COMPONENTS = 256;
-
 namespace details {
 
 struct entity_traits {
-    static constexpr uint8_t  gen_offset = 20u;
+    static constexpr uint8_t gen_offset = 20u;
     static constexpr entity index_mask       = 0x000FFFFF;
     static constexpr entity generation_mask  = 0xFFFu << gen_offset;
 

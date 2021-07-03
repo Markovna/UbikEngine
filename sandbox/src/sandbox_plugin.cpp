@@ -1,6 +1,7 @@
 #include "sandbox_plugin.h"
 #include "spin_plugin.h"
 #include "core/engine.h"
+#include "core/engine_i.h"
 #include "core/world.h"
 #include "base/log.h"
 #include "core/components/mesh_component.h"
@@ -8,7 +9,7 @@
 
 #include "core/meta/registration.h"
 
-class test : public plugin_base {
+class test : public plugin<engine_i> {
  public:
   int count = 0;
   void stop(engine *e) override {}
@@ -66,14 +67,14 @@ void load_sandbox_plugin(engine* engine) {
   register_type(custom_component);
 
   logger::core::Info("load_sandbox_plugin");
-  engine->plugins->add_plugin<test>("test");
+  engine->plugins->add<test>("test");
 }
 
 
 void unload_sandbox_plugin(engine* engine) {
 
   logger::core::Info("unload_sandbox_plugin");
-  engine->plugins->remove_plugin("test");
+  engine->plugins->remove("test");
 
 }
 

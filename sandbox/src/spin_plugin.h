@@ -1,10 +1,11 @@
 #pragma once
 
 #include "core/plugins_registry.h"
+#include "core/engine_i.h"
 
 struct plugins_registry;
 
-class some_plugin : public plugin_base {
+class some_plugin : public plugin<engine_i> {
  public:
   int count = 100;
   void update(engine *e) override;

@@ -2,8 +2,8 @@
 
 #include "base/window_event.h"
 #include "base/cursor.h"
-
 #include "base/timer.h"
+
 #include "gfx/gfx.h"
 #include "core/assets/asset_handle.h"
 
@@ -21,6 +21,8 @@ class gui_renderer {
 
   void begin_frame();
   void end_frame();
+
+  void set_context();
 
   cursor::type cursor() const;
 

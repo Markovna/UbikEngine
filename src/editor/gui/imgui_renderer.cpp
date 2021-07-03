@@ -324,3 +324,7 @@ cursor::type gui_renderer::cursor() const {
 
   return cursor_;
 }
+
+void gui_renderer::set_context() {
+  gui::SetCurrentContext(context_);
+}
