@@ -98,6 +98,8 @@ int main(int argc, char* argv[]) {
       engine.input->push_event(event);
     }
 
+    gfx::resolution(window.get_resolution());
+
     gui_renderer->begin_frame();
     gui::begin_dockspace();
 

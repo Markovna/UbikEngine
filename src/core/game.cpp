@@ -65,6 +65,8 @@ int main(int argc, char* argv[]) {
       engine.input->push_event(event);
     }
 
+    gfx::resolution(window.get_resolution());
+
     engine.update();
 
     vec2i resolution = window.get_resolution();

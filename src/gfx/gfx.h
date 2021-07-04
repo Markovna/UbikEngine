@@ -278,6 +278,9 @@ struct clear_flag {
 void init(const config&);
 void shutdown();
 
+void resolution(const vec2i&);
+vec2i resolution();
+
 vertexbuf_handle create_vertex_buffer(buffer_ptr ptr, uint32_t size, vertex_layout layout);
 indexbuf_handle create_index_buffer(buffer_ptr ptr, uint32_t size);
 framebuf_handle create_frame_buffer(std::initializer_list<texture_handle>);

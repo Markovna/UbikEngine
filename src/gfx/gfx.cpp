@@ -408,4 +408,12 @@ void update_index_buffer(indexbuf_handle handle, buffer_ptr ptr, uint32_t offset
   command.offset = offset;
 }
 
+void resolution(const vec2i& resolution) {
+  details::g_config.resolution = resolution;
+}
+
+vec2i gfx::resolution() {
+  return details::g_config.resolution;
+}
+
 }
