@@ -230,6 +230,15 @@ bool operator==(vec2i lhs, vec2i rhs) {
       && lhs.y == rhs.y;
 }
 
+bool operator!=(vec2 lhs, vec2 rhs) {
+  return !(lhs == rhs);
+}
+
+bool operator==(vec2 lhs, vec2 rhs) {
+  return lhs.x == rhs.x
+      && lhs.y == rhs.y;
+}
+
 const vec3 &vec3::up() {
   static vec3 inst { 0.0f, 1.0f, 0.0f };
   return inst;
@@ -242,6 +251,11 @@ const vec3 &vec3::forward() {
 
 const vec3 &vec3::right() {
   static vec3 inst { 1.0f, 0.0f, 0.0f };
+  return inst;
+}
+
+const vec2 &vec2::zero() {
+  static vec2 inst { 0.0f, 0.0f };
   return inst;
 }
 
@@ -261,6 +275,19 @@ vec3::operator vec2() const {
 
 vec3 vec3::normalized(const vec3& vec) {
   return vec / std::sqrt(vec | vec);
+}
+
+void vec3::normalize(vec3& vec) {
+  float inv_l = 1.0f / vec3::length(vec);
+  vec.x *= inv_l, vec.y *= inv_l, vec.z *= inv_l;
+}
+
+float vec3::sqr_length(const vec3& vec) {
+  return vec | vec;
+}
+
+float vec3::length(const vec3& vec) {
+  return std::sqrtf(vec | vec);
 }
 
 vec4::operator vec3() const { 
@@ -380,6 +407,68 @@ quat quat::from_matrix(const mat4& mat) {
     q.x = qt[0]; q.y = qt[1]; q.z = qt[2]; q.w = qt[3];
   }
   return q;
+}
+
+quat quat::axis(const vec3& a, float angle_rad) {
+  const float halfAngle = 0.5f * angle_rad;
+  const float s = std::sinf(halfAngle);
+  quat q;
+  q.x = s * a.x; q.y = s * a.y; q.z = s * a.z; q.w = std::cosf(halfAngle);
+  return q;
+}
+
+quat quat::angle(const vec3 &from, const vec3 &to) {
+  vec3 from_n = vec3::normalized(from);
+  vec3 to_n = vec3::normalized(to);
+  float dot = from_n | to_n;
+
+  if (math::approximately(dot, -1.0f)) {
+    vec3 axis = vec3::right() ^ from_n;
+    if (math::approximately(0.0f, vec3::length(axis)))
+      axis = vec3::up() ^ from_n;
+
+    return quat::axis(axis, math::PI);
+  }
+
+  vec3 c = from_n ^ to_n;
+  float s = std::sqrtf((1.0f + dot) * 2.0f);
+  float inv_s = 1.0f / s;
+
+  quat q;
+  q.x = c.x * inv_s;
+  q.y = c.y * inv_s;
+  q.z = c.z * inv_s;
+  q.w = 0.5f * s;
+  return q;
+}
+
+quat quat::look_at(const vec3& direction, const vec3& up) {
+  vec3 forward = vec3::normalized(direction);
+
+  vec3 v = forward ^ up;
+  // if direction & up are parallel, fallback to Quat::Angle
+  if (math::approximately(vec3::sqr_length(v), 0.0f)) {
+    return quat::angle(vec3::forward(), forward);
+  }
+
+  vec3::normalize(v);
+  vec3 up_axis = v ^ forward;
+  vec3 right_axis = up_axis ^ forward;
+  return quat::basis(right_axis, up_axis, forward);
+}
+
+quat quat::basis(const vec3 &right, const vec3 &up, const vec3 &forward) {
+  return quat::from_matrix({{
+  { right.x,  right.y,  right.z,  0.0f },
+ { up.x,  up.y,  up.z,  0.0f },
+ { forward.x,  forward.y,  forward.z,  0.0f },
+ { 0.0f, 0.0f, 0.0f, 1.0f }
+  }});
+}
+
+quat &quat::operator*=(const quat &rhs) {
+  *this = *this * rhs;
+  return *this;
 }
 
 quat operator*(const quat& lhs, const quat& rhs) {

@@ -17,7 +17,7 @@ class game_view_gui : public plugin<editor_gui_i> {
     gui_renderer->set_context();
 
     if (gui::GetCurrentContext()) {
-      gui::Begin("game_view_gui");
+      gui::Begin("Game View");
 
       ImVec2 scale = gui::GetIO().DisplayFramebufferScale;
       ImVec2 size = gui::GetContentRegionAvail();

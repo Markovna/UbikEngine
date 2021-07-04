@@ -41,6 +41,8 @@ set(ENGINE_INCLUDES src)
 
 set(SANDBOX_LIBS_DIR ${CMAKE_SOURCE_DIR}/sandbox/.ubik/libs)
 
+set(PLUGINS)
+
 file(MAKE_DIRECTORY ${SANDBOX_LIBS_DIR})
 
 # ----------------------------------------- #
@@ -80,6 +82,7 @@ target_link_libraries(sandbox PRIVATE game ${ENGINE_LIBS})
 target_include_directories(sandbox PRIVATE ${ENGINE_INCLUDES})
 
 
+
 # ----------------------------------------- #
 # ------------ Sandbox plugins ------------ #
 # ----------------------------------------- #
@@ -96,6 +99,8 @@ set_target_properties(spin_plugin
         RUNTIME_OUTPUT_DIRECTORY "${SANDBOX_LIBS_DIR}"
         )
 
+list(APPEND PLUGINS spin_plugin)
+
 # ----------------------------------------- #
 
 add_library(sandbox_plugin SHARED
@@ -110,6 +115,9 @@ set_target_properties(sandbox_plugin
         LIBRARY_OUTPUT_DIRECTORY "${SANDBOX_LIBS_DIR}"
         RUNTIME_OUTPUT_DIRECTORY "${SANDBOX_LIBS_DIR}"
         )
+
+list(APPEND PLUGINS sandbox_plugin)
+
 
 # ----------------------------------------- #
 # -------------- Editor lib --------------- #
@@ -143,6 +151,23 @@ set_target_properties(game_view_gui
         LIBRARY_OUTPUT_DIRECTORY "${SANDBOX_LIBS_DIR}"
         RUNTIME_OUTPUT_DIRECTORY "${SANDBOX_LIBS_DIR}"
         )
+list(APPEND PLUGINS game_view_gui)
+
+# ----------------------------------------- #
+
+add_library(scene_view_gui SHARED
+        src/editor/plugins/scene_view_gui.cpp src/editor/plugins/scene_view_gui.h
+        )
+
+target_link_libraries(scene_view_gui PRIVATE engine editor)
+
+set_target_properties(scene_view_gui
+        PROPERTIES
+        ARCHIVE_OUTPUT_DIRECTORY "${SANDBOX_LIBS_DIR}"
+        LIBRARY_OUTPUT_DIRECTORY "${SANDBOX_LIBS_DIR}"
+        RUNTIME_OUTPUT_DIRECTORY "${SANDBOX_LIBS_DIR}"
+        )
+list(APPEND PLUGINS scene_view_gui)
 
 # ----------------------------------------- #
 # ----------- Editor executable ----------- #
@@ -155,7 +180,7 @@ add_executable(ubik
 target_link_libraries(ubik PRIVATE engine editor)
 
 # TODO
-add_dependencies(ubik sandbox_plugin spin_plugin game_view_gui)
+add_dependencies(ubik ${PLUGINS})
 
 
 

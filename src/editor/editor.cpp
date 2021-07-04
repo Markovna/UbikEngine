@@ -25,16 +25,18 @@
 #include <vector>
 
 int main(int argc, char* argv[]) {
-  const std::vector<std::string> plugin_names = {
-      "spin_plugin", "sandbox_plugin", "game_view_gui"
+  const char* plugin_names [] = {
+      "spin_plugin",
+      "sandbox_plugin",
+      "game_view_gui",
+      "scene_view_gui"
   };
 
   fs::paths::project(argv[1]);
   logger::init(fs::append(fs::paths::cache(), "log").c_str());
 
+  assets::init();
   assets::compile_assets(fs::paths::project().c_str());
-
-  library_loader libs(fs::append(fs::paths::cache(), "libs_tmp").c_str());
 
   meta::load_schemas(fs::absolute("schema").c_str());
 
@@ -53,7 +55,6 @@ int main(int argc, char* argv[]) {
   register_type(camera_component);
   register_type(mesh_component);
 
-  assets::init();
 
   window window({1024, 512});
   gfx::init({.window_handle = window.get_handle(), .resolution = window.get_resolution()});
@@ -74,8 +75,10 @@ int main(int argc, char* argv[]) {
   engine.input->on_scroll.connect(gui_renderer.get(), &gui_renderer::on_scroll);
   engine.input->on_text.connect(gui_renderer.get(), &gui_renderer::on_text_input);
 
-  for (auto& plugin_name : plugin_names) {
-    libs.load(plugin_name.c_str(), os::find_lib(fs::append(fs::paths::cache(), "libs").c_str(), plugin_name.c_str()), &engine);
+  library_loader libs(fs::append(fs::paths::cache(), "libs_tmp").c_str());
+
+  for (auto plugin_name : plugin_names) {
+    libs.load(plugin_name, os::find_lib(fs::append(fs::paths::cache(), "libs").c_str(), plugin_name), &engine);
   }
 
   engine.start();
@@ -110,8 +113,8 @@ int main(int argc, char* argv[]) {
     gfx::frame();
   }
 
-  for (auto& plugin_name : plugin_names) {
-    libs.unload(plugin_name.c_str(), &engine);
+  for (auto plugin_name : plugin_names) {
+    libs.unload(plugin_name, &engine);
   }
 
   engine.input->on_resize.disconnect(gui_renderer.get(), &gui_renderer::on_resize);

@@ -39,6 +39,8 @@ bool operator!=(vec4i lhs, vec4i rhs);
 
 struct vec2 {
   float x, y;
+
+  static const vec2& zero();
 };
 
 struct vec3 {
@@ -47,6 +49,9 @@ struct vec3 {
   explicit operator vec2() const;
 
   static vec3 normalized(const vec3&);
+  static void normalize(vec3&);
+  static float length(const vec3&);
+  static float sqr_length(const vec3&);
 
   static const vec3& up();
   static const vec3& forward();
@@ -60,6 +65,9 @@ struct vec4 {
 
   explicit operator vec3() const;
 };
+
+bool operator==(vec2 lhs, vec2 rhs);
+bool operator!=(vec2 lhs, vec2 rhs);
 
 struct mat4 {
   float data[4][4] = {
@@ -104,9 +112,15 @@ struct quat {
 
   quat& normalize();
 
+  quat& operator*=(const quat& rhs);
+
   static const quat& identity();
+  static quat axis(const vec3&, float rad);
+  static quat angle(const vec3 &from, const vec3 &to);
   static quat inverse(const quat&);
   static quat from_matrix(const mat4&);
+  static quat look_at(const vec3& direction, const vec3& up);
+  static quat basis(const vec3 &right, const vec3 &up, const vec3 &forward);
 };
 
 quat operator*(const quat& lhs, const quat& rhs);

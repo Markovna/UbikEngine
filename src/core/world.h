@@ -190,6 +190,10 @@ class world : ecs::registry {
     return ecs::registry::view<Component...>();
   }
 
+  bool valid(entity e) const {
+    return ecs::registry::valid(e.id);
+  }
+
  private:
   void set_parent_impl(entity ent, entity parent, entity next);
 
