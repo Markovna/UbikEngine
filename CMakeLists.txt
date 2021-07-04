@@ -150,8 +150,7 @@ set_target_properties(game_view_gui
 
 add_executable(editor_runner
         src/editor/editor.cpp
-        src/editor/library_registry.cpp src/editor/library_registry.h
-        )
+        src/editor/library_loader.cpp src/editor/library_loader.h)
 
 target_link_libraries(editor_runner PRIVATE engine editor)
 

@@ -13,6 +13,8 @@ int unload_lib(void*);
 
 void* get_symbol(void*, const char*);
 
+int64_t get_timestamp(const fs::path&);
+
 };
 
 
