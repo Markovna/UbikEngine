@@ -148,14 +148,14 @@ set_target_properties(game_view_gui
 # ----------- Editor executable ----------- #
 # ----------------------------------------- #
 
-add_executable(editor_runner
+add_executable(ubik
         src/editor/editor.cpp
         src/editor/library_loader.cpp src/editor/library_loader.h)
 
-target_link_libraries(editor_runner PRIVATE engine editor)
+target_link_libraries(ubik PRIVATE engine editor)
 
 # TODO
-add_dependencies(editor_runner sandbox_plugin spin_plugin)
+add_dependencies(ubik sandbox_plugin spin_plugin game_view_gui)
 
 
 
