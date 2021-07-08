@@ -136,7 +136,7 @@ static void clear_draw_unit(gfx::details::draw_unit &draw) {
   draw.ib_handle = {};
   draw.vb_handle = {};
   draw.shader_handle = {};
-  draw.camera_id = 0;
+  draw.viewid = 0;
   draw.vb_offset = 0;
   draw.vb_size = 0;
   draw.ib_offset = 0;
@@ -155,8 +155,8 @@ void gfx::details::frame::reset() {
   clear_draw_unit(draws_[draws_count_]);
   commands_count_ = 0;
 }
-void gfx::details::frame::set_cameras(const gfx::details::camera *src) {
-  std::memcpy(cameras_, src, sizeof(camera) * static_config::kCamerasCapacity);
+void gfx::details::frame::set_views(const gfx::details::view *src) {
+  std::memcpy(views_, src, sizeof(views_));
 }
 bool gfx::details::shader_type::try_parse(std::string_view str, gfx::details::shader_type::type &type) {
   if (str == "vertex") {

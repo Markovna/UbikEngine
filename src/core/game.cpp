@@ -70,9 +70,9 @@ int main(int argc, char* argv[]) {
     engine.update();
 
     vec2i resolution = window.get_resolution();
-    viewport.z = (float) resolution.x;
-    viewport.w = (float) resolution.y;
-    renderer::render(engine.world, viewport, gfx::framebuf_handle::invalid(), camera_component::kind_t::Game);
+    viewport.z = (float) resolution.x, viewport.w = (float) resolution.y;
+    renderer::update_views(engine.world, viewport, gfx::framebuf_handle::invalid());
+    renderer::render(engine.world);
 
     gfx::frame();
   }

@@ -8,6 +8,7 @@
 #include "core/render_texture.h"
 #include "core/renderer.h"
 #include "core/components/camera_component.h"
+#include "core/assets/shader.h"
 
 #include "editor/editor_gui_i.h"
 #include "editor/gui/imgui_renderer.h"
@@ -33,9 +34,11 @@ void scene_view_gui::gui(engine *e, gui_renderer *gui_renderer) {
     // create camera
     camera_ = e->world->create_entity();
     e->world->set_local_rotation(camera_, quat::axis(vec3::right(), 30 * math::DEG_TO_RAD));
-    e->world->add_component<camera_component>(camera_, camera_component::kind_t::Editor)
-        .clear_color = { 0.1f, 0.1f, 0.1f, 1.0f };
-
+    e->world->set_local_position(camera_, vec3 { 0, 0, 0} );
+    camera_component& camera = e->world->add_component<camera_component>(camera_);
+    camera.clear_color = { 0.14f, 0.14f, 0.14f, 1.0f };
+    camera.tag |= camera_component::tag_t::Editor;
+    camera.far = 10'000.0f;
   }
 
   gui::Begin("Scene View");
@@ -52,7 +55,37 @@ void scene_view_gui::gui(engine *e, gui_renderer *gui_renderer) {
     render_texture_ = std::make_unique<render_texture>(resolution.x, resolution.y, gfx::texture_format::RGBA8, gfx::texture_wrap{}, gfx::texture_filter{}, gfx::texture_flags::None);
   }
 
-  renderer::render(e->world, {0,0, (float) resolution.x, (float) resolution.y}, render_texture_->handle(), camera_component::kind_t::Editor);
+  auto camera_predicate = [] (entity e, const camera_component& c) { return (c.tag & camera_component::tag_t::Editor) == camera_component::tag_t::Editor; };
+  renderer::update_views(e->world, {0,0, (float) resolution.x, (float) resolution.y}, render_texture_->handle(), camera_predicate);
+  renderer::render(e->world, camera_predicate);
+
+  // render grid
+  {
+    static shader_handle grid_shader = assets::load<shader>("assets/shaders/EditorGrid.shader");
+    static float size = 100.0f;
+    static float hs = size * 0.5f;
+
+    static const float uv_max = 0.5f;
+    static const float uv_min = -0.5f;
+    static float vertices[] = {
+        // pos          // tex coords
+        -hs, -hs, 0.0f, uv_min, uv_min,
+         hs, -hs, 0.0f, uv_max, uv_min,
+         hs,  hs, 0.0f, uv_max, uv_max,
+         hs,  hs, 0.0f, uv_max, uv_max,
+        -hs,  hs, 0.0f, uv_min, uv_max,
+        -hs, -hs, 0.0f, uv_min, uv_min,
+    };
+
+    static gfx::vertexbuf_handle vb = gfx::create_vertex_buffer(
+        gfx::make_ref(vertices, sizeof(vertices)),
+        6,
+        {
+            {gfx::attribute::binding::Position, gfx::attribute::format::Float3()},
+            {gfx::attribute::binding::TexCoord0, gfx::attribute::format::Float2()}
+        });
+    renderer::render(mat4::look_at(vec3::zero(), vec3::up(), vec3::forward()), grid_shader->handle(), vb, gfx::indexbuf_handle::invalid(), e->world->component<camera_component>(camera_));
+  }
 
   gui::Image((ImTextureID)(intptr_t)render_texture_->texture().handle().id, size, {0,1}, {1, 0});
 

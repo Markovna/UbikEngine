@@ -19,7 +19,7 @@ window::window(vec2i size) : size_(size) {
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, true);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-  GLFWwindow* win = glfwCreateWindow(size_.x, size_.y, "SprintEngine", NULL, NULL);
+  GLFWwindow* win = glfwCreateWindow(size_.x, size_.y, "Ubik", NULL, NULL);
   assert(win); // TODO: assert macro
   handle_ = win;
 

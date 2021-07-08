@@ -1,5 +1,6 @@
-#include <core/render_texture.h>
 #include "game_view_gui.h"
+#include "core/render_texture.h"
+#include "core/world.h"
 
 #include "gfx/gfx.h"
 #include "core/engine.h"
@@ -31,7 +32,9 @@ class game_view_gui : public plugin<editor_gui_i> {
         render_texture_ = std::make_unique<render_texture>(resolution.x, resolution.y, gfx::texture_format::RGBA8, gfx::texture_wrap{}, gfx::texture_filter{}, gfx::texture_flags::None);
       }
 
-      renderer::render(e->world, {0,0, (float) resolution.x, (float) resolution.y}, render_texture_->handle(), camera_component::kind_t::Game);
+      auto camera_predicate = [] (entity e, const camera_component& c) { return (c.tag & camera_component::tag_t::Game) == camera_component::tag_t::Game; };
+      renderer::update_views(e->world, {0,0, (float) resolution.x, (float) resolution.y}, render_texture_->handle(), camera_predicate);
+      renderer::render(e->world, camera_predicate);
 
       gui::Image((ImTextureID)(intptr_t)render_texture_->texture().handle().id, size, {0,1}, {1, 0});
 

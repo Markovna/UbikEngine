@@ -27,7 +27,6 @@ using plugin_type_t = typename plugin_type<T>::type;
 
 class plugins_registry {
 
-
   class type_info
   {
     static size_t counter() {

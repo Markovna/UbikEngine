@@ -1,10 +1,5 @@
 #include "camera_component.h"
 
-int_set<uint32_t, gfx::static_config::kCamerasCapacity> &camera_component::registry() {
-  static int_set<uint32_t, gfx::static_config::kCamerasCapacity> idx_registry{};
-  return idx_registry;
-}
-
 void serializer<camera_component>::to_asset(asset& asset, const camera_component& comp) {
   assets::set(asset, "fov", comp.fov);
   assets::set(asset, "near", comp.near);
@@ -21,4 +16,6 @@ void serializer<camera_component>::from_asset(const asset& asset, camera_compone
   assets::get(asset, "orthogonal_size", comp.orthogonal_size);
   assets::get(asset, "normalized_rect", comp.normalized_rect);
   assets::get(asset, "clear_flags", comp.clear_flags);
+
+  comp.tag = camera_component::tag_t::Game;
 }

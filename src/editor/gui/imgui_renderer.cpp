@@ -120,7 +120,7 @@ static void setup_style() {
 }
 
 //TODO: reserve imgui camera id
-static const uint32_t camera_id = gfx::static_config::kCamerasCapacity - 1;
+static const uint32_t camera_id = gfx::static_config::kViewsCapacity - 1;
 
 void gui_renderer::on_resize(resize_event& event) {
   ImGuiIO& io = gui::GetIO();
@@ -181,9 +181,9 @@ void gui_renderer::on_text_input(text_event &e) {
 gui_renderer::gui_renderer(window* w) : context_(gui::CreateContext()) {
 
   vb_handle_ = gfx::create_vertex_buffer(gfx::make_ref(nullptr, kBufferMaxSize * sizeof(ImDrawVert)), kBufferMaxSize, {
-      { gfx::attribute::binding::Position, gfx::attribute::format::Vec2() },
-      { gfx::attribute::binding::TexCoord0, gfx::attribute::format::Vec2() } ,
-      { gfx::attribute::binding::Color0, gfx::attribute::format::Vec4Byte(), true }
+      { gfx::attribute::binding::Position, gfx::attribute::format::Float2() },
+      { gfx::attribute::binding::TexCoord0, gfx::attribute::format::Float2() } ,
+      {gfx::attribute::binding::Color0, gfx::attribute::format::Byte4(), true }
   });
 
   ib_handle_ = gfx::create_index_buffer(gfx::make_ref(nullptr, kBufferMaxSize * sizeof(ImDrawIdx)), kBufferMaxSize);

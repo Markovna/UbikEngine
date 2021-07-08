@@ -2,49 +2,51 @@
 #include "base/guid.h"
 
 float *GetVertices() {
+  static float size = 2.0f;
+  static float hs = size * 0.5f;
   static float vertices[] = {
       // pos                // tex coords
-      -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-      0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
-      0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-      0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-      -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-      -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+      -hs, -hs, -hs,  0.0f, 0.0f,
+      hs, -hs, -hs,  1.0f, 0.0f,
+      hs,  hs, -hs,  1.0f, 1.0f,
+      hs,  hs, -hs,  1.0f, 1.0f,
+      -hs,  hs, -hs,  0.0f, 1.0f,
+      -hs, -hs, -hs,  0.0f, 0.0f,
 
-      -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-      0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-      0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-      0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-      -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
-      -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+      -hs, -hs,  hs,  0.0f, 0.0f,
+      hs, -hs,  hs,  1.0f, 0.0f,
+      hs,  hs,  hs,  1.0f, 1.0f,
+      hs,  hs,  hs,  1.0f, 1.0f,
+      -hs,  hs,  hs,  0.0f, 1.0f,
+      -hs, -hs,  hs,  0.0f, 0.0f,
 
-      -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-      -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-      -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-      -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-      -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-      -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+      -hs,  hs,  hs,  1.0f, 0.0f,
+      -hs,  hs, -hs,  1.0f, 1.0f,
+      -hs, -hs, -hs,  0.0f, 1.0f,
+      -hs, -hs, -hs,  0.0f, 1.0f,
+      -hs, -hs,  hs,  0.0f, 0.0f,
+      -hs,  hs,  hs,  1.0f, 0.0f,
 
-      0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-      0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-      0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-      0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-      0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-      0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+      hs,  hs,  hs,  1.0f, 0.0f,
+      hs,  hs, -hs,  1.0f, 1.0f,
+      hs, -hs, -hs,  0.0f, 1.0f,
+      hs, -hs, -hs,  0.0f, 1.0f,
+      hs, -hs,  hs,  0.0f, 0.0f,
+      hs,  hs,  hs,  1.0f, 0.0f,
 
-      -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-      0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
-      0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-      0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-      -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-      -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+      -hs, -hs, -hs,  0.0f, 1.0f,
+      hs, -hs, -hs,  1.0f, 1.0f,
+      hs, -hs,  hs,  1.0f, 0.0f,
+      hs, -hs,  hs,  1.0f, 0.0f,
+      -hs, -hs,  hs,  0.0f, 0.0f,
+      -hs, -hs, -hs,  0.0f, 1.0f,
 
-      -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-      0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-      0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-      0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-      -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
-      -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
+      -hs,  hs, -hs,  0.0f, 1.0f,
+      hs,  hs, -hs,  1.0f, 1.0f,
+      hs,  hs,  hs,  1.0f, 0.0f,
+      hs,  hs,  hs,  1.0f, 0.0f,
+      -hs,  hs,  hs,  0.0f, 0.0f,
+      -hs,  hs, -hs,  0.0f, 1.0f
   };
 
   return vertices;
@@ -58,8 +60,8 @@ gfx::vertexbuf_handle GetVertexBuf() {
       gfx::make_ref(vertices, sizeof(float) * 5 * count),
       count,
       {
-          {gfx::attribute::binding::Position,  gfx::attribute::format::Vec3() },
-          {gfx::attribute::binding::TexCoord0, gfx::attribute::format::Vec2() }
+          {gfx::attribute::binding::Position, gfx::attribute::format::Float3() },
+          {gfx::attribute::binding::TexCoord0, gfx::attribute::format::Float2() }
       }
   );
   return vb_handle;

@@ -400,7 +400,7 @@ void GLRendererAPI::RenderFrame(const frame& frame) {
     default_context_.MakeCurrent();
 
     CHECK_ERRORS(glDisable(GL_SCISSOR_TEST));
-    for (const camera& camera : frame.get_cameras()) {
+    for (const view& camera : frame.views()) {
         if (camera.frame_buffer) {
             CHECK_ERRORS(glBindFramebuffer(GL_FRAMEBUFFER, frame_buffers_[camera.frame_buffer.index()].id));
         }
@@ -415,7 +415,7 @@ void GLRendererAPI::RenderFrame(const frame& frame) {
 
     static vec2i resolution;
     Shader* shader = nullptr;
-    camera_id camera_id = UINT16_MAX;
+    viewid_t camera_id = UINT16_MAX;
     vec4i scissor;
     uint32_t vb_id = 0;
     uint32_t fb_id = 0;
@@ -427,21 +427,21 @@ void GLRendererAPI::RenderFrame(const frame& frame) {
     for (const draw_unit& draw : frame.get_draws()) {
         SPRINT_RENDERER_PROFILE_SCOPE("GLRendererAPI::RenderFrame [render a draw call]");
 
-        const camera& camera = frame.get_camera(draw.camera_id);
+        const view& camera = frame.get_view(draw.viewid);
 
         uint32_t curr_shader_id = shaders_[draw.shader_handle.index()].id;
         uint32_t curr_vb_id = draw.vb_handle ? vertex_buffers_[draw.vb_handle.index()].id : 0;
         uint32_t curr_fb_id = camera.frame_buffer ? frame_buffers_[camera.frame_buffer.index()].id : 0;
 
         bool shader_changed = shader == nullptr || shader->id != curr_shader_id;
-        bool camera_changed = camera_id != draw.camera_id;
+        bool camera_changed = camera_id != draw.viewid;
         bool scissor_changed = scissor != draw.scissor;
         bool vb_changed = curr_vb_id != vb_id;
         bool fb_changed = curr_fb_id != fb_id;
         bool vb_offset_changed = vb_offset != draw.vb_offset;
 
         shader = draw.shader_handle ? &shaders_[draw.shader_handle.index()] : nullptr;
-        camera_id = draw.camera_id;
+        camera_id = draw.viewid;
         scissor = draw.scissor;
         fb_id = curr_fb_id;
         vb_id = curr_vb_id;

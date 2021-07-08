@@ -2,6 +2,7 @@
 #include "gfx_details.h"
 #include "renderer_api.h"
 #include "base/iterator_range.h"
+#include "base/intset.h"
 
 #include <vector>
 #include <unordered_map>
@@ -29,19 +30,19 @@ struct gfx::attribute::format gfx::attribute::format::Float() {
   return { gfx::attribute::type::Float, 1 };
 }
 
-struct gfx::attribute::format gfx::attribute::format::Vec4Byte() {
+struct gfx::attribute::format gfx::attribute::format::Byte4() {
   return { gfx::attribute::type::Byte, 4 };
 }
 
-struct gfx::attribute::format gfx::attribute::format::Vec4() {
+struct gfx::attribute::format gfx::attribute::format::Float4() {
   return { gfx::attribute::type::Float, 4 };
 }
 
-struct gfx::attribute::format gfx::attribute::format::Vec3() {
+struct gfx::attribute::format gfx::attribute::format::Float3() {
   return { gfx::attribute::type::Float, 3 };
 }
 
-struct gfx::attribute::format gfx::attribute::format::Vec2() {
+struct gfx::attribute::format gfx::attribute::format::Float2() {
   return { gfx::attribute::type::Float, 2 };
 }
 
@@ -75,8 +76,9 @@ struct state {
   handle_pool<shader_handle, static_config::kShadersCapacity> shader_handles;
   handle_pool<texture_handle, static_config::kTexturesCapacity> texture_handles;
   handle_pool<uniform_handle, static_config::kUniformsCapacity> uniform_handles;
+  intset<viewid_t, static_config::kViewsCapacity> viewid_storage;
 
-  camera cameras[static_config::kCamerasCapacity] = {};
+  view views[static_config::kViewsCapacity] = {};
   struct frame frame = {};
   renderer_api* api = nullptr;
 };
@@ -167,16 +169,16 @@ void frame() {
   frame_count++;
 
   details::g_state.frame.set_resolution(details::g_config.resolution);
-  details::g_state.frame.set_cameras(details::g_state.cameras);
+  details::g_state.frame.set_views(details::g_state.views);
 
   details::g_state.api->RenderFrame(details::g_state.frame);
 
   details::g_state.frame.reset();
 }
 
-void render(camera_id camera_id, shader_handle handle) {
+void render(viewid_t viewid, shader_handle handle) {
   details::draw_unit &draw = details::g_state.frame.get_draw();
-  draw.camera_id = camera_id;
+  draw.viewid = viewid;
   draw.shader_handle = handle;
   details::g_state.frame.next();
 }
@@ -307,11 +309,11 @@ shader_handle create_shader(const char* vertex_src, const char* fragment_src, at
   return handle;
 }
 
-uniform_handle create_uniform(const char* c_str) {
+uniform_handle create_uniform(const char* name) {
   uniform_handle handle(details::g_state.uniform_handles.get());
   auto& command = details::g_state.frame.emplace_command<details::create_uniform_command>();
   command.handle = handle;
-  std::strcpy(command.name, c_str);
+  std::strcpy(command.name, name);
   return handle;
 }
 
@@ -360,28 +362,28 @@ buffer_ptr make_ref(void * data, uint32_t size) {
   return buffer_ptr {ptr, size};
 }
 
-void set_view(camera_id id, const mat4& value) {
-  details::g_state.cameras[id].view = value;
+void set_view(viewid_t id, const mat4& value) {
+  details::g_state.views[id].view = value;
 }
 
-void set_view_rect(camera_id id, const vec4i& value) {
-  details::g_state.cameras[id].viewport = value;
+void set_view_rect(viewid_t id, const vec4i& value) {
+  details::g_state.views[id].viewport = value;
 }
 
-void set_view_buffer(camera_id id , framebuf_handle value) {
-  details::g_state.cameras[id].frame_buffer = value;
+void set_view_buffer(viewid_t id , framebuf_handle value) {
+  details::g_state.views[id].frame_buffer = value;
 }
 
-void set_projection(camera_id id, const mat4& value) {
-  details::g_state.cameras[id].projection = value;
+void set_projection(viewid_t id, const mat4& value) {
+  details::g_state.views[id].projection = value;
 }
 
-void set_clear(camera_id id, clear_flag::flags value) {
-  details::g_state.cameras[id].clear_flags = value;
+void set_clear(viewid_t id, clear_flag::flags value) {
+  details::g_state.views[id].clear_flags = value;
 }
 
-void set_clear_color(camera_id id, const color& value) {
-  details::g_state.cameras[id].clear_color = value;
+void set_clear_color(viewid_t id, const color& value) {
+  details::g_state.views[id].clear_color = value;
 }
 
 void set_scissor(vec4i rect) {
@@ -412,8 +414,16 @@ void resolution(const vec2i& resolution) {
   details::g_config.resolution = resolution;
 }
 
-vec2i gfx::resolution() {
+vec2i resolution() {
   return details::g_config.resolution;
+}
+
+viewid_t reserve_view() {
+  return details::g_state.viewid_storage.alloc();
+}
+
+void release_view(viewid_t id) {
+  details::g_state.viewid_storage.free(id);
 }
 
 }

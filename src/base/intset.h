@@ -3,14 +3,14 @@
 #include <numeric>
 
 template<class T, T SIZE>
-class int_set {
+class intset {
 private:
     static_assert(std::is_unsigned<T>::value, "The managed type must be an unsigned integral");
 
     static constexpr T invalid = SIZE;
 
 public:
-    int_set() : next_(0) {
+    intset() noexcept : next_(0) {
         std::iota(std::begin(registry_), std::end(registry_), 1);
     }
 

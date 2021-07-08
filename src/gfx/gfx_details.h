@@ -100,7 +100,7 @@ struct shader_type {
   static bool try_parse(std::string_view str, type& type);
 };
 
-struct camera {
+struct view {
   mat4 view = {};
   mat4 projection = {};
   vec4i viewport = {};
@@ -110,7 +110,7 @@ struct camera {
 };
 
 struct draw_unit {
-  camera_id camera_id = 0;
+  viewid_t viewid = 0;
   mat4 transform = mat4::identity();
   indexbuf_handle ib_handle = {};
   vertexbuf_handle vb_handle = {};
@@ -240,10 +240,10 @@ class frame {
     return std::get<T>(command_buffer_[commands_count_-1]);
   }
 
-  void set_cameras(const camera *src);
+  void set_views(const view *src);
 
-  [[nodiscard]] const camera &get_camera(camera_id id) const {
-    return cameras_[id];
+  [[nodiscard]] const view &get_view(viewid_t id) const {
+    return views_[id];
   }
 
   iterator_range<frame_command *> get_commands() {
@@ -258,15 +258,15 @@ class frame {
     return {draws_, draws_ + draws_count_};
   }
 
-  [[nodiscard]] iterator_range<const camera*> get_cameras() const {
-    return {cameras_, cameras_ + static_config::kCamerasCapacity};
+  [[nodiscard]] iterator_range<const view*> views() const {
+    return {views_, views_ + static_config::kViewsCapacity};
   }
 
   [[nodiscard]] vec2i get_resolution() const { return resolution_; }
   void set_resolution(vec2i value) { resolution_ = value; }
 
  private:
-  camera cameras_[static_config::kCamerasCapacity];
+  view views_[static_config::kViewsCapacity];
   draw_unit draws_[static_config::kMaxDrawCallsCount];
   uint32_t draws_count_ = 0;
   frame_command command_buffer_[static_config::kMaxFrameCommandsCount];

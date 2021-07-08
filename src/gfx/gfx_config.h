@@ -3,7 +3,7 @@
 namespace gfx::static_config {
 
 constexpr static const uint16_t kAttributesCapacity = 16;
-constexpr static const uint16_t kCamerasCapacity = 16;
+constexpr static const uint16_t kViewsCapacity = 16;
 constexpr static const uint16_t kTextureSlotsCapacity = 64;
 constexpr static const uint16_t kFrameBufferMaxAttachments = 8;
 constexpr static const uint16_t kIndexBuffersCapacity = 1024;

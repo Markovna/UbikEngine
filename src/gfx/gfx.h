@@ -75,10 +75,10 @@ struct attribute {
     static format Int();
     static format Uint();
     static format Float();
-    static format Vec2();
-    static format Vec3();
-    static format Vec4();
-    static format Vec4Byte();
+    static format Float2();
+    static format Float3();
+    static format Float4();
+    static format Byte4();
 
     type type;
     uint8_t size;
@@ -163,7 +163,7 @@ using shader_handle = handle<handle_type::Shader>;
 using uniform_handle = handle<handle_type::Uniform>;
 using texture_handle = handle<handle_type::Texture>;
 
-using camera_id = uint32_t;
+using viewid_t = uint32_t;
 using tex_slot = uint32_t;
 
 struct texture_format {
@@ -284,10 +284,20 @@ vec2i resolution();
 vertexbuf_handle create_vertex_buffer(buffer_ptr ptr, uint32_t size, vertex_layout layout);
 indexbuf_handle create_index_buffer(buffer_ptr ptr, uint32_t size);
 framebuf_handle create_frame_buffer(std::initializer_list<texture_handle>);
-uniform_handle create_uniform(const char* c_str);
+uniform_handle create_uniform(const char* name);
 shader_handle create_shader(const char* vertex_src, const char* fragment_src, attribute::binding_pack bindings);
 texture_handle create_texture(uint32_t width, uint32_t height, texture_format::type, buffer_ptr ref = {});
 texture_handle create_texture(uint32_t width, uint32_t height, texture_format::type, texture_wrap wrap, texture_filter filter, texture_flags::mask, buffer_ptr ptr);
+
+viewid_t reserve_view();
+void release_view(viewid_t);
+
+void destroy(vertexbuf_handle&);
+void destroy(indexbuf_handle&);
+void destroy(framebuf_handle&);
+void destroy(shader_handle&);
+void destroy(uniform_handle&);
+void destroy(texture_handle&);
 
 void set_uniform(uniform_handle, int);
 void set_uniform(uniform_handle, bool);
@@ -302,30 +312,23 @@ void set_buffer(vertexbuf_handle, uint32_t offset = 0, uint32_t num = 0);
 void set_buffer(indexbuf_handle, uint32_t offset = 0, uint32_t num = 0);
 
 void set_transform(const mat4&);
+void set_scissor(vec4i rect);
+void set_options(options::flags);
 
 void update_vertex_buffer(vertexbuf_handle, buffer_ptr ptr, uint32_t offset = 0);
 void update_index_buffer(indexbuf_handle, buffer_ptr ptr, uint32_t offset = 0);
 
-void set_view(camera_id, const mat4&);
-void set_view_rect(camera_id, const vec4i& rect);
-void set_view_buffer(camera_id, framebuf_handle);
-void set_projection(camera_id, const mat4&);
-void set_clear(camera_id, clear_flag::flags);
-void set_clear_color(camera_id, const color&);
-void set_scissor(vec4i rect);
-void set_options(options::flags);
-
-void destroy(vertexbuf_handle&);
-void destroy(indexbuf_handle&);
-void destroy(framebuf_handle&);
-void destroy(shader_handle&);
-void destroy(uniform_handle&);
-void destroy(texture_handle&);
+void set_view_rect(viewid_t, const vec4i& rect);
+void set_view(viewid_t, const mat4&);
+void set_projection(viewid_t, const mat4&);
+void set_view_buffer(viewid_t, framebuf_handle);
+void set_clear(viewid_t, clear_flag::flags);
+void set_clear_color(viewid_t, const color&);
 
 buffer_ptr copy(const void*, uint32_t);
 buffer_ptr make_ref(void*, uint32_t);
 
-void render(camera_id, shader_handle);
+void render(viewid_t, shader_handle);
 void frame();
 
 };
