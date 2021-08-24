@@ -8,16 +8,15 @@
 namespace assets {
 
 template<class T>
-bool compile_asset(const fs::path& path, const asset&, const fs::path& output_path);
+bool compile_asset(std::ifstream&, const asset&, std::ostream& output);
 
 template<>
-bool compile_asset<texture>(const fs::path& path, const asset&, const fs::path& output_path);
+bool compile_asset<texture>(std::ifstream&, const asset&, std::ostream& output);
 
 template<>
-bool compile_asset<shader>(const fs::path& path, const asset&, const fs::path& output_path);
+bool compile_asset<shader>(std::ifstream&, const asset&, std::ostream& output);
 
 void compile_asset(const char* path);
-
-void compile_assets(const char* directory);
+void compile_all_assets(const char* directory);
 
 }

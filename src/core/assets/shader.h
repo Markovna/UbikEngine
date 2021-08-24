@@ -33,4 +33,3 @@ std::unique_ptr<shader> load(std::istream&);
 
 }
 
-

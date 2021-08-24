@@ -85,8 +85,8 @@ entity world::load_from_asset(const asset& asset, entity parent, entity next) {
   entity entity { ecs::registry::create() };
   ecs::registry::emplace<link_component>(entity.id);
 
-  for (const ::asset& comp_asset : asset["components"]) {
-    std::string name = comp_asset["__type"];
+  for (const ::asset& comp_asset : asset.at("components")) {
+    std::string name = comp_asset.at("__type");
     meta::type type =  meta::get_type(name.c_str());
     type.from_asset(comp_asset, type.instantiate(*this, entity));
   }
@@ -94,7 +94,7 @@ entity world::load_from_asset(const asset& asset, entity parent, entity next) {
   set_parent(entity, parent, next);
 
   if (asset.contains("children")) {
-    for (const ::asset& child_asset : asset["children"]) {
+    for (const ::asset& child_asset : asset.at("children")) {
       load_from_asset(child_asset, entity);
     }
   }
@@ -105,8 +105,8 @@ void world::save_to_asset(asset& asset, entity e) {
   asset["__type"] = "entity";
   asset["__guid"] = guid::generate();
 
-  for (component_base::id_t id : ecs::registry::get_components(e.id)) {
-    meta::get_type(id).to_asset(asset["components"], ecs::registry::try_get(e.id, id));
+  for (auto [id, ptr] : ecs::registry::get_components(e.id)) {
+    meta::get_type(id).to_asset(asset["components"], ptr);
   }
 
   entity child_e = child(e);

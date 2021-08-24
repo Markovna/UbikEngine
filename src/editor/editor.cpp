@@ -36,7 +36,7 @@ int main(int argc, char* argv[]) {
   logger::init(fs::append(fs::paths::cache(), "log").c_str());
 
   assets::init();
-  assets::compile_assets(fs::paths::project().c_str());
+  assets::compile_all_assets(fs::paths::project().c_str());
 
   meta::load_schemas(fs::absolute("schema").c_str());
 

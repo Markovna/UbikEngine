@@ -29,6 +29,7 @@ void project(const path&);
 }
 
 std::ifstream read_file(const fs::path &path, std::ios::openmode mode = std::ios::in | std::ios::binary);
+std::ifstream read_file(const char* path, std::ios::openmode mode = std::ios::in | std::ios::binary);
 
 path absolute(const char*);
 path absolute(const path&);

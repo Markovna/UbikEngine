@@ -33,36 +33,26 @@ class registry {
  public:
   using key = typename container::key_type;
 
-  key load(guid guid) {
-    if (auto it = id_to_keys_.find(guid); it != id_to_keys_.end()) {
+  key load(guid id) {
+    if (auto it = id_to_keys_.find(id); it != id_to_keys_.end()) {
       return it->second;
     }
 
-    fs::path asset_path { fs::append(fs::paths::import(), guid.str()) };
-    asset meta = assets::read(fs::concat(asset_path, ".asset"));
+    fs::path asset_path = fs::append(fs::paths::import(), id.str());
+    std::ifstream stream = fs::read_file(asset_path);
+    key key = table_.insert({
+      .ptr = ::assets::loader::load<T>(stream),
+      .id = id,
+      .use_count = 0
+    });
 
+    asset meta = assets::read(fs::concat(asset_path, ".asset"));
     std::string path;
     assets::get(meta, "path", path);
 
-    std::ifstream stream = fs::read_file(asset_path);
-    key key {
-        table_.insert({
-                          .ptr = ::assets::loader::load<T>(stream),
-                          .id = guid,
-                          .use_count = 0
-                      })
-    };
-
-    id_to_keys_.insert({guid, key});
+    id_to_keys_.insert({id, key});
     path_to_keys_.insert({path.c_str(), key});
     return key;
-  }
-
-  guid get_guid(const fs::path &path) {
-    asset meta = assets::read(fs::concat(path, ".meta"));
-    std::string guid;
-    assets::get(meta, "__guid", guid);
-    return guid::from_string(guid);
   }
 
   key load(const fs::path &path) {
@@ -70,21 +60,22 @@ class registry {
       return it->second;
     }
 
-    fs::path absolute_path { fs::absolute(path) };
+    fs::path absolute_path = fs::absolute(path) ;
 
-    guid guid = get_guid(absolute_path);
-    fs::path asset_path { fs::append(fs::paths::import(), guid.str()) };
+    asset meta = assets::read(fs::concat(absolute_path, ".meta"));
+    std::string str_id;
+    assets::get(meta, "__guid", str_id);
+    guid id = guid::from_string(str_id);
 
+    fs::path asset_path = fs::append(fs::paths::import(), str_id);
     std::ifstream stream = fs::read_file(asset_path);
-    key key {
-      table_.insert({
-        .ptr = ::assets::loader::load<T>(stream),
-        .id = guid,
-        .use_count = 0
-      })
-    };
+    key key = table_.insert({
+      .ptr = ::assets::loader::load<T>(stream),
+      .id = id,
+      .use_count = 0
+    });
 
-    id_to_keys_.insert({guid, key});
+    id_to_keys_.insert({id, key});
     path_to_keys_.insert({path.c_str(), key});
     return key;
   }

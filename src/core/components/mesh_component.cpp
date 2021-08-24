@@ -2,7 +2,7 @@
 #include "base/guid.h"
 
 float *GetVertices() {
-  static float size = 2.0f;
+  static float size = 1.0f;
   static float hs = size * 0.5f;
   static float vertices[] = {
       // pos                // tex coords

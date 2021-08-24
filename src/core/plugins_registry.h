@@ -129,7 +129,7 @@ class plugins_registry {
   T* get(const char* name) {
     if (auto it = names_map_.find(std::string(name)); it != names_map_.end()) {
       auto& [pool_index, index] = it->second;
-      static_cast<T*>(pools_[pool_index][index].plugin_ptr.get());
+      return static_cast<T*>(pools_[pool_index][index].plugin_ptr.get());
     }
 
     return nullptr;

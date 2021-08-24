@@ -5,22 +5,19 @@
 template<>
 std::unique_ptr<shader> assets::loader::load(std::istream& stream) {
   gfx::attribute::binding_pack bindings;
+  size_t vertex_size, fragment_size;
 
   stream.read((char*) &bindings, sizeof(bindings));
 
-  size_t vertex_size;
   stream.read((char*) &vertex_size, sizeof(vertex_size));
-
   char vertex_src[vertex_size];
   stream.read(vertex_src, vertex_size);
 
-  size_t fragment_size;
   stream.read((char*) &fragment_size, sizeof(fragment_size));
-
   char fragment_src[fragment_size];
   stream.read(fragment_src, fragment_size);
 
-  return std::unique_ptr<shader>(new shader(vertex_src, fragment_src, bindings));
+  return std::unique_ptr<shader> { new shader(vertex_src, fragment_src, bindings) };
 }
 
 shader::shader(shader&& other) noexcept

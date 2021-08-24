@@ -20,7 +20,8 @@ set(CORE_SRC
         src/core/plugins_registry.h src/core/plugins_registry.cpp src/core/world.h src/core/engine.cpp src/core/engine.h src/core/renderer.cpp src/core/renderer.h
         src/core/input_system.cpp src/core/input_system.h
         src/core/assets/asset_handle.cpp src/core/assets/asset_handle.h src/core/assets/texture.cpp src/core/assets/texture.h src/core/assets/shader.cpp src/core/assets/shader.h src/core/components/mesh_component.cpp src/core/components/mesh_component.h src/core/components/camera_component.cpp src/core/components/camera_component.h src/core/world.cpp src/core/meta/registration.h src/core/meta/registration.cpp src/core/components/component.cpp src/core/components/component.h src/core/serialization.h src/core/meta/type.h src/core/meta/type_info.h src/core/meta/type_info.cpp src/core/meta/schema.cpp src/core/meta/schema.h src/core/assets/asset_loader.h src/core/assets/asset.h src/core/assets/asset.cpp src/core/engine_i.h
-        src/core/render_texture.h src/core/render_texture.cpp)
+        src/core/render_texture.h src/core/render_texture.cpp
+        )
 
 set(GFX_SRC
         src/gfx/gfx.cpp src/gfx/gfx.h src/gfx/gfx_config.h src/gfx/gfx_details.cpp src/gfx/gfx_details.h src/gfx/renderer_api.h src/gfx/renderer_api_gl.h src/gfx/renderer_api_gl.cpp
@@ -30,6 +31,11 @@ set(PLATFORM_SRC
         src/platform/window.h src/platform/window.cpp src/base/window_event.h
         src/platform/os.cpp src/platform/os.h
         src/platform/file_system.h src/platform/file_system.cpp)
+
+set(EXPERIMENTAL
+        src/experimental/assets.h
+        src/experimental/assets.cpp
+        src/experimental/resources.cpp src/experimental/resources.h)
 
 set(ENGINE_LIBS
         glfw
@@ -125,10 +131,9 @@ list(APPEND PLUGINS sandbox_plugin)
 
 add_library(editor
         src/platform/file_watcher.h src/platform/file_watcher.cpp
-        src/editor/tools/asset_compiler.h src/editor/tools/asset_compiler.cpp
         src/editor/gui/imgui_renderer.cpp src/editor/gui/imgui_renderer.h
         src/editor/gui/gui.h src/editor/gui/gui.cpp
-        src/editor/editor_gui_i.h)
+        )
 
 target_link_libraries(editor PRIVATE engine)
 target_link_libraries(editor PUBLIC efsw imgui)
@@ -174,6 +179,7 @@ list(APPEND PLUGINS scene_view_gui)
 # ----------------------------------------- #
 
 add_executable(ubik
+        "${EXPERIMENTAL}"
         src/editor/editor.cpp
         src/editor/library_loader.cpp src/editor/library_loader.h)
 

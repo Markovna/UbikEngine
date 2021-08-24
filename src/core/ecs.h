@@ -273,7 +273,7 @@ class component_ids {
  public:
   class iterator {
    public:
-    using value_type = guid;
+    using value_type = std::pair<guid, void*>;
 
    public:
     iterator(entity entity, pool_iterator curr, pool_iterator last);
@@ -425,19 +425,6 @@ public:
   template<class Component>
   Component& get(entity entity) {
     return const_cast<Component&>(static_cast<const registry&>(*this).get<Component>(entity));
-  }
-
-  [[nodiscard]] const void* try_get(entity entity, component_id_t id) const {
-    auto it = guid_to_pool_idx_.find(id);
-    if (it == guid_to_pool_idx_.end())
-      return nullptr;
-
-    const pool_info& pool = pools_[it->second];
-    return pool.get_ptr(pool.ptr.get(), entity);
-  }
-
-  void* try_get(entity entity, component_id_t id)  {
-    return const_cast<void*>(static_cast<const registry&>(*this).try_get(entity, id));
   }
 
   template<class Component>

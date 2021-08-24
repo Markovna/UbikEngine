@@ -6,6 +6,7 @@
 #include "platform/file_system.h"
 
 #include <fstream>
+#include <base/guid.h>
 
 using asset = nlohmann::json;
 
@@ -47,6 +48,21 @@ void get(const asset& asset, const char* key, T& value) {
 template <class T, class = std::enable_if_t<has_to_json<T>::value>>
 void set(asset& asset, const char* key, T&& value) {
   asset[key] = std::forward<T>(value);
+}
+
+static std::unique_ptr<asset> load_asset(const fs::path& path, guid& id) {
+  asset res = assets::read(path);
+
+  std::string guid;
+  assets::get(res, "__guid", guid);
+  id = guid::from_string(guid);
+
+  return std::make_unique<asset>(res);
+}
+
+namespace details {
+
+
 }
 
 }

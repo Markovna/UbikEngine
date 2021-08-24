@@ -66,16 +66,20 @@ path meta(const path& _path) {
   return meta(_path.c_str());
 }
 
-std::ifstream read_file(const path &path, std::ios::openmode mode)  {
+std::ifstream read_file(const char* path, std::ios::openmode mode)  {
   std::ifstream stream;
   stream.exceptions(std::ifstream::failbit | std::ifstream::badbit);
   try {
     stream.open(path, mode);
   }
   catch (std::ifstream::failure &e) {
-    logger::core::Error("Couldn't read file {0} {1}", path.string(), e.what());
+    logger::core::Error("Couldn't read file {0} {1}", path, e.what());
   }
   return stream;
+}
+
+std::ifstream read_file(const path &path, std::ios::openmode mode) {
+  return read_file(path.c_str(), mode);
 }
 
 details::config &details::get_config() {

@@ -1,20 +1,24 @@
-#include "asset_compiler.h"
+#include "resource_compiler.h"
+
+#include "core/assets/shader.h"
 #include "core/assets/texture.h"
 #include "stb_image.h"
 
-#include <iostream>
+#include <vector>
+#include <unordered_set>
+#include <sstream>
+#include <random>
 
-namespace assets {
+namespace experimental2::resources {
 
 template<>
-bool compile_asset<texture>(std::ifstream& stream, const asset& settings, std::ostream& output) {
-
+bool compile_asset<texture>(std::ifstream& resource, const assets::asset& settings, std::ostream& output) {
   stbi_set_flip_vertically_on_load(true);
 
-  std::size_t size = stream.rdbuf()->pubseekoff(0, std::ios::end, std::ios_base::in);
+  std::size_t size = resource.rdbuf()->pubseekoff(0, std::ios::end, std::ios_base::in);
   char* buffer = new char[size];
-  stream.rdbuf()->pubseekpos(0, std::ios_base::in);
-  stream.rdbuf()->sgetn(buffer, size);
+  resource.rdbuf()->pubseekpos(0, std::ios_base::in);
+  resource.rdbuf()->sgetn(buffer, size);
 
   int32_t width, height, channels, desired_channels = 0;
   uint8_t* data = stbi_load_from_memory(reinterpret_cast<stbi_uc*>(buffer), size, &width, &height, &channels, desired_channels);
@@ -29,8 +33,8 @@ bool compile_asset<texture>(std::ifstream& stream, const asset& settings, std::o
 }
 
 template<>
-bool compile_asset<shader>(std::ifstream& stream, const asset& settings, std::ostream& output) {
-  std::string source { std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>() };
+bool compile_asset<shader>(std::ifstream& resource, const assets::asset& settings, std::ostream& output) {
+  std::string source { std::istreambuf_iterator<char>(resource), std::istreambuf_iterator<char>() };
 
   static const std::string type_token = "#type";
   static const std::string vertex_type = "vertex";
@@ -94,48 +98,64 @@ bool compile_asset<shader>(std::ifstream& stream, const asset& settings, std::os
   return true;
 }
 
-void compile_asset(const char *path)  {
-  fs::path absolute_path = fs::absolute(path);
-
-  asset meta = assets::read(fs::concat(absolute_path, ".meta"));
-
-  std::string guid;
-  assets::get(meta, "__guid", guid);
-
-  std::string type;
-  assets::get(meta, "type", type);
-
-  fs::path output_path = fs::append(fs::paths::import(), guid);
-
-  asset asset;
-  assets::set(asset, "__guid", guid);
-  assets::set(asset, "type", type);
-  assets::set(asset, "path", path);
-  assets::write(asset, fs::concat(output_path, ".asset"));
-
-  std::ifstream stream = fs::read_file(absolute_path);
-  std::ofstream out_stream(output_path, std::ios::binary | std::ios::trunc);
-
-  if (type == "texture") {
-    assets::compile_asset<texture>(
-        stream,
-        meta,
-        out_stream
-    );
-  } else if (type == "shader") {
-    assets::compile_asset<shader>(
-        stream,
-        meta,
-        out_stream
-    );
-  }
+bool compile_asset_impl(const std::string& type, std::ifstream& stream, const assets::asset& settings, std::ostream& output) {
+  using func_t = bool(*)(std::ifstream& stream, const assets::asset& settings, std::ostream&);
+  static std::unordered_map<std::string, func_t> func_ptr = {
+      { "shader", compile_asset<shader> },
+      { "texture", compile_asset<texture> }
+  };
+  return func_ptr[type](stream, settings, output);
 }
 
-void compile_all_assets(const char *directory) {
-  std::vector<fs::path> files;
 
-  for(auto it = fs::recursive_directory_iterator(directory); it != fs::recursive_directory_iterator(); ++it ) {
-    if (it->path() == fs::paths::cache()) {
+void compile_asset(const fs::path &path, const fs::path& directory) {
+  logger::core::Info("Start compiling resource {}.", path.c_str());
+
+  assets::asset meta;
+  if (!assets::read(fs::absolute(path), meta))
+    return;
+
+  fs::path res_path = meta["source_path"];
+  std::string res_id = meta["source_guid"];
+
+  std::ifstream file = fs::read_file(fs::absolute(res_path));
+  fs::path asset_path = fs::append(directory, res_id);
+
+  fs::path buffers_dir = fs::concat(asset_path, ".buffers");
+  if (fs::exists(buffers_dir)) {
+    fs::remove_all(buffers_dir);
+  } else {
+    fs::create_directory(buffers_dir);
+  }
+
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_int_distribution<uint64_t> dis;
+  uint64_t buffer_id = dis(gen);
+  fs::path buffer_path = fs::append(buffers_dir, std::to_string(buffer_id));
+
+  std::ofstream buffer(buffer_path, std::ios::binary | std::ios::trunc);
+  compile_asset_impl(meta["type"], file, meta, buffer);
+
+  assets::asset resource;
+  resource["__guid"] = res_id;
+  resource["source_path"] = res_path;
+  resource["buffer"] = buffer_id;
+
+  assets::write(resource, fs::append(directory, res_id));
+}
+
+void compile(
+    const fs::path& directory,
+    const fs::path& dest,
+    std::initializer_list<fs::path> ignore) {
+
+  std::vector<fs::path> files;
+  std::set<fs::path> ignore_set { ignore };
+
+  for (auto it = fs::recursive_directory_iterator(directory); it != fs::recursive_directory_iterator(); ++it ) {
+
+    if (ignore_set.count(it->path())) {
       it.disable_recursion_pending();
       continue;
     }
@@ -148,14 +168,12 @@ void compile_all_assets(const char *directory) {
       continue;
     }
 
-
-    files.push_back(fs::append(it->path().parent_path(), it->path().stem()));
+    files.push_back(it->path());
   }
 
   for (auto& file : files) {
-    compile_asset(file.c_str());
+    compile_asset(file.c_str(), dest);
   }
 }
-
 
 }

@@ -36,7 +36,7 @@ void scene_view_gui::gui(engine *e, gui_renderer *gui_renderer) {
     e->world->set_local_rotation(camera_, quat::axis(vec3::right(), 30 * math::DEG_TO_RAD));
     e->world->set_local_position(camera_, vec3 { 0, 0, 0} );
     camera_component& camera = e->world->add_component<camera_component>(camera_);
-    camera.clear_color = { 0.14f, 0.14f, 0.14f, 1.0f };
+    camera.clear_color = { 0.1f, 0.1f, 0.1f, 1.0f };
     camera.tag |= camera_component::tag_t::Editor;
     camera.far = 10'000.0f;
   }

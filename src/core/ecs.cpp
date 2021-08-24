@@ -23,7 +23,7 @@ bool component_ids::iterator::operator!=(const component_ids::iterator &other) c
 bool component_ids::iterator::check() const { return curr_->ptr->contains(entity_); }
 
 component_ids::iterator::value_type component_ids::iterator::operator*() const {
-  return curr_->id;
+  return std::make_pair(curr_->id, curr_->get_ptr(curr_->ptr.get(), entity_));
 }
 
 component_ids::iterator::iterator(entity entity, pool_iterator curr, pool_iterator last)
