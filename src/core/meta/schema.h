@@ -11,6 +11,8 @@ struct schema_info {
   std::string name;
 };
 
+void init();
+void shutdown();
 void load_schemas(const char* path);
 
 guid get_schema_id(const char *name);

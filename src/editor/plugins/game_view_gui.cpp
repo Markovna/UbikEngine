@@ -3,17 +3,16 @@
 #include "core/world.h"
 
 #include "gfx/gfx.h"
-#include "core/engine.h"
-#include "editor/editor_gui_i.h"
+#include "editor/editor_gui.h"
 #include "editor/gui/gui.h"
 #include "editor/gui/imgui_renderer.h"
-#include "core/plugins_registry.h"
+#include "core/plugins.h"
 #include "core/renderer.h"
 
-class game_view_gui : public plugin<editor_gui_i> {
+class game_view_gui : public editor_gui {
  public:
 
-  void gui(engine* e, gui_renderer* gui_renderer) override {
+  void gui(gui_renderer* gui_renderer) override {
 
     gui_renderer->set_context();
 
@@ -33,8 +32,8 @@ class game_view_gui : public plugin<editor_gui_i> {
       }
 
       auto camera_predicate = [] (entity e, const camera_component& c) { return (c.tag & camera_component::tag_t::Game) == camera_component::tag_t::Game; };
-      renderer::update_views(e->world, {0,0, (float) resolution.x, (float) resolution.y}, render_texture_->handle(), camera_predicate);
-      renderer::render(e->world, camera_predicate);
+      renderer::update_views(ecs::world, {0,0, (float) resolution.x, (float) resolution.y}, render_texture_->handle(), camera_predicate);
+      renderer::render(ecs::world, camera_predicate);
 
       gui::Image((ImTextureID)(intptr_t)render_texture_->texture().handle().id, size, {0,1}, {1, 0});
 
@@ -47,11 +46,12 @@ class game_view_gui : public plugin<editor_gui_i> {
 
 };
 
-extern "C" void load_game_view_gui(engine* e) {
-  e->plugins->add<game_view_gui>("game_view_gui");
+void load_game_view_gui(plugins* plugins) {
+  plugins->get<editor_gui_plugin>()->add_editor<game_view_gui>();
 }
 
-extern "C" void unload_game_view_gui(engine* e) {
-  e->plugins->remove("game_view_gui");
-
+void unload_game_view_gui(plugins* plugins) {
+// TODO
+//  editor_gui_plugins& editor_plugins = *plugins->get<editor_gui_plugins>("editor_gui");
+//  plugins_registry->remove("game_view_gui");
 }

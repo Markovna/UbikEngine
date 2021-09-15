@@ -1,33 +1,33 @@
 {
-  "__guid": "f87dd4a6e1a348779b50c9d8780a7ad8",
+  "__guid": "3edb02cb49f84929952e0d00b4a3a272",
   "__type": "entity",
   "children": [
     {
-      "__guid": "a34de7b9bb414c839abacfbbc03a12d8",
+      "__guid": "7a4757474b5d4131877809a9c6ff5629",
       "__type": "entity",
       "children": [
         {
-          "__guid": "64b63356ded243389df027c24da86aa9",
+          "__guid": "29eb81064df64711b7da5e5f6e5974af",
           "__type": "entity",
           "children": [
             {
-              "__guid": "679abd885f4848a2be313bd10d87a11b",
+              "__guid": "a40daca37ec548bcaa8ee5c3d3488665",
               "__type": "entity",
               "children": [
                 {
-                  "__guid": "e1d63301cd9240cf89b13a8ceaf25480",
+                  "__guid": "2a44b067079748058cf62c3d8902b0ce",
                   "__type": "entity",
                   "children": [
                     {
-                      "__guid": "5275309a7a334d9e8a6f0f6221400dab",
+                      "__guid": "4af76e6b66854022b0c09ce9591aaf61",
                       "__type": "entity",
                       "children": [
                         {
-                          "__guid": "de00ecc089ee4fba9cf1ae98177c4adf",
+                          "__guid": "bb44dd9a20db44cca291b41d0f8b34a3",
                           "__type": "entity",
                           "components": [
                             {
-                              "__guid": "757f120a5e5840cb9aa07031315ef054",
+                              "__guid": "ecaa0a9df31b478abe9cb53e4bcbe9bc",
                               "__type": "transform_component",
                               "position": {
                                 "x": 0.0,
@@ -47,7 +47,7 @@
                               }
                             },
                             {
-                              "__guid": "3fa02a1ee25d44a282029664010763f7",
+                              "__guid": "14d9169b2c7d4ac2a603ce8032e216db",
                               "__type": "mesh_component",
                               "color": {
                                 "a": 1.0,
@@ -60,7 +60,7 @@
                               "shader": "4054252338da4b1386512e1269a3a115"
                             },
                             {
-                              "__guid": "aaf909c53ed14fe9909c9850563da4ab",
+                              "__guid": "0b30438e5a7046e1ba3ae7d26cba9797",
                               "__type": "custom_component",
                               "a": 42,
                               "b": 0.0,
@@ -73,7 +73,7 @@
                       ],
                       "components": [
                         {
-                          "__guid": "5ed444994ff147f9a5ec0f8fb8e13e6f",
+                          "__guid": "c41e529bbd274699bb3b0fe58771071a",
                           "__type": "transform_component",
                           "position": {
                             "x": 0.0,
@@ -95,11 +95,11 @@
                       ]
                     },
                     {
-                      "__guid": "e745dc3734d142db8b62febdd6e83a5f",
+                      "__guid": "4637d545428a4d2d912bda644b8f2dd8",
                       "__type": "entity",
                       "components": [
                         {
-                          "__guid": "807ed22def98411ab2a5d25cfa48f06c",
+                          "__guid": "b77f13351cc6497182b68c45a9592b69",
                           "__type": "transform_component",
                           "position": {
                             "x": 0.0,
@@ -119,7 +119,7 @@
                           }
                         },
                         {
-                          "__guid": "fe47a748f27449dca90ec6a6cf0e66d0",
+                          "__guid": "15b070302cca4b47a7a6ed4818852514",
                           "__type": "camera_component",
                           "clear_flags": 6,
                           "far": 100.0,
@@ -138,7 +138,7 @@
                   ],
                   "components": [
                     {
-                      "__guid": "731b4273179f43a39b1dd89e11bb2f25",
+                      "__guid": "60a8a951a92840c9bc07df8aafe59642",
                       "__type": "transform_component",
                       "position": {
                         "x": 0.0,
@@ -162,7 +162,7 @@
               ],
               "components": [
                 {
-                  "__guid": "9d64db95700f40d795d0a7de29489a15",
+                  "__guid": "cfeb57349b224333856d61d153b8d677",
                   "__type": "transform_component",
                   "position": {
                     "x": 0.0,
@@ -186,7 +186,7 @@
           ],
           "components": [
             {
-              "__guid": "cba3a8814b1543bdb8cac0cb1804840f",
+              "__guid": "570926b0f4ac4383bb6a4cdc21ee036d",
               "__type": "transform_component",
               "position": {
                 "x": 0.0,
@@ -210,7 +210,7 @@
       ],
       "components": [
         {
-          "__guid": "d249caff85454a6b8da9ae55a4d2d783",
+          "__guid": "10910246ba25458382edc9aa3997c874",
           "__type": "transform_component",
           "position": {
             "x": 0.0,
@@ -234,7 +234,7 @@
   ],
   "components": [
     {
-      "__guid": "83cb8ab60b0b47e8885ea38047a09a17",
+      "__guid": "cca4460dc5f046c39ced300ee1450a96",
       "__type": "transform_component",
       "position": {
         "x": 0.0,

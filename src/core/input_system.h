@@ -19,4 +19,9 @@ class input_system {
   void push_event(window_event);
 };
 
+extern input_system* input;
+
+void init_input_system();
+void shutdown_input_system();
+
 

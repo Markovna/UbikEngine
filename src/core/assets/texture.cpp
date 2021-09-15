@@ -16,6 +16,12 @@ static gfx::texture_format::type to_format(uint32_t channels) {
 
 template<>
 std::unique_ptr<texture> assets::loader::load(std::istream& stream) {
+//  logger::core::Info("Start loading texture");
+
+  if (!stream) {
+    logger::core::Error("Couldn't load texture");
+    return {};
+  }
 
   uint32_t width, height, channels;
 
@@ -96,3 +102,28 @@ texture::texture(
   , width_(width)
   , height_(height)
 {}
+
+namespace assets::compiler {
+
+template<>
+bool compile<texture>(std::ifstream& stream, const asset& meta, std::ostream& output) {
+  stbi_set_flip_vertically_on_load(true);
+
+  std::size_t size = stream.rdbuf()->pubseekoff(0, std::ios::end, std::ios_base::in);
+  char* buffer = new char[size];
+  stream.rdbuf()->pubseekpos(0, std::ios_base::in);
+  stream.rdbuf()->sgetn(buffer, size);
+
+  int32_t width, height, channels, desired_channels = 0;
+  uint8_t* data = stbi_load_from_memory(reinterpret_cast<stbi_uc*>(buffer), size, &width, &height, &channels, desired_channels);
+
+  output.write((char*) &width, sizeof(width));
+  output.write((char*) &height, sizeof(height));
+  output.write((char*) &channels, sizeof(channels));
+  output.write((char*) data, width * height * channels);
+  stbi_image_free(data);
+
+  return true;
+}
+
+}

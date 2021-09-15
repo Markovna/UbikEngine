@@ -107,9 +107,9 @@ gfx::uniform_handle GetColorUniform() {
 void serializer<mesh_component>::from_asset(const asset& asset, mesh_component& comp) {
   assets::get(asset, "color", comp.color_);
 
-  comp.main_texture_ = assets::resolve<texture>(asset, "main_texture");
-  comp.second_texture_ = assets::resolve<texture>(asset, "second_texture");
-  comp.shader_ = assets::resolve<shader>(asset, "shader");
+  comp.main_texture_ = resources::resolve<texture>(asset, "main_texture", assets::g_provider);
+  comp.second_texture_ = resources::resolve<texture>(asset, "second_texture", assets::g_provider);
+  comp.shader_ = resources::resolve<shader>(asset, "shader", assets::g_provider);
 }
 
 void serializer<mesh_component>::to_asset(asset& asset, const mesh_component& comp) {

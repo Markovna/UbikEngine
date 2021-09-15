@@ -8,7 +8,7 @@
 
 #include <cstdint>
 
-struct camera_component : public component<camera_component> {
+struct camera_component {
  private:
   using clear_flag = gfx::clear_flag::flags;
 
@@ -23,7 +23,7 @@ struct camera_component : public component<camera_component> {
   };
 
  public:
-  explicit camera_component() : viewid(gfx::reserve_view()) {}
+  camera_component() : viewid(gfx::reserve_view()) {}
   ~camera_component() { gfx::release_view(viewid); }
 
   gfx::viewid_t viewid;
@@ -42,3 +42,5 @@ struct serializer<camera_component> {
   static void from_asset(const asset&, camera_component&);
   static void to_asset(asset&, const camera_component&);
 };
+
+register_component(camera_component)

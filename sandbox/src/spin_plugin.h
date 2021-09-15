@@ -1,19 +1,22 @@
 #pragma once
 
-#include "core/plugins_registry.h"
-#include "core/engine_i.h"
+#include "core/world.h"
 
-struct plugins_registry;
+struct test_component {
+  int a;
+};
 
-class some_plugin : public plugin<engine_i> {
+struct plugins;
+
+class some_plugin : public world_system {
  public:
   int count = 100;
-  void update(engine *e) override;
-  void start(engine *e) override;
-  void stop(engine *e) override {}
+  void update(world*) override;
+  void start(world*) override;
+  void stop(world*) override {}
 
   int foo();
 };
 
-extern "C" void load_spin_plugin(engine*);
-extern "C" void unload_spin_plugin(engine*);
+extern "C" void load_spin_plugin(plugins*);
+extern "C" void unload_spin_plugin(plugins*);

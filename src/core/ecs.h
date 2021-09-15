@@ -2,6 +2,7 @@
 
 #include "base/guid.h"
 #include "base/sparse_set.h"
+#include "core/components/component.h"
 
 #include <unordered_map>
 #include <cassert>
@@ -264,6 +265,8 @@ struct pool_info {
   component_id_t id;
   remove_ptr_t remove_ptr;
   get_ptr_t get_ptr;
+//  pool_info() = default;
+//  ~pool_info() = default;
 };
 
 class component_ids {
@@ -309,9 +312,6 @@ class component_ids {
 };
 
 template<class Component>
-static inline component_id_t component_id() { return Component::id(); }
-
-template<class Component>
 static void remove_pool_impl(sparse_set<entity>* ptr, ecs::entity entity) {
   static_cast<pool_t<Component>*>(ptr)->erase(entity);
 }
@@ -327,27 +327,26 @@ private:
 
   template<class Component>
   [[nodiscard]] uint32_t component_index() const {
-    auto it = guid_to_pool_idx_.find(component_id<Component>());
+    auto it = guid_to_pool_idx_.find(component_info<Component>::id());
     return it != guid_to_pool_idx_.end() ? it->second : std::numeric_limits<uint32_t>::max();
   }
 
   template<class Component>
   pool_t<Component>& assure() {
-    component_id_t id = component_id<Component>();
+    component_id_t id = component_info<Component>::id();
 
     if (auto it = guid_to_pool_idx_.find(id); it != guid_to_pool_idx_.end())
       return *static_cast<pool_t<Component>*>(pools_[it->second].ptr.get());
 
     guid_to_pool_idx_[id] = pools_.size();
-    pool_t<Component>* pool = new pool_t<Component>;
-    pool_info& p = pools_.emplace_back( pool_info {
-        .ptr = {},
-        .id = id,
-        .remove_ptr = &remove_pool_impl<Component>,
-        .get_ptr = &get_component_impl<Component>
-      });
-    p.ptr.reset(pool);
-    return *pool;
+
+    pool_info& p = pools_.emplace_back();
+    p.id = id;
+    p.ptr = std::make_unique<pool_t<Component>>();
+    p.remove_ptr = &remove_pool_impl<Component>;
+    p.get_ptr = &get_component_impl<Component>;
+
+    return *static_cast<pool_t<Component>*>(p.ptr.get());
   }
 
   template<class Component>

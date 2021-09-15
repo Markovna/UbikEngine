@@ -2,6 +2,7 @@
 
 #include "gfx/gfx.h"
 #include "core/assets/asset_loader.h"
+#include "core/assets/asset_compiler.h"
 
 class texture {
  public:
@@ -49,6 +50,13 @@ namespace assets::loader {
 
 template<>
 std::unique_ptr<texture> load(std::istream&);
+
+}
+
+namespace assets::compiler {
+
+template<>
+bool compile<texture>(std::ifstream& stream, const asset& meta, std::ostream&);
 
 }
 

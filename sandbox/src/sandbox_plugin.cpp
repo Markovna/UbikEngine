@@ -1,23 +1,27 @@
 #include "sandbox_plugin.h"
 #include "spin_plugin.h"
-#include "core/engine.h"
-#include "core/engine_i.h"
 #include "core/world.h"
 #include "base/log.h"
 #include "core/components/mesh_component.h"
 #include "core/components/camera_component.h"
+#include "core/assets/assets.h"
+#include "core/plugins.h"
 
 #include "core/meta/registration.h"
 
-class test : public plugin<engine_i> {
+class test : public world_system {
  public:
   int count = 0;
-  void stop(engine *e) override {}
-  void start(engine *e) override {
-    logger::core::Info("test::start  ");
+  void stop(world*) override {}
+  void start(world* w) override {
+    logger::core::Info("test::start");
 
-    asset scene_asset = assets::read(fs::absolute("assets/scenes/start_scene.entity"));
-    e->world->load_from_asset(scene_asset);
+    assets::handle scene =
+        assets::load(
+            assets::g_provider,
+            fs::absolute("assets/scenes/start_scene.entity")
+          );
+    w->load_from_asset(*scene);
 
     /*
     auto root_ent = e->world->create_entity();
@@ -52,30 +56,29 @@ class test : public plugin<engine_i> {
     */
   }
 
-  void update(engine *e) override {
-    auto mesh_view = e->world->view<mesh_component, custom_component>();
+  void update(world* w) override {
+    auto mesh_view = w->view<mesh_component, custom_component>();
     for (ecs::entity id : mesh_view) {
-      mesh_view.get<mesh_component>(id).set_color(color::blue());
+      mesh_view.get<mesh_component>(id).set_color(color::green());
     }
+
+//    logger::core::Info(meta::get_type<test_component>().name());
   }
 };
 
+void load_sandbox_plugin(plugins* plugins_registry) {
 
-void load_sandbox_plugin(engine* engine) {
-
+  register_type(test_component);
   register_type(inner_type);
   register_type(custom_component);
 
   logger::core::Info("load_sandbox_plugin");
-  engine->plugins->add<test>("test");
+  ecs::world->register_system<test>("test");
 }
 
-
-void unload_sandbox_plugin(engine* engine) {
-
+void unload_sandbox_plugin(plugins* plugins_registry) {
   logger::core::Info("unload_sandbox_plugin");
-  engine->plugins->remove("test");
-
+  ecs::world->unregister_system("test");
 }
 
 void serializer<custom_component>::from_asset(const asset &asset, custom_component& comp) {

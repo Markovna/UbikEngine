@@ -3,14 +3,15 @@
 #include "base/window_event.h"
 #include "base/cursor.h"
 #include "base/timer.h"
+#include "core/assets/resources.h"
 
 #include "gfx/gfx.h"
-#include "core/assets/asset_handle.h"
 
 struct window;
 struct ImGuiContext;
 struct ImDrawData;
 struct texture;
+struct shader;
 
 class gui_renderer {
  public:
@@ -40,7 +41,7 @@ class gui_renderer {
  private:
   constexpr static const size_t kBufferMaxSize  = 10 * 2048;
 
-  shader_handle shader_;
+  resources::handle<shader> shader_;
   std::unique_ptr<texture> texture_;
   gfx::uniform_handle texture_uniform_handle_;
   gfx::vertexbuf_handle vb_handle_;
@@ -50,5 +51,6 @@ class gui_renderer {
   timer timer_;
 };
 
-
+void connect_gui_events(gui_renderer*, class input_system*);
+void disconnect_gui_events(gui_renderer*, class input_system*);
 

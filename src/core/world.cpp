@@ -135,3 +135,16 @@ void serializer<transform_component>::to_asset(asset& asset, const transform_com
   assets::set(asset, "scale", comp.local.scale);
 }
 
+namespace ecs {
+
+class world* world;
+
+void init_world() {
+  world = new ::world;
+}
+
+void shutdown_world() {
+  delete world;
+}
+
+}

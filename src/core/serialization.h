@@ -39,7 +39,14 @@ void get(const asset& asset, const char* key, T& value) {
 
 template <class T, class = std::enable_if_t<!has_to_json<T>::value>, class = std::enable_if_t<has_to_asset<T>::value>>
 void set(asset& asset, const char* key, T&& value) {
-  serializer<std::decay_t<T>>::to_asset(asset[key], std::forward<T>(value));
+  serializer<std::decay_t<T>>::to_asset(asset.at(key), std::forward<T>(value));
 }
+
+template <class T, class = std::enable_if_t<!has_to_json<T>::value>, class = std::enable_if_t<has_to_asset<T>::value>>
+const asset& at(const asset& asset, const char* key) {
+
+  return asset.at(key);
+}
+
 
 }

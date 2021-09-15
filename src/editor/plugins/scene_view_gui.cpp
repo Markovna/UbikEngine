@@ -2,20 +2,19 @@
 
 #include "base/color.h"
 
-#include "core/engine.h"
 #include "core/world.h"
-#include "core/plugins_registry.h"
+#include "core/plugins.h"
 #include "core/render_texture.h"
 #include "core/renderer.h"
 #include "core/components/camera_component.h"
 #include "core/assets/shader.h"
 
-#include "editor/editor_gui_i.h"
+#include "editor/editor_gui.h"
 #include "editor/gui/imgui_renderer.h"
 
-class scene_view_gui : public plugin<editor_gui_i> {
+class scene_view_gui : public editor_gui {
  public:
-  void gui(engine* e, gui_renderer* gui_renderer) override;
+  void gui(gui_renderer* gui_renderer) override;
 
  private:
   void move_camera(world* w, const vec2 &delta);
@@ -27,15 +26,15 @@ class scene_view_gui : public plugin<editor_gui_i> {
   std::unique_ptr<render_texture> render_texture_;
 };
 
-void scene_view_gui::gui(engine *e, gui_renderer *gui_renderer) {
+void scene_view_gui::gui(gui_renderer *gui_renderer) {
   gui_renderer->set_context();
 
-  if (!e->world->valid(camera_)) {
+  if (!ecs::world->valid(camera_)) {
     // create camera
-    camera_ = e->world->create_entity();
-    e->world->set_local_rotation(camera_, quat::axis(vec3::right(), 30 * math::DEG_TO_RAD));
-    e->world->set_local_position(camera_, vec3 { 0, 0, 0} );
-    camera_component& camera = e->world->add_component<camera_component>(camera_);
+    camera_ = ecs::world->create_entity();
+    ecs::world->set_local_rotation(camera_, quat::axis(vec3::right(), 30 * math::DEG_TO_RAD));
+    ecs::world->set_local_position(camera_, vec3 { 0, 0, 0} );
+    camera_component& camera = ecs::world->add_component<camera_component>(camera_);
     camera.clear_color = { 0.1f, 0.1f, 0.1f, 1.0f };
     camera.tag |= camera_component::tag_t::Editor;
     camera.far = 10'000.0f;
@@ -56,12 +55,12 @@ void scene_view_gui::gui(engine *e, gui_renderer *gui_renderer) {
   }
 
   auto camera_predicate = [] (entity e, const camera_component& c) { return (c.tag & camera_component::tag_t::Editor) == camera_component::tag_t::Editor; };
-  renderer::update_views(e->world, {0,0, (float) resolution.x, (float) resolution.y}, render_texture_->handle(), camera_predicate);
-  renderer::render(e->world, camera_predicate);
+  renderer::update_views(ecs::world, {0,0, (float) resolution.x, (float) resolution.y}, render_texture_->handle(), camera_predicate);
+  renderer::render(ecs::world, camera_predicate);
 
   // render grid
   {
-    static shader_handle grid_shader = assets::load<shader>("assets/shaders/EditorGrid.shader");
+    static resources::handle<shader> grid_shader = resources::load<shader>(fs::absolute("assets/shaders/EditorGrid.shader"), assets::g_provider);
     static float size = 100.0f;
     static float hs = size * 0.5f;
 
@@ -84,14 +83,14 @@ void scene_view_gui::gui(engine *e, gui_renderer *gui_renderer) {
             {gfx::attribute::binding::Position, gfx::attribute::format::Float3()},
             {gfx::attribute::binding::TexCoord0, gfx::attribute::format::Float2()}
         });
-    renderer::render(mat4::look_at(vec3::zero(), vec3::up(), vec3::forward()), grid_shader->handle(), vb, gfx::indexbuf_handle::invalid(), e->world->component<camera_component>(camera_));
+    renderer::render(mat4::look_at(vec3::zero(), vec3::up(), vec3::forward()), grid_shader->handle(), vb, gfx::indexbuf_handle::invalid(), ecs::world->component<camera_component>(camera_));
   }
 
   gui::Image((ImTextureID)(intptr_t)render_texture_->texture().handle().id, size, {0,1}, {1, 0});
 
   ImGuiIO& io = gui::GetIO();
   if (gui::IsWindowHovered() && io.MouseWheel != 0.0f) {
-    zoom_camera(e->world, io.MouseWheel);
+    zoom_camera(ecs::world, io.MouseWheel);
   }
 
   if (gui::IsWindowFocused()) {
@@ -120,10 +119,10 @@ void scene_view_gui::gui(engine *e, gui_renderer *gui_renderer) {
     }
 
     if (move_delta != vec2::zero())
-      move_camera(e->world, move_delta);
+      move_camera(ecs::world, move_delta);
 
     if (rotate_delta != vec2::zero())
-      rotate_camera(e->world, rotate_delta);
+      rotate_camera(ecs::world, rotate_delta);
   }
 
   gui::End();
@@ -164,10 +163,12 @@ void scene_view_gui::rotate_camera(world *w, const vec2 &delta) {
   w->set_local_rotation(camera_, quat::look_at(center - local_pos, rot * up));
 }
 
-void load_scene_view_gui(engine* e) {
-  e->plugins->add<scene_view_gui>("scene_view_gui");
+void load_scene_view_gui(plugins* plugins) {
+  plugins->get<editor_gui_plugin>()->add_editor<scene_view_gui>();
+//  plugins_registry->add<scene_view_gui>("scene_view_gui");
 }
 
-void unload_scene_view_gui(engine* e) {
-  e->plugins->remove("scene_view_gui");
+void unload_scene_view_gui(plugins* plugins) {
+  // TODO
+//  plugins_registry->remove("scene_view_gui");
 }

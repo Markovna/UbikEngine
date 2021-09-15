@@ -1,25 +1,26 @@
 
-#include "core/engine.h"
+#include <core/assets/assets.h>
 #include "core/input_system.h"
 #include "core/world.h"
 #include "core/components/mesh_component.h"
 #include "core/components/camera_component.h"
-#include "core/plugins_registry.h"
 #include "core/renderer.h"
 #include "gfx/gfx.h"
 #include "platform/window.h"
 #include "base/window_event.h"
-#include "core/assets/asset_handle.h"
 #include "core/meta/registration.h"
 #include "core/meta/schema.h"
+#include "core/plugins.h"
+//#include "core/plugins_registry.h"
 
-extern void load_plugins(engine*);
+extern void load_plugins(plugins*);
 
 int main(int argc, char* argv[]) {
 
   fs::paths::project(fs::current_path().c_str());
   logger::init(fs::absolute("log").c_str());
 
+  meta::init();
   meta::load_schemas(fs::absolute("schema").c_str());
 
   register_type(color);
@@ -42,14 +43,17 @@ int main(int argc, char* argv[]) {
   window window({512, 512});
   gfx::init({.window_handle = window.get_handle(), .resolution = window.get_resolution()});
 
-  engine engine;
-  engine.world = new world;
-  engine.plugins = new plugins_registry;
-  engine.input = new input_system;
+  ecs::init_world();
+  init_input_system();
+  init_plugins_registry();
+  load_plugins(plugins_reg);
 
-  load_plugins(&engine);
+  assets::filesystem_provider* provider = new assets::filesystem_provider;
+  provider->add(fs::paths::project());
 
-  engine.start();
+  assets::init(provider);
+
+  ecs::world->start_systems();
   vec4 viewport {};
 
   bool running = true;
@@ -62,25 +66,30 @@ int main(int argc, char* argv[]) {
       if (event.type == event_type::Close) {
         running = false;
       }
-      engine.input->push_event(event);
+      input->push_event(event);
     }
 
     gfx::resolution(window.get_resolution());
 
-    engine.update();
+    ecs::world->update_systems();
 
     vec2i resolution = window.get_resolution();
     viewport.z = (float) resolution.x, viewport.w = (float) resolution.y;
-    renderer::update_views(engine.world, viewport, gfx::framebuf_handle::invalid());
-    renderer::render(engine.world);
+    renderer::update_views(ecs::world, viewport, gfx::framebuf_handle::invalid());
+    renderer::render(ecs::world);
 
     gfx::frame();
   }
 
-  engine.stop();
-  delete engine.input;
-  delete engine.plugins;
-  delete engine.world;
+  ecs::world->stop_systems();
+
+  shutdown_input_system();
+  shutdown_plugins_registry();
+  ecs::shutdown_world();
+
+  assets::shutdown();
+
+  meta::shutdown();
 
   gfx::shutdown();
   return 0;

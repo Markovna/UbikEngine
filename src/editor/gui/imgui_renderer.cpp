@@ -3,6 +3,7 @@
 #include "platform/window.h"
 #include "core/assets/shader.h"
 #include "core/assets/texture.h"
+#include "core/input_system.h"
 
 std::unique_ptr<gui_renderer> gui_renderer::create(window* w) {
   return std::make_unique<gui_renderer>(w);
@@ -201,7 +202,7 @@ gui_renderer::gui_renderer(window* w) : context_(gui::CreateContext()) {
   // consider calling GetTexDataAsAlpha8() instead to save on GPU memory.
   io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
   texture_ = std::make_unique<texture>(pixels, width, height, gfx::texture_format::RGBA8);
-  shader_ = assets::load<shader>("assets/shaders/GUIShader.shader");
+  shader_ = resources::load<shader>(fs::absolute("assets/shaders/GUIShader.shader"), assets::g_provider);
 
   io.Fonts->TexID = (ImTextureID)(intptr_t) texture_->handle().id;
 
@@ -327,4 +328,26 @@ cursor::type gui_renderer::cursor() const {
 
 void gui_renderer::set_context() {
   gui::SetCurrentContext(context_);
+}
+
+void connect_gui_events(gui_renderer* gui_renderer, class input_system* input_events) {
+  input_events->on_resize.connect(gui_renderer, &gui_renderer::on_resize);
+  input_events->on_key_press.connect(gui_renderer, &gui_renderer::on_key_pressed);
+  input_events->on_key_release.connect(gui_renderer, &gui_renderer::on_key_released);
+  input_events->on_mouse_down.connect(gui_renderer, &gui_renderer::on_mouse_down);
+  input_events->on_mouse_move.connect(gui_renderer, &gui_renderer::on_mouse_move);
+  input_events->on_mouse_up.connect(gui_renderer, &gui_renderer::on_mouse_up);
+  input_events->on_scroll.connect(gui_renderer, &gui_renderer::on_scroll);
+  input_events->on_text.connect(gui_renderer, &gui_renderer::on_text_input);
+}
+
+void disconnect_gui_events(gui_renderer* gui_renderer, class input_system* input_events) {
+  input_events->on_resize.disconnect(gui_renderer, &gui_renderer::on_resize);
+  input_events->on_key_press.disconnect(gui_renderer, &gui_renderer::on_key_pressed);
+  input_events->on_key_release.disconnect(gui_renderer, &gui_renderer::on_key_released);
+  input_events->on_mouse_down.disconnect(gui_renderer, &gui_renderer::on_mouse_down);
+  input_events->on_mouse_move.disconnect(gui_renderer, &gui_renderer::on_mouse_move);
+  input_events->on_mouse_up.disconnect(gui_renderer, &gui_renderer::on_mouse_up);
+  input_events->on_scroll.disconnect(gui_renderer, &gui_renderer::on_scroll);
+  input_events->on_text.disconnect(gui_renderer, &gui_renderer::on_text_input);
 }

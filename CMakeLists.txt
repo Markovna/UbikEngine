@@ -17,11 +17,11 @@ set(BASE_SRC
 
 set(CORE_SRC
         src/core/ecs.h src/core/ecs.cpp
-        src/core/plugins_registry.h src/core/plugins_registry.cpp src/core/world.h src/core/engine.cpp src/core/engine.h src/core/renderer.cpp src/core/renderer.h
+        src/core/plugins_registry.h src/core/plugins_registry.cpp src/core/world.h src/core/renderer.cpp src/core/renderer.h
         src/core/input_system.cpp src/core/input_system.h
-        src/core/assets/asset_handle.cpp src/core/assets/asset_handle.h src/core/assets/texture.cpp src/core/assets/texture.h src/core/assets/shader.cpp src/core/assets/shader.h src/core/components/mesh_component.cpp src/core/components/mesh_component.h src/core/components/camera_component.cpp src/core/components/camera_component.h src/core/world.cpp src/core/meta/registration.h src/core/meta/registration.cpp src/core/components/component.cpp src/core/components/component.h src/core/serialization.h src/core/meta/type.h src/core/meta/type_info.h src/core/meta/type_info.cpp src/core/meta/schema.cpp src/core/meta/schema.h src/core/assets/asset_loader.h src/core/assets/asset.h src/core/assets/asset.cpp src/core/engine_i.h
+        src/core/assets/texture.cpp src/core/assets/texture.h src/core/assets/shader.cpp src/core/assets/shader.h src/core/components/mesh_component.cpp src/core/components/mesh_component.h src/core/components/camera_component.cpp src/core/components/camera_component.h src/core/world.cpp src/core/meta/registration.h src/core/meta/registration.cpp src/core/components/component.cpp src/core/components/component.h src/core/serialization.h src/core/meta/type.h src/core/meta/type_info.h src/core/meta/type_info.cpp src/core/meta/schema.cpp src/core/meta/schema.h src/core/assets/asset_loader.h src/core/assets/asset.h src/core/assets/asset.cpp
         src/core/render_texture.h src/core/render_texture.cpp
-        )
+        src/core/plugins.cpp src/core/plugins.h src/core/simulation.cpp src/core/simulation.h src/core/assets/asset_compiler.h)
 
 set(GFX_SRC
         src/gfx/gfx.cpp src/gfx/gfx.h src/gfx/gfx_config.h src/gfx/gfx_details.cpp src/gfx/gfx_details.h src/gfx/renderer_api.h src/gfx/renderer_api_gl.h src/gfx/renderer_api_gl.cpp
@@ -33,9 +33,9 @@ set(PLATFORM_SRC
         src/platform/file_system.h src/platform/file_system.cpp)
 
 set(EXPERIMENTAL
-        src/experimental/assets.h
-        src/experimental/assets.cpp
-        src/experimental/resources.cpp src/experimental/resources.h)
+        src/core/assets/assets.h
+        src/core/assets/assets.cpp
+        src/core/assets/resources.cpp src/core/assets/resources.h)
 
 set(ENGINE_LIBS
         glfw
@@ -56,7 +56,7 @@ file(MAKE_DIRECTORY ${SANDBOX_LIBS_DIR})
 # ----------------------------------------- #
 
 add_library(game STATIC
-        ${BASE_SRC} ${CORE_SRC} ${GFX_SRC} ${PLATFORM_SRC} src/core/game.cpp
+        ${EXPERIMENTAL} ${BASE_SRC} ${CORE_SRC} ${GFX_SRC} ${PLATFORM_SRC} src/core/game.cpp
         )
 
 target_link_libraries(game PRIVATE ${ENGINE_LIBS})
@@ -67,7 +67,7 @@ target_include_directories(game PRIVATE ${ENGINE_INCLUDES})
 # ----------------------------------------- #
 
 add_library(engine SHARED
-        ${BASE_SRC} ${CORE_SRC} ${GFX_SRC} ${PLATFORM_SRC}
+        ${EXPERIMENTAL} ${BASE_SRC} ${CORE_SRC} ${GFX_SRC} ${PLATFORM_SRC}
         )
 
 target_link_libraries(engine PUBLIC ${ENGINE_LIBS})
@@ -179,7 +179,6 @@ list(APPEND PLUGINS scene_view_gui)
 # ----------------------------------------- #
 
 add_executable(ubik
-        "${EXPERIMENTAL}"
         src/editor/editor.cpp
         src/editor/library_loader.cpp src/editor/library_loader.h)
 

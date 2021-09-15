@@ -1,4 +1,7 @@
 {
   "__guid": "4054242338de4e1386599f3299a3ab29",
-  "__type": "shader"
+  "data": 8418152768671971451,
+  "source_guid": "4054242338de4e1386511f3299a3ab29",
+  "source_path": "assets/shaders/EditorGrid.shader",
+  "type": "shader"
 }

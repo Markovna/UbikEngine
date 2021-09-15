@@ -4,13 +4,14 @@
 #include "base/json.hpp"
 #include "platform/file_system.h"
 #include "base/slot_map.h"
+#include "core/assets/asset.h"
 
 #include <map>
 #include <sstream>
+#include <random>
 
-namespace experimental::assets {
+namespace assets {
 
-using asset = nlohmann::json;
 using buffer_t = std::unique_ptr<std::istream>;
 
 bool read(const fs::path &path, asset &data);
@@ -80,11 +81,16 @@ class repository {
 class provider {
  public:
   virtual fs::path get_path(const guid& id) = 0;
+
   virtual asset load(const fs::path&) = 0;
   virtual void load_buffer(const fs::path&, uint64_t buffer_id, std::ostream&) = 0;
+
   virtual void save(const fs::path&, const asset&) = 0;
-//  virtual void save_buffer(const fs::path&, uint64_t buffer_id, const std::istream&) = 0;
+  virtual void save_buffer(const fs::path&, uint64_t buffer_id, const std::istream&) = 0;
+  virtual void remove_buffer(const fs::path&, uint64_t buffer_id) = 0;
+
   virtual void reload(repository&) = 0;
+  virtual ~provider() = default;
 };
 
 class filesystem_provider : public provider {
@@ -94,8 +100,13 @@ class filesystem_provider : public provider {
   asset load(const fs::path&) override;
   fs::path get_path(const guid& id) override;
   void load_buffer(const fs::path&, uint64_t buffer_id, std::ostream&) override;
+  void save_buffer(const fs::path&, uint64_t buffer_id, const std::istream&) override;
   void save(const fs::path&, const asset&) override;
+  void remove_buffer(const fs::path&, uint64_t buffer_id) override;
   void reload(repository&) override;
+
+ private:
+  fs::path get_or_create_buffers_dir(const fs::path&);
 
  private:
   std::unordered_map<guid, std::string> guid_to_path_;
@@ -134,63 +145,21 @@ class handle {
   repository::key key_;
 };
 
-class registry1 {
- public:
-  handle load(provider*, const guid& id);
-  handle load(provider*, const fs::path& path);
-  buffer_t load_buffer(provider*, const handle& handle, uint64_t buffer_id);
+handle load(provider* provider, repository& rep, const guid& id);
+handle load(provider* provider, repository& rep, const fs::path& path);
 
- private:
-  repository repository_;
-};
+handle load(provider* provider, const guid& id);
+handle load(provider* provider, const fs::path& path);
+buffer_t load_buffer(provider* provider, const handle& handle, const char* name);
 
-class registry {
- public:
-  void init(provider* provider) {
-    provider_ = provider;
-  }
+uint64_t add_buffer(handle& handle, const char* name);
 
-  handle load(const guid& id) {
-    if (auto [ key, success ] = repository_.find(id); success)
-      return { &repository_, key };
+extern repository* g_repository;
+void init();
+void shutdown();
 
-    fs::path path = provider_->get_path(id);
-    repository::key key = repository_.emplace(id, path);
-    repository_[key].asset = provider_->load(path);
-    return { &repository_, key };
-  }
-
-  handle load(const fs::path& path) {
-    if (auto [ key, success ] = repository_.find(path); success)
-      return { &repository_, key };
-
-    asset asset = provider_->load(path);
-    repository::key key = repository_.emplace(guid::from_string(asset["__guid"]), path);
-    repository_[key].asset = std::move(asset);
-    return { &repository_, key };
-  }
-
-  buffer_t load_buffer(const handle& handle, uint64_t buffer_id) {
-    if (!handle)
-      return { };
-
-    std::stringstream stream;
-    provider_->load_buffer(handle.path(), buffer_id, stream);
-    return std::make_unique<std::stringstream>(std::move(stream));
-  }
-
-  void save_changes(const handle& handle) {
-    provider_->save(handle.path(), *handle);
-  }
-
-  void reload() {
-    provider_->reload(repository_);
-  }
-
- private:
-  repository repository_;
-  provider* provider_ = nullptr;
-};
-
+extern provider* g_provider;
+void init_provider(provider* provider);
+void shutdown_provider();
 
 }

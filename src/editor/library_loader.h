@@ -84,7 +84,7 @@ class library_loader {
   void reset();
 
   template<class ...Args>
-  void update(Args... args) {
+  void check_hot_reload(Args... args) {
     for (auto& [_, info] : libs_) {
 
       int64_t timestamp = os::get_timestamp(info.src_path);

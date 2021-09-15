@@ -2,7 +2,7 @@
 #include "spin_plugin.h"
 #include "sandbox_plugin.h"
 
-void load_plugins(engine* engine) {
-  load_spin_plugin(engine);
-  load_sandbox_plugin(engine);
+void load_plugins(plugins* plugins_registry) {
+  load_spin_plugin(plugins_registry);
+  load_sandbox_plugin(plugins_registry);
 }

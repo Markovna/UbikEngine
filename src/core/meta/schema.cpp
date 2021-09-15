@@ -12,9 +12,14 @@ struct context {
   std::unordered_map<std::string, schema_info> schemas;
 };
 
-context& get_context() {
-  static context inst;
-  return inst;
+context* g_context;
+
+void init() {
+  g_context = new context;
+}
+
+void shutdown() {
+  delete g_context;
 }
 
 void load_schemas(const char *path) {
@@ -36,8 +41,7 @@ void load_schemas(const char *path) {
       file.open(schema_path, std::ios::in | std::ios::binary);
       asset data = nlohmann::json::parse(file);
 
-      context &c = get_context();
-      schema_info &schema_info = c.schemas[data["name"]];
+      schema_info &schema_info = g_context->schemas[data["name"]];
       schema_info.name = data["name"];
       schema_info.guid = guid::from_string(data["__guid"].get<std::string>().c_str());
 
@@ -52,14 +56,12 @@ void load_schemas(const char *path) {
 }
 
 guid get_schema_id(const char *name) {
-  context &c = get_context();
-  auto it = c.schemas.find(std::string(name));
-  return it != c.schemas.end() ? it->second.guid : guid::invalid();
+  auto it = g_context->schemas.find(std::string(name));
+  return it != g_context->schemas.end() ? it->second.guid : guid::invalid();
 }
 
 const schema_info &get_schema(const char *name) {
-  context &c = get_context();
-  return c.schemas[std::string(name)];
+  return g_context->schemas[std::string(name)];
 }
 
 }

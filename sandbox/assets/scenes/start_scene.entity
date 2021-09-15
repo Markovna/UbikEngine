@@ -65,6 +65,84 @@
                           }
                         }
                       ]
+                    },
+                    {
+                      "__guid": "c71e5e17bdb84a9cbc72653a2b8a5241",
+                      "__type": "entity",
+                      "components": [
+                        {
+                          "__guid": "b51d909e3bd8499d880132a47a735621",
+                          "__type": "transform_component",
+                          "position": {
+                            "x": 0.0,
+                            "y": 1.0,
+                            "z": 1.0
+                          },
+                          "rotation": {
+                            "w": 1.0,
+                            "x": 0.0,
+                            "y": 0.0,
+                            "z": 0.0
+                          },
+                          "scale": {
+                            "x": 1.0,
+                            "y": 1.0,
+                            "z": 1.0
+                          }
+                        },
+                        {
+                          "__guid": "cdd603881c0f455fb82f0cef4b4a7261",
+                          "__type": "mesh_component",
+                          "color": {
+                            "a": 1.0,
+                            "b": 1.0,
+                            "g": 1.0,
+                            "r": 1.0
+                          },
+                          "main_texture": "2531a21125da4b1386512e1269b1b252",
+                          "second_texture": "2531a25525da4b1218519e2269b1b111",
+                          "shader": "4054252338da4b1386512e1269a3a115"
+                        }
+                      ]
+                    },
+                    {
+                      "__guid": "c71e5e17bdb84a9cbc72653a2b8a5242",
+                      "__type": "entity",
+                      "components": [
+                        {
+                          "__guid": "b51d909e3bd8499d880132a47a735622",
+                          "__type": "transform_component",
+                          "position": {
+                            "x": 1.0,
+                            "y": 1.0,
+                            "z": 0.0
+                          },
+                          "rotation": {
+                            "w": 1.0,
+                            "x": 0.0,
+                            "y": 0.0,
+                            "z": 0.0
+                          },
+                          "scale": {
+                            "x": 1.0,
+                            "y": 1.0,
+                            "z": 1.0
+                          }
+                        },
+                        {
+                          "__guid": "cdd603881c0f455fb82f0cef4b4a7262",
+                          "__type": "mesh_component",
+                          "color": {
+                            "a": 1.0,
+                            "b": 1.0,
+                            "g": 1.0,
+                            "r": 1.0
+                          },
+                          "main_texture": "2531a21125da4b1386512e1269b1b252",
+                          "second_texture": "2531a25525da4b1218519e2269b1b111",
+                          "shader": "4054252338da4b1386512e1269a3a115"
+                        }
+                      ]
                     }
                   ],
                   "components": [

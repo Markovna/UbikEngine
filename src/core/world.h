@@ -1,8 +1,10 @@
 #pragma once
 
 #include <vector>
+#include <unordered_map>
 
 #include "base/math.h"
+#include "base/slot_map.h"
 
 #include "core/ecs.h"
 #include "core/components/component.h"
@@ -26,7 +28,15 @@ struct entity {
   explicit operator bool() const { return is_valid(); }
 };
 
-struct link_component : public component<link_component> {
+class world_system {
+ public:
+  virtual void start(world*) = 0;
+  virtual void stop(world*) = 0;
+  virtual void update(world*) = 0;
+  virtual ~world_system() = default;
+};
+
+struct link_component {
   entity parent;
   entity next;
   entity prev;
@@ -35,11 +45,15 @@ struct link_component : public component<link_component> {
   uint32_t children_size = 0;
 };
 
-struct transform_component : public component<transform_component> {
+register_component(link_component);
+
+struct transform_component {
   transform local;
   mutable transform world;
   mutable bool dirty = false;
 };
+
+register_component(transform_component);
 
 template<>
 struct serializer<transform_component> {
@@ -58,6 +72,38 @@ class world : ecs::registry {
 
   entity create_entity(const transform& local = {}, entity parent = entity::invalid(), entity next = entity::invalid());
   void destroy_entity(entity entity);
+
+  template<class T, class ...Args>
+  void register_system(const char* name, Args... args) {
+    auto key = systems_.emplace(std::make_unique<T>(std::forward<Args>(args)...));
+    system_names_map_[name] = key;
+  }
+
+  void unregister_system(const char* name) {
+    auto it = system_names_map_.find(name);
+    if (it != system_names_map_.end()) {
+      systems_.erase(it->second);
+      system_names_map_.erase(it);
+    }
+  }
+
+  void start_systems() {
+    for (std::unique_ptr<world_system>& sys : systems_) {
+      sys->start(this);
+    }
+  }
+
+  void update_systems() {
+    for (std::unique_ptr<world_system>& sys : systems_) {
+      sys->update(this);
+    }
+  }
+
+  void stop_systems() {
+    for (std::unique_ptr<world_system>& sys : systems_) {
+      sys->stop(this);
+    }
+  }
 
   entity load_from_asset(const asset& asset, entity parent = entity::invalid(), entity next = entity::invalid());
 
@@ -221,7 +267,21 @@ class world : ecs::registry {
   }
 
  private:
+  using system_container = stdext::slot_map<std::unique_ptr<world_system>>;
+  using system_key = system_container::key_type ;
+
   entity root_;
+  system_container systems_;
+  std::unordered_map<std::string, system_key> system_names_map_;
 };
+
+namespace ecs {
+
+extern world *world;
+
+void init_world();
+void shutdown_world();
+
+}
 
 

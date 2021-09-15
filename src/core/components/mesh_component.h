@@ -3,9 +3,9 @@
 #include "gfx/gfx.h"
 #include "core/assets/texture.h"
 #include "core/assets/shader.h"
-#include "core/assets/asset_handle.h"
 #include "core/components/component.h"
 #include "core/serialization.h"
+#include "core/assets/resources.h"
 
 #include <cstdint>
 
@@ -21,7 +21,7 @@ gfx::uniform_handle GetColorUniform();
 
 
 //TODO:
-class mesh_component : public component<mesh_component> {
+class mesh_component {
  public:
   gfx::uniform_handle GetMainTextureUniform() const {
     return ::GetMainTextureUniform();
@@ -72,9 +72,9 @@ class mesh_component : public component<mesh_component> {
 
  private:
   struct color color_ = color::white();
-  texture_handle main_texture_;
-  texture_handle second_texture_;
-  shader_handle shader_;
+  resources::handle<texture> main_texture_;
+  resources::handle<texture> second_texture_;
+  resources::handle<shader> shader_;
 };
 
 template<>
@@ -83,3 +83,4 @@ struct serializer<mesh_component> {
   static void to_asset(asset&, const mesh_component&);
 };
 
+register_component(mesh_component)

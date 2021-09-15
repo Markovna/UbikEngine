@@ -7,7 +7,7 @@ struct inner_type {
   double a;
 };
 
-class custom_component : public component<custom_component> {
+class custom_component {
  public:
   int a;
  private:
@@ -17,10 +17,12 @@ class custom_component : public component<custom_component> {
   friend serializer<custom_component>;
 };
 
-struct engine;
+register_component(custom_component);
 
-extern "C" void load_sandbox_plugin(engine*);
-extern "C" void unload_sandbox_plugin(engine*);
+struct plugins;
+
+extern "C" void load_sandbox_plugin(plugins*);
+extern "C" void unload_sandbox_plugin(plugins*);
 
 template<>
 struct serializer<custom_component> {

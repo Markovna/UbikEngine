@@ -2,6 +2,7 @@
 
 #include "gfx/gfx.h"
 #include "core/assets/asset_loader.h"
+#include "core/assets/asset_compiler.h"
 
 #include <string>
 
@@ -30,6 +31,13 @@ namespace assets::loader {
 
 template<>
 std::unique_ptr<shader> load(std::istream&);
+
+}
+
+namespace assets::compiler {
+
+template<>
+bool compile<shader>(std::ifstream& stream, const asset& meta, std::ostream&);
 
 }
 

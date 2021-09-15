@@ -1,9 +1,8 @@
-#include "core/engine.h"
 #include "core/renderer.h"
 #include "core/input_system.h"
 #include "core/world.h"
 #include "core/plugins_registry.h"
-#include "core/assets/asset_handle.h"
+#include "core/plugins.h"
 #include "core/meta/registration.h"
 #include "core/meta/schema.h"
 #include "core/serialization.h"
@@ -17,8 +16,9 @@
 
 #include "editor/gui/gui.h"
 #include "editor/gui/imgui_renderer.h"
-#include "editor/tools/asset_compiler.h"
-#include "editor_gui_i.h"
+#include "editor_gui.h"
+#include "core/assets/assets.h"
+#include "core/assets/resources.h"
 
 #include "library_loader.h"
 
@@ -35,9 +35,7 @@ int main(int argc, char* argv[]) {
   fs::paths::project(argv[1]);
   logger::init(fs::append(fs::paths::cache(), "log").c_str());
 
-  assets::init();
-  assets::compile_all_assets(fs::paths::project().c_str());
-
+  meta::init();
   meta::load_schemas(fs::absolute("schema").c_str());
 
   register_type(color);
@@ -55,38 +53,40 @@ int main(int argc, char* argv[]) {
   register_type(camera_component);
   register_type(mesh_component);
 
-
   window window({1024, 512});
   gfx::init({.window_handle = window.get_handle(), .resolution = window.get_resolution()});
 
+  ecs::init_world();
+  init_input_system();
+  init_plugins_registry();
+
+  auto* provider = new assets::filesystem_provider;
+  provider->add(fs::paths::project());
+
+  assets::init_provider(provider);
+  assets::init();
+
+  resources::init_compiler();
+  resources::compile_all_assets(fs::paths::project().c_str(), provider);
+
+  resources::init();
+
   std::unique_ptr<gui_renderer> gui_renderer = gui_renderer::create(&window);
 
-  engine engine {};
-  engine.world = new world;
-  engine.plugins = new plugins_registry;
-  engine.input = new input_system;
+  connect_gui_events(gui_renderer.get(), input);
 
-  engine.input->on_resize.connect(gui_renderer.get(), &gui_renderer::on_resize);
-  engine.input->on_key_press.connect(gui_renderer.get(), &gui_renderer::on_key_pressed);
-  engine.input->on_key_release.connect(gui_renderer.get(), &gui_renderer::on_key_released);
-  engine.input->on_mouse_down.connect(gui_renderer.get(), &gui_renderer::on_mouse_down);
-  engine.input->on_mouse_move.connect(gui_renderer.get(), &gui_renderer::on_mouse_move);
-  engine.input->on_mouse_up.connect(gui_renderer.get(), &gui_renderer::on_mouse_up);
-  engine.input->on_scroll.connect(gui_renderer.get(), &gui_renderer::on_scroll);
-  engine.input->on_text.connect(gui_renderer.get(), &gui_renderer::on_text_input);
+  plugins_reg->add<editor_gui_plugin>();
 
   library_loader libs(fs::append(fs::paths::cache(), "libs_tmp").c_str());
-
   for (auto plugin_name : plugin_names) {
-    libs.load(plugin_name, os::find_lib(fs::append(fs::paths::cache(), "libs").c_str(), plugin_name), &engine);
+    libs.load(plugin_name, os::find_lib(fs::append(fs::paths::cache(), "libs").c_str(), plugin_name), plugins_reg);
   }
 
-  engine.start();
+  ecs::world->start_systems();
 
   bool running = true;
   while (running) {
-
-    libs.update(&engine);
+    libs.check_hot_reload(plugins_reg);
 
     window.update();
 
@@ -95,7 +95,7 @@ int main(int argc, char* argv[]) {
       if (event.type == event_type::Close) {
         running = false;
       }
-      engine.input->push_event(event);
+      input->push_event(event);
     }
 
     gfx::resolution(window.get_resolution());
@@ -103,11 +103,9 @@ int main(int argc, char* argv[]) {
     gui_renderer->begin_frame();
     gui::begin_dockspace();
 
-    engine.update();
+    ecs::world->update_systems();
 
-    for (editor_gui_i& plugin : engine.plugins->view<editor_gui_i>()) {
-      plugin.gui(&engine, gui_renderer.get());
-    }
+    plugins_reg->get<editor_gui_plugin>()->gui(gui_renderer.get());
 
     window.set_cursor(gui_renderer->cursor());
     gui_renderer->end_frame();
@@ -116,22 +114,23 @@ int main(int argc, char* argv[]) {
   }
 
   for (auto plugin_name : plugin_names) {
-    libs.unload(plugin_name, &engine);
+    libs.unload(plugin_name, plugins_reg);
   }
 
-  engine.input->on_resize.disconnect(gui_renderer.get(), &gui_renderer::on_resize);
-  engine.input->on_key_press.disconnect(gui_renderer.get(), &gui_renderer::on_key_pressed);
-  engine.input->on_key_release.disconnect(gui_renderer.get(), &gui_renderer::on_key_released);
-  engine.input->on_mouse_down.disconnect(gui_renderer.get(), &gui_renderer::on_mouse_down);
-  engine.input->on_mouse_move.disconnect(gui_renderer.get(), &gui_renderer::on_mouse_move);
-  engine.input->on_mouse_up.disconnect(gui_renderer.get(), &gui_renderer::on_mouse_up);
-  engine.input->on_scroll.disconnect(gui_renderer.get(), &gui_renderer::on_scroll);
-  engine.input->on_text.disconnect(gui_renderer.get(), &gui_renderer::on_text_input);
+  disconnect_gui_events(gui_renderer.get(), input);
 
-  engine.stop();
-  delete engine.input;
-  delete engine.plugins;
-  delete engine.world;
+  ecs::world->stop_systems();
+
+  shutdown_input_system();
+  shutdown_plugins_registry();
+  ecs::shutdown_world();
+
+  resources::shutdown();
+
+  assets::shutdown();
+  assets::shutdown_provider();
+
+  meta::shutdown();
 
   gfx::shutdown();
   return 0;

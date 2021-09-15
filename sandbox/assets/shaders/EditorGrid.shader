@@ -28,8 +28,8 @@ out vec4 outColor;
 
 uniform float log10_inv = 1 / log(10);
 uniform float cell_size = 0.0001f; // minimum size of a grid cell in world units that will be visualized.
-uniform vec4 thin_color = vec4(0.5f, 0.5f, 0.5f, 1.0);
-uniform vec4 thick_color = vec4(0.6, 0.6, 0.6, 1.0);
+uniform vec4 thin_color = vec4(1.0f, 1.0f, 1.0f, 0.4f);
+uniform vec4 thick_color = vec4(1.0f, 1.0f, 1.0f, 0.7f);
 uniform float grid_size = 0.5f;
 
 void main()
@@ -43,7 +43,7 @@ void main()
     );
 
     // Define minimum number of pixels between cell lines before LOD switch should occur.
-    const float min_pixels_between_cells = 4.f;
+    const float min_pixels_between_cells = 8.f;
 
     // Calc lod-level [2].
     float lod_level = max(0, log10_inv * log(length(dudv) * min_pixels_between_cells / cell_size) + 1.0);

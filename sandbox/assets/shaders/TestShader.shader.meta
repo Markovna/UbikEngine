@@ -1,4 +1,7 @@
 {
   "__guid": "4054252338da4b1386512e1269a3a115",
-  "__type": "shader"
+  "data": 7529058258386432189,
+  "source_guid": "e012af1015da4b1218519e8169b10007",
+  "source_path": "assets/shaders/TestShader.shader",
+  "type": "shader"
 }
