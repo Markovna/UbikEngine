@@ -8,6 +8,7 @@
 #include "core/renderer.h"
 #include "core/components/camera_component.h"
 #include "core/assets/shader.h"
+#include "core/assets/filesystem_provider.h"
 
 #include "editor/editor_gui.h"
 #include "editor/gui/imgui_renderer.h"
@@ -60,7 +61,8 @@ void scene_view_gui::gui(gui_renderer *gui_renderer) {
 
   // render grid
   {
-    static resources::handle<shader> grid_shader = resources::load<shader>(fs::absolute("assets/shaders/EditorGrid.shader"), assets::g_provider);
+    //TODO: provider
+    static resources::handle<shader> grid_shader = resources::load<shader>(fs::absolute("assets/shaders/EditorGrid.shader"), g_fsprovider);
     static float size = 100.0f;
     static float hs = size * 0.5f;
 
@@ -165,10 +167,10 @@ void scene_view_gui::rotate_camera(world *w, const vec2 &delta) {
 
 void load_scene_view_gui(plugins* plugins) {
   plugins->get<editor_gui_plugin>()->add_editor<scene_view_gui>();
-//  plugins_registry->add<scene_view_gui>("scene_view_gui");
 }
 
 void unload_scene_view_gui(plugins* plugins) {
+//  plugins->get<editor_gui_plugin>()
   // TODO
 //  plugins_registry->remove("scene_view_gui");
 }

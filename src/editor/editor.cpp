@@ -1,15 +1,13 @@
-#include "core/renderer.h"
 #include "core/input_system.h"
 #include "core/world.h"
 #include "core/plugins_registry.h"
 #include "core/plugins.h"
 #include "core/meta/registration.h"
 #include "core/meta/schema.h"
-#include "core/serialization.h"
+#include "core/application.h"
 #include "gfx/gfx.h"
 #include "platform/window.h"
 #include "platform/file_system.h"
-#include "core/assets/shader.h"
 
 #include "core/components/mesh_component.h"
 #include "core/components/camera_component.h"
@@ -19,6 +17,8 @@
 #include "editor_gui.h"
 #include "core/assets/assets.h"
 #include "core/assets/resources.h"
+#include "core/assets/resource_compiler.h"
+#include "core/assets/filesystem_provider.h"
 
 #include "library_loader.h"
 
@@ -26,6 +26,7 @@
 
 int main(int argc, char* argv[]) {
   const char* plugin_names [] = {
+      "sandbox",
       "spin_plugin",
       "sandbox_plugin",
       "game_view_gui",
@@ -60,18 +61,16 @@ int main(int argc, char* argv[]) {
   init_input_system();
   init_plugins_registry();
 
-  auto* provider = new assets::filesystem_provider;
-  provider->add(fs::paths::project());
+  init_filesystem_provider();
 
-  assets::init_provider(provider);
   assets::init();
 
   resources::init_compiler();
-  resources::compile_all_assets(fs::paths::project().c_str(), provider);
+  resources::compile_all_assets(fs::paths::project().c_str());
 
   resources::init();
 
-  std::unique_ptr<gui_renderer> gui_renderer = gui_renderer::create(&window);
+  std::unique_ptr<gui_renderer> gui_renderer = gui_renderer::create(&window, g_fsprovider);
 
   connect_gui_events(gui_renderer.get(), input);
 
@@ -81,6 +80,9 @@ int main(int argc, char* argv[]) {
   for (auto plugin_name : plugin_names) {
     libs.load(plugin_name, os::find_lib(fs::append(fs::paths::cache(), "libs").c_str(), plugin_name), plugins_reg);
   }
+
+  if (g_application)
+    g_application->start(g_fsprovider);
 
   ecs::world->start_systems();
 
@@ -103,6 +105,9 @@ int main(int argc, char* argv[]) {
     gui_renderer->begin_frame();
     gui::begin_dockspace();
 
+    if (g_application)
+      g_application->tick();
+
     ecs::world->update_systems();
 
     plugins_reg->get<editor_gui_plugin>()->gui(gui_renderer.get());
@@ -113,6 +118,9 @@ int main(int argc, char* argv[]) {
     gfx::frame();
   }
 
+  if (g_application)
+    g_application->stop();
+
   for (auto plugin_name : plugin_names) {
     libs.unload(plugin_name, plugins_reg);
   }
@@ -121,14 +129,16 @@ int main(int argc, char* argv[]) {
 
   ecs::world->stop_systems();
 
+  shutdown_filesystem_provider();
+
   shutdown_input_system();
   shutdown_plugins_registry();
   ecs::shutdown_world();
 
   resources::shutdown();
+  resources::shutdown_compiler();
 
   assets::shutdown();
-  assets::shutdown_provider();
 
   meta::shutdown();
 

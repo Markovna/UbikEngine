@@ -14,7 +14,7 @@ struct color {
 
 template<>
 struct serializer<color> {
-  static void from_asset(const asset&, color&);
+  static void from_asset(assets::provider*, const asset&, color&);
   static void to_asset(asset&, const color&);
 };
 

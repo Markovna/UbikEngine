@@ -39,7 +39,7 @@ struct camera_component {
 
 template<>
 struct serializer<camera_component> {
-  static void from_asset(const asset&, camera_component&);
+  static void from_asset(assets::provider*, const asset&, camera_component&);
   static void to_asset(asset&, const camera_component&);
 };
 

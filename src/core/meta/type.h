@@ -24,8 +24,8 @@ class type {
     details::get_type(id_).to_asset(asset, obj);
   }
 
-  void from_asset(const asset& asset, void* obj) const {
-    details::get_type(id_).from_asset(asset, obj);
+  void from_asset(assets::provider* p, const asset& asset, void* obj) const {
+    details::get_type(id_).from_asset(p, asset, obj);
   }
 
  private:

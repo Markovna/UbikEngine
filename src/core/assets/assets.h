@@ -2,9 +2,9 @@
 
 #include "base/guid.h"
 #include "base/json.hpp"
-#include "platform/file_system.h"
 #include "base/slot_map.h"
 #include "core/assets/asset.h"
+#include "platform/file_system.h"
 
 #include <map>
 #include <sstream>
@@ -85,31 +85,7 @@ class provider {
   virtual asset load(const fs::path&) = 0;
   virtual void load_buffer(const fs::path&, uint64_t buffer_id, std::ostream&) = 0;
 
-  virtual void save(const fs::path&, const asset&) = 0;
-  virtual void save_buffer(const fs::path&, uint64_t buffer_id, const std::istream&) = 0;
-  virtual void remove_buffer(const fs::path&, uint64_t buffer_id) = 0;
-
-  virtual void reload(repository&) = 0;
   virtual ~provider() = default;
-};
-
-class filesystem_provider : public provider {
- public:
-  void add(const fs::path&);
-
-  asset load(const fs::path&) override;
-  fs::path get_path(const guid& id) override;
-  void load_buffer(const fs::path&, uint64_t buffer_id, std::ostream&) override;
-  void save_buffer(const fs::path&, uint64_t buffer_id, const std::istream&) override;
-  void save(const fs::path&, const asset&) override;
-  void remove_buffer(const fs::path&, uint64_t buffer_id) override;
-  void reload(repository&) override;
-
- private:
-  fs::path get_or_create_buffers_dir(const fs::path&);
-
- private:
-  std::unordered_map<guid, std::string> guid_to_path_;
 };
 
 class handle {
@@ -158,8 +134,6 @@ extern repository* g_repository;
 void init();
 void shutdown();
 
-extern provider* g_provider;
-void init_provider(provider* provider);
-void shutdown_provider();
-
 }
+
+

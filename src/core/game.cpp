@@ -38,8 +38,6 @@ int main(int argc, char* argv[]) {
   register_type(camera_component);
   register_type(mesh_component);
 
-  assets::init();
-
   window window({512, 512});
   gfx::init({.window_handle = window.get_handle(), .resolution = window.get_resolution()});
 
@@ -51,7 +49,10 @@ int main(int argc, char* argv[]) {
   assets::filesystem_provider* provider = new assets::filesystem_provider;
   provider->add(fs::paths::project());
 
-  assets::init(provider);
+  assets::init_provider(provider);
+  assets::init();
+
+  resources::init();
 
   ecs::world->start_systems();
   vec4 viewport {};
@@ -87,7 +88,10 @@ int main(int argc, char* argv[]) {
   shutdown_plugins_registry();
   ecs::shutdown_world();
 
+  resources::shutdown();
+
   assets::shutdown();
+  assets::shutdown_provider();
 
   meta::shutdown();
 

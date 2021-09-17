@@ -11,7 +11,7 @@ struct entity;
 namespace meta::details {
 
 using to_asset_fn = void (*)(asset&, const void*);
-using from_asset_fn = void (*)(const asset&, void*);
+using from_asset_fn = void (*)(assets::provider*, const asset&, void*);
 using instantiate_fn = void* (*)(world&, const entity&);
 
 struct type_info {

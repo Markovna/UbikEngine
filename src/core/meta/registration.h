@@ -23,7 +23,7 @@ inline constexpr bool has_component_info_v = has_component_info<T>::value;
 
 template<class Component>
 static void to_asset_impl(::asset& asset, const void *ptr) {
-  if constexpr (has_to_asset<Component>::value) {
+  if constexpr (assets::has_to_asset<Component>::value) {
     ::asset& comp_asset = asset.emplace_back();
     serializer<Component>::to_asset(comp_asset, *static_cast<const Component*>(ptr));
     if constexpr (has_component_info_v<Component>) {
@@ -34,9 +34,9 @@ static void to_asset_impl(::asset& asset, const void *ptr) {
 }
 
 template<class Component>
-static void from_asset_impl(const asset &asset, void *ptr) {
-  if constexpr (has_from_asset<Component>::value) {
-    serializer<Component>::from_asset(asset, *static_cast<Component*>(ptr));
+static void from_asset_impl(assets::provider* p, const asset &asset, void *ptr) {
+  if constexpr (assets::has_from_asset<Component>::value) {
+    serializer<Component>::from_asset(p, asset, *static_cast<Component*>(ptr));
   }
 }
 

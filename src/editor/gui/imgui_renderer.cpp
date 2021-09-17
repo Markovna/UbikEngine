@@ -5,8 +5,8 @@
 #include "core/assets/texture.h"
 #include "core/input_system.h"
 
-std::unique_ptr<gui_renderer> gui_renderer::create(window* w) {
-  return std::make_unique<gui_renderer>(w);
+std::unique_ptr<gui_renderer> gui_renderer::create(window* w, assets::provider* provider) {
+  return std::make_unique<gui_renderer>(w, provider);
 }
 
 static cursor::type cursor_type(ImGuiMouseCursor cursor) {
@@ -179,7 +179,7 @@ void gui_renderer::on_text_input(text_event &e) {
   }
 }
 
-gui_renderer::gui_renderer(window* w) : context_(gui::CreateContext()) {
+gui_renderer::gui_renderer(window* w, assets::provider* provider) : context_(gui::CreateContext()) {
 
   vb_handle_ = gfx::create_vertex_buffer(gfx::make_ref(nullptr, kBufferMaxSize * sizeof(ImDrawVert)), kBufferMaxSize, {
       { gfx::attribute::binding::Position, gfx::attribute::format::Float2() },
@@ -202,7 +202,7 @@ gui_renderer::gui_renderer(window* w) : context_(gui::CreateContext()) {
   // consider calling GetTexDataAsAlpha8() instead to save on GPU memory.
   io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
   texture_ = std::make_unique<texture>(pixels, width, height, gfx::texture_format::RGBA8);
-  shader_ = resources::load<shader>(fs::absolute("assets/shaders/GUIShader.shader"), assets::g_provider);
+  shader_ = resources::load<shader>(fs::absolute("assets/shaders/GUIShader.shader"), provider);
 
   io.Fonts->TexID = (ImTextureID)(intptr_t) texture_->handle().id;
 

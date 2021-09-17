@@ -11,7 +11,6 @@ path absolute(const char* _path) {
   return result;
 }
 
-
 path absolute(const path& _path) {
   return absolute(_path.c_str());
 }
@@ -44,16 +43,9 @@ void paths::project(const path& _path) {
     fs::create_directory(ubik_path);
   }
   details::get_config().cache_path = ubik_path;
-
-  path import_path { append(ubik_path, "import") };
-  if (!exists(import_path)) {
-    fs::create_directory(import_path);
-  }
-  details::get_config().import_path = import_path;
 }
 
 const path &paths::project() { return ::fs::details::get_config().project_path; }
-const path &paths::import() { return ::fs::details::get_config().import_path; }
 const path &paths::cache() { return ::fs::details::get_config().cache_path; }
 
 path meta(const char* _path) {

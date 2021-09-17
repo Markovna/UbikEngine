@@ -14,14 +14,6 @@ class test : public world_system {
   int count = 0;
   void stop(world*) override {}
   void start(world* w) override {
-    logger::core::Info("test::start");
-
-    assets::handle scene =
-        assets::load(
-            assets::g_provider,
-            fs::absolute("assets/scenes/start_scene.entity")
-          );
-    w->load_from_asset(*scene);
 
     /*
     auto root_ent = e->world->create_entity();
@@ -57,10 +49,10 @@ class test : public world_system {
   }
 
   void update(world* w) override {
-    auto mesh_view = w->view<mesh_component, custom_component>();
-    for (ecs::entity id : mesh_view) {
-      mesh_view.get<mesh_component>(id).set_color(color::green());
-    }
+//    auto mesh_view = w->view<mesh_component, custom_component>();
+//    for (ecs::entity id : mesh_view) {
+//      mesh_view.get<mesh_component>(id).set_color(color::green());
+//    }
 
 //    logger::core::Info(meta::get_type<test_component>().name());
   }
@@ -81,10 +73,10 @@ void unload_sandbox_plugin(plugins* plugins_registry) {
   ecs::world->unregister_system("test");
 }
 
-void serializer<custom_component>::from_asset(const asset &asset, custom_component& comp) {
-  assets::get(asset, "a", comp.a);
-  assets::get(asset, "b", comp.b);
-  assets::get(asset, "c", comp.c);
+void serializer<custom_component>::from_asset(assets::provider* p, const asset &asset, custom_component& comp) {
+  assets::get(p, asset, "a", comp.a);
+  assets::get(p, asset, "b", comp.b);
+  assets::get(p, asset, "c", comp.c);
 }
 
 void serializer<custom_component>::to_asset(asset &asset, const custom_component& comp) {
@@ -93,8 +85,8 @@ void serializer<custom_component>::to_asset(asset &asset, const custom_component
   assets::set(asset, "c", comp.c);
 }
 
-void serializer<inner_type>::from_asset(const asset &asset, inner_type& val) {
-  assets::get(asset, "a", val.a);
+void serializer<inner_type>::from_asset(assets::provider* p, const asset &asset, inner_type& val) {
+  assets::get(p, asset, "a", val.a);
 }
 
 void serializer<inner_type>::to_asset(asset &asset, const inner_type& val) {

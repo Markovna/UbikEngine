@@ -10,7 +10,6 @@ namespace details {
 
 struct config {
   path project_path;
-  path import_path;
   path cache_path;
 };
 
@@ -21,7 +20,6 @@ config& get_config();
 namespace paths {
 
 const path& project();
-const path& import();
 const path& cache();
 
 void project(const path&);

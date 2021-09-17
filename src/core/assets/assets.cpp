@@ -11,7 +11,13 @@ bool read(const fs::path &path, asset &data) {
   if (!file)
     return false;
 
-  data = asset::parse(file);
+  try {
+    data = asset::parse(file);
+  }
+  catch (asset::parse_error& ex) {
+    return false;
+  }
+
   return true;
 }
 
@@ -70,7 +76,6 @@ uint64_t add_buffer(handle& handle, const char* name) {
 }
 
 repository* g_repository;
-provider* g_provider;
 
 void init() {
   g_repository = new repository;
@@ -78,14 +83,6 @@ void init() {
 
 void shutdown() {
   delete g_repository;
-}
-
-void init_provider(provider* provider) {
-  g_provider = provider;
-}
-
-void shutdown_provider() {
-  delete g_provider;
 }
 
 handle::handle(repository* repository, const repository::key& key)
@@ -122,81 +119,6 @@ handle& handle::operator=(const handle& other) {
 void handle::swap(handle& other) noexcept {
   std::swap(repository_, other.repository_);
   std::swap(key_, other.key_);
-}
-
-asset filesystem_provider::load(const fs::path& path) {
-  asset asset;
-  read(path, asset);
-  return asset;
-}
-
-fs::path filesystem_provider::get_path(const guid& id) {
-  auto iterator = guid_to_path_.find(id);
-  if (iterator == guid_to_path_.end())
-    return {};
-
-  return iterator->second;
-}
-
-void filesystem_provider::save(const fs::path& path, const asset& asset) {
-  guid id = guid::from_string(asset["__guid"]);
-  guid_to_path_[id] = path;
-  write(path, asset);
-}
-
-void filesystem_provider::reload(repository& repository) {
-  // TODO: check for all changes and load it to repository
-//  repository.replace()
-}
-
-void filesystem_provider::load_buffer(const fs::path& path, uint64_t buffer_id, std::ostream& stream) {
-  fs::path buffer_path = fs::append(get_or_create_buffers_dir(path), std::to_string(buffer_id));
-  std::ifstream file = fs::read_file(buffer_path);
-  stream << file.rdbuf();
-}
-
-void filesystem_provider::add(const fs::path& path) {
-  static const std::set<std::string> extensions = {
-      ".meta",
-      ".entity"
-  };
-
-  for (auto it = fs::recursive_directory_iterator(path); it != fs::recursive_directory_iterator(); it++) {
-    if (it->is_directory())
-      continue;
-
-    if (!extensions.count(it->path().extension()))
-      continue;
-
-    asset asset;
-    if (!read(it->path(), asset))
-      continue;
-
-    guid id = guid::from_string(asset["__guid"]);
-    if (id.is_valid()) {
-      guid_to_path_[id] = it->path();
-    }
-  }
-}
-
-void filesystem_provider::save_buffer(const fs::path& path, uint64_t buffer_id, const std::istream& buffer) {
-  logger::core::Info("filesystem_provider::save_buffer {0}:{1}", path.c_str(), buffer_id);
-  fs::path buffer_path = fs::append(get_or_create_buffers_dir(path), std::to_string(buffer_id));
-  std::ofstream file(buffer_path, std::ios::binary | std::ios::trunc);
-  file << buffer.rdbuf();
-}
-
-void filesystem_provider::remove_buffer(const fs::path& path, uint64_t buffer_id) {
-  fs::path buffer_path = fs::append(get_or_create_buffers_dir(path), std::to_string(buffer_id));
-  fs::remove(buffer_path);
-}
-
-fs::path filesystem_provider::get_or_create_buffers_dir(const fs::path& path) {
-  fs::path buffers_path = fs::concat(path, ".buffers");
-  if (!fs::exists(buffers_path)) {
-    fs::create_directory(buffers_path);
-  }
-  return buffers_path;
 }
 
 }

@@ -81,21 +81,21 @@ void world::set_parent(entity ent, entity parent, entity next) {
   set_world_transform(ent, world);
 }
 
-entity world::load_from_asset(const asset& asset, entity parent, entity next) {
+entity world::load_from_asset(assets::provider* provider, const asset& asset, entity parent, entity next) {
   entity entity { ecs::registry::create() };
   ecs::registry::emplace<link_component>(entity.id);
 
   for (const ::asset& comp_asset : asset.at("components")) {
     std::string name = comp_asset.at("__type");
     meta::type type =  meta::get_type(name.c_str());
-    type.from_asset(comp_asset, type.instantiate(*this, entity));
+    type.from_asset(provider, comp_asset, type.instantiate(*this, entity));
   }
 
   set_parent(entity, parent, next);
 
   if (asset.contains("children")) {
     for (const ::asset& child_asset : asset.at("children")) {
-      load_from_asset(child_asset, entity);
+      load_from_asset(provider, child_asset, entity);
     }
   }
   return entity;
@@ -121,10 +121,10 @@ void world::save_to_asset(asset &asset) {
   save_to_asset(asset, root_);
 }
 
-void serializer<transform_component>::from_asset(const asset& asset, transform_component& comp) {
-  assets::get(asset, "position", comp.local.position);
-  assets::get(asset, "rotation", comp.local.rotation);
-  assets::get(asset, "scale", comp.local.scale);
+void serializer<transform_component>::from_asset(assets::provider* p, const asset& asset, transform_component& comp) {
+  assets::get(p, asset, "position", comp.local.position);
+  assets::get(p, asset, "rotation", comp.local.rotation);
+  assets::get(p, asset, "scale", comp.local.scale);
 
   comp.dirty = true;
 }

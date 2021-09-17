@@ -128,7 +128,6 @@ class library_loader {
   }
 
  private:
-
   fs::path copy_to_temp(const char* name, const fs::path& src_path, uint32_t version);
 
   template<class ...Args>
