@@ -13,15 +13,15 @@ add_subdirectory(thirdparty/imgui imgui)
 set(BASE_SRC
         src/base/slot_map.h src/base/delegate.h src/base/event.h src/base/key_codes.h src/base/mouse_codes.h src/base/color.h src/base/color.cpp src/base/math.h src/base/math.cpp src/base/cursor.h src/base/iterator_range.h src/base/profiler.h src/base/profiler.cpp src/base/macro.h src/base/log.h src/base/log.cpp
         src/base/guid.cpp
-        src/base/detector.h src/base/timer.cpp src/base/timer.h)
+        src/base/detector.h src/base/timer.cpp src/base/timer.h src/base/type_name.h)
 
 set(CORE_SRC
         src/core/ecs.h src/core/ecs.cpp
         src/core/plugins_registry.h src/core/plugins_registry.cpp src/core/world.h src/core/renderer.cpp src/core/renderer.h
         src/core/input_system.cpp src/core/input_system.h
-        src/core/assets/texture.cpp src/core/assets/texture.h src/core/assets/shader.cpp src/core/assets/shader.h src/core/components/mesh_component.cpp src/core/components/mesh_component.h src/core/components/camera_component.cpp src/core/components/camera_component.h src/core/world.cpp src/core/meta/registration.h src/core/meta/registration.cpp src/core/components/component.cpp src/core/components/component.h src/core/serialization.h src/core/meta/type.h src/core/meta/type_info.h src/core/meta/type_info.cpp src/core/meta/schema.cpp src/core/meta/schema.h src/core/assets/asset_loader.h src/core/assets/asset.h src/core/assets/asset.cpp
+        src/core/assets/texture.cpp src/core/assets/texture.h src/core/assets/shader.cpp src/core/assets/shader.h src/core/components/mesh_component.cpp src/core/components/mesh_component.h src/core/components/camera_component.cpp src/core/components/camera_component.h src/core/world.cpp src/core/meta/registration.h src/core/meta/registration.cpp src/core/serialization.h src/core/meta/type.h src/core/meta/type_info.h src/core/meta/type_info.cpp src/core/meta/schema.cpp src/core/meta/schema.h src/core/assets/asset_loader.h src/core/assets/asset.h src/core/assets/asset.cpp
         src/core/render_texture.h src/core/render_texture.cpp
-        src/core/plugins.cpp src/core/plugins.h src/core/simulation.cpp src/core/simulation.h src/core/assets/asset_compiler.h)
+        src/core/plugins.cpp src/core/plugins.h src/core/simulation.cpp src/core/simulation.h src/core/assets/asset_compiler.h src/core/application.cpp src/core/application.h src/core/assets/filesystem_provider.cpp src/core/assets/filesystem_provider.h src/core/assets/resource_compiler.cpp src/core/assets/resource_compiler.h)
 
 set(GFX_SRC
         src/gfx/gfx.cpp src/gfx/gfx.h src/gfx/gfx_config.h src/gfx/gfx_details.cpp src/gfx/gfx_details.h src/gfx/renderer_api.h src/gfx/renderer_api_gl.h src/gfx/renderer_api_gl.cpp
@@ -47,7 +47,7 @@ set(ENGINE_INCLUDES src)
 
 set(SANDBOX_LIBS_DIR ${CMAKE_SOURCE_DIR}/sandbox/.ubik/libs)
 
-set(PLUGINS)
+set(UBIK_DEPENDENCIES)
 
 file(MAKE_DIRECTORY ${SANDBOX_LIBS_DIR})
 
@@ -79,14 +79,14 @@ target_include_directories(engine PUBLIC ${ENGINE_INCLUDES})
 
 set(SANDBOX_DIR ${CMAKE_SOURCE_DIR}/sandbox/)
 
-add_executable(sandbox
+add_executable(host
         ${SANDBOX_DIR}/src/load_libraries.cpp
+        ${SANDBOX_DIR}/src/sandbox.cpp ${SANDBOX_DIR}/src/sandbox.h
         ${SANDBOX_DIR}/src/spin_plugin.cpp ${SANDBOX_DIR}/src/spin_plugin.h
         ${SANDBOX_DIR}/src/sandbox_plugin.cpp ${SANDBOX_DIR}/src/sandbox_plugin.h)
 
-target_link_libraries(sandbox PRIVATE game ${ENGINE_LIBS})
-target_include_directories(sandbox PRIVATE ${ENGINE_INCLUDES})
-
+target_link_libraries(host PRIVATE game ${ENGINE_LIBS})
+target_include_directories(host PRIVATE ${ENGINE_INCLUDES})
 
 
 # ----------------------------------------- #
@@ -105,7 +105,23 @@ set_target_properties(spin_plugin
         RUNTIME_OUTPUT_DIRECTORY "${SANDBOX_LIBS_DIR}"
         )
 
-list(APPEND PLUGINS spin_plugin)
+list(APPEND UBIK_DEPENDENCIES spin_plugin)
+
+# ----------------------------------------- #
+
+add_library(sandbox SHARED
+        ${SANDBOX_DIR}/src/sandbox.cpp ${SANDBOX_DIR}/src/sandbox.h
+        )
+target_link_libraries(sandbox PRIVATE engine)
+
+set_target_properties(sandbox
+        PROPERTIES
+        ARCHIVE_OUTPUT_DIRECTORY "${SANDBOX_LIBS_DIR}"
+        LIBRARY_OUTPUT_DIRECTORY "${SANDBOX_LIBS_DIR}"
+        RUNTIME_OUTPUT_DIRECTORY "${SANDBOX_LIBS_DIR}"
+        )
+
+list(APPEND UBIK_DEPENDENCIES sandbox)
 
 # ----------------------------------------- #
 
@@ -122,8 +138,7 @@ set_target_properties(sandbox_plugin
         RUNTIME_OUTPUT_DIRECTORY "${SANDBOX_LIBS_DIR}"
         )
 
-list(APPEND PLUGINS sandbox_plugin)
-
+list(APPEND UBIK_DEPENDENCIES sandbox_plugin)
 
 # ----------------------------------------- #
 # -------------- Editor lib --------------- #
@@ -156,7 +171,7 @@ set_target_properties(game_view_gui
         LIBRARY_OUTPUT_DIRECTORY "${SANDBOX_LIBS_DIR}"
         RUNTIME_OUTPUT_DIRECTORY "${SANDBOX_LIBS_DIR}"
         )
-list(APPEND PLUGINS game_view_gui)
+list(APPEND UBIK_DEPENDENCIES game_view_gui)
 
 # ----------------------------------------- #
 
@@ -172,7 +187,7 @@ set_target_properties(scene_view_gui
         LIBRARY_OUTPUT_DIRECTORY "${SANDBOX_LIBS_DIR}"
         RUNTIME_OUTPUT_DIRECTORY "${SANDBOX_LIBS_DIR}"
         )
-list(APPEND PLUGINS scene_view_gui)
+list(APPEND UBIK_DEPENDENCIES scene_view_gui)
 
 # ----------------------------------------- #
 # ----------- Editor executable ----------- #
@@ -185,7 +200,7 @@ add_executable(ubik
 target_link_libraries(ubik PRIVATE engine editor)
 
 # TODO
-add_dependencies(ubik ${PLUGINS})
+add_dependencies(ubik ${UBIK_DEPENDENCIES})
 
 
 
