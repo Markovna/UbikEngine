@@ -8,9 +8,12 @@
 #include "editor/gui/imgui_renderer.h"
 #include "core/plugins.h"
 #include "core/renderer.h"
+#include "core/meta/registration.h"
 
 class game_view_gui : public editor_gui {
  public:
+
+  void start(assets::provider*) override {}
 
   void gui(gui_renderer* gui_renderer) override {
 
@@ -47,11 +50,10 @@ class game_view_gui : public editor_gui {
 };
 
 void load_game_view_gui(plugins* plugins) {
+  register_type(game_view_gui);
   plugins->get<editor_gui_plugin>()->add_editor<game_view_gui>();
 }
 
 void unload_game_view_gui(plugins* plugins) {
-// TODO
-//  editor_gui_plugins& editor_plugins = *plugins->get<editor_gui_plugins>("editor_gui");
-//  plugins_registry->remove("game_view_gui");
+  plugins->get<editor_gui_plugin>()->remove_editor<game_view_gui>();
 }

@@ -3,7 +3,6 @@
 #include "gfx/gfx.h"
 #include "core/assets/texture.h"
 #include "core/assets/shader.h"
-#include "core/components/component.h"
 #include "core/serialization.h"
 #include "core/assets/resources.h"
 
@@ -82,5 +81,3 @@ struct serializer<mesh_component> {
   static void from_asset(assets::provider*, const asset&, mesh_component&);
   static void to_asset(asset&, const mesh_component&);
 };
-
-register_component(mesh_component)

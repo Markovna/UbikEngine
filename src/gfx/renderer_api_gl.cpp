@@ -9,11 +9,11 @@ namespace gfx::details {
 #define RENDERER_API_DEBUG 1
 
 #if RENDERER_API_PROFILE
-#   define SPRINT_RENDERER_PROFILE_SCOPE(__name) SPRINT_PROFILE_SCOPE(__name)
-#   define SPRINT_RENDERER_PROFILE_FUNCTION() SPRINT_PROFILE_FUNCTION()
+#   define UBIK_RENDERER_PROFILE_SCOPE(__name) UBIK_PROFILE_SCOPE(__name)
+#   define UBIK_RENDERER_PROFILE_FUNCTION() UBIK_PROFILE_FUNCTION()
 #else
-#   define SPRINT_RENDERER_PROFILE_SCOPE(__name)
-#   define SPRINT_RENDERER_PROFILE_FUNCTION()
+#   define UBIK_RENDERER_PROFILE_SCOPE(__name)
+#   define UBIK_RENDERER_PROFILE_FUNCTION()
 #endif
 
 #if RENDERER_API_DEBUG
@@ -395,7 +395,7 @@ static void SetUniformValue(int loc, const uniform& value) {
 
 void GLRendererAPI::RenderFrame(const frame& frame) {
 
-    SPRINT_PROFILE_FUNCTION();
+    UBIK_PROFILE_FUNCTION();
 
     default_context_.MakeCurrent();
 
@@ -425,7 +425,7 @@ void GLRendererAPI::RenderFrame(const frame& frame) {
     resolution = frame.get_resolution();
 
     for (const draw_unit& draw : frame.get_draws()) {
-        SPRINT_RENDERER_PROFILE_SCOPE("GLRendererAPI::RenderFrame [render a draw call]");
+        UBIK_RENDERER_PROFILE_SCOPE("GLRendererAPI::RenderFrame [render a draw call]");
 
         const view& camera = frame.get_view(draw.viewid);
 
@@ -466,7 +466,7 @@ void GLRendererAPI::RenderFrame(const frame& frame) {
         }
 
         {
-            SPRINT_RENDERER_PROFILE_SCOPE("GLRendererAPI::RenderFrame [set matrix uniforms]");
+            UBIK_RENDERER_PROFILE_SCOPE("GLRendererAPI::RenderFrame [set matrix uniforms]");
 
             CHECK_ERRORS(glUniformMatrix4fv(shader->model_location, 1, GL_FALSE, (float *) &draw.transform));
             CHECK_ERRORS(glUniformMatrix4fv(shader->view_location, 1, GL_FALSE, (float *) &camera.view));
@@ -474,7 +474,7 @@ void GLRendererAPI::RenderFrame(const frame& frame) {
         }
 
         {
-            SPRINT_RENDERER_PROFILE_SCOPE("GLRendererAPI::RenderFrame [set shader uniforms]");
+            UBIK_RENDERER_PROFILE_SCOPE("GLRendererAPI::RenderFrame [set shader uniforms]");
 
             for (int i = 0; i < draw.uniforms_size; i++) {
                 const uniform_pair& pair = draw.uniforms[i];
@@ -506,14 +506,14 @@ void GLRendererAPI::RenderFrame(const frame& frame) {
         }
 
         if (draw.vb_handle) {
-            SPRINT_RENDERER_PROFILE_SCOPE("GLRendererAPI::RenderFrame [set vertex attributes array]");
+            UBIK_RENDERER_PROFILE_SCOPE("GLRendererAPI::RenderFrame [set vertex attributes array]");
 
             vertex_layout& layout = vertex_buffers_[draw.vb_handle.index()].layout;
 
             uint16_t enabledAttribMask = 0;
             uint32_t base_vertex = draw.vb_offset * layout.get_stride();
             {
-                SPRINT_RENDERER_PROFILE_SCOPE("GLRendererAPI::RenderFrame [enable attributes]");
+                UBIK_RENDERER_PROFILE_SCOPE("GLRendererAPI::RenderFrame [enable attributes]");
 
                 for (const auto &item : layout) {
                     uint16_t idx;
@@ -541,7 +541,7 @@ void GLRendererAPI::RenderFrame(const frame& frame) {
         }
 
         if (draw.vb_handle) {
-            SPRINT_RENDERER_PROFILE_SCOPE("GLRendererAPI::RenderFrame [draw vertex array]");
+            UBIK_RENDERER_PROFILE_SCOPE("GLRendererAPI::RenderFrame [draw vertex array]");
 
             if (draw.ib_handle) {
                 IndexBuffer& index_buffer = index_buffers_[draw.ib_handle.index()];
@@ -616,7 +616,7 @@ void GLContext::Init(GLContext &context) {
 }
 
 void GLContext::SwapBuffers() {
-    SPRINT_RENDERER_PROFILE_FUNCTION();
+    UBIK_RENDERER_PROFILE_FUNCTION();
     glfwSwapBuffers(handle_);
 }
 

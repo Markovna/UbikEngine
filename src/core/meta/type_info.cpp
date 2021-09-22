@@ -7,32 +7,38 @@ namespace meta::details {
 
 class registry {
  public:
-  void add_type(type_info&& info) {
-    name_index_[info.name] = types_.size();
-    id_index_[info.id] = types_.size();
-    types_.emplace_back(std::move(info));
+  type_info* add_type(type_info&& info) {
+    type_info* ptr;
+    if (auto it = name_index_.find(info.name); it != name_index_.end()) {
+      ptr = (type_info*) it->second;
+      *ptr = std::move(info);
+    } else {
+     ptr = types_.emplace_back(std::make_unique<type_info>(std::move(info))).get();
+    }
+    ptr->id = (uintptr_t) ptr;
+    name_index_[ptr->name] = ptr->id;
+    return ptr;
   }
 
-  [[nodiscard]] const type_info& get(guid id) const {
-    if (auto it = id_index_.find(id); it != id_index_.end()) {
-      return types_[it->second];
+//  [[nodiscard]] const type_info* get(const char* name) const {
+//    if (auto it = name_index_.find(name); it != name_index_.end()) {
+//      return (type_info*) it->second;
+//    }
+//
+//    return nullptr;
+//  }
+
+  [[nodiscard]] const type_info* get(std::string_view name) const {
+    if (auto it = name_index_.find(std::string { name }); it != name_index_.end()) {
+      return (type_info*) it->second;
     }
 
-    return type_info::invalid();
-  }
-
-  [[nodiscard]] const type_info& get(const char* name) const {
-    if (auto it = name_index_.find(name); it != name_index_.end()) {
-      return types_[it->second];
-    }
-
-    return type_info::invalid();
+    return nullptr;
   }
 
  private:
-  std::vector<type_info> types_;
-  std::unordered_map<std::string, uint32_t> name_index_;
-  std::unordered_map<guid, uint32_t> id_index_;
+  std::vector<std::unique_ptr<type_info>> types_;
+  std::unordered_map<std::string, typeid_t> name_index_;
 };
 
 registry& get_registry() {
@@ -44,17 +50,8 @@ void add_type(type_info&& info) {
   get_registry().add_type(std::move(info));
 }
 
-const type_info& get_type(guid id) {
-  return get_registry().get(id);
-}
-
-const type_info& get_type(const char* name) {
+const type_info* get_type_info(std::string_view name) {
   return get_registry().get(name);
-}
-
-const type_info& type_info::invalid() {
-  static type_info inst {.id = guid::invalid(), .name = ""};
-  return inst;
 }
 
 }

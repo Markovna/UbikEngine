@@ -7,7 +7,6 @@
 #include "base/slot_map.h"
 
 #include "core/ecs.h"
-#include "core/components/component.h"
 #include "core/serialization.h"
 
 using entity_id = ecs::entity;
@@ -45,15 +44,12 @@ struct link_component {
   uint32_t children_size = 0;
 };
 
-register_component(link_component);
-
 struct transform_component {
   transform local;
   mutable transform world;
   mutable bool dirty = false;
 };
 
-register_component(transform_component);
 
 template<>
 struct serializer<transform_component> {

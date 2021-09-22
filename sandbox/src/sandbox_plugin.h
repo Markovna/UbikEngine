@@ -1,7 +1,6 @@
 #pragma once
 
 #include "core/serialization.h"
-#include "core/components/component.h"
 
 struct inner_type {
   double a;
@@ -16,8 +15,6 @@ class custom_component {
 
   friend serializer<custom_component>;
 };
-
-register_component(custom_component);
 
 struct plugins;
 

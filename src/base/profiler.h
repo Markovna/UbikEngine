@@ -9,7 +9,7 @@
 #include "base/log.h"
 #include "base/macro.h"
 
-#define SPRINT_PROFILE 0
+#define UBIK_PROFILE 0
 
 namespace profiler {
 
@@ -51,15 +51,15 @@ public:
 
 };
 
-#ifndef SPRINT_PROFILE
-#define SPRINT_PROFILE 0
+#ifndef UBIK_PROFILE
+#define UBIK_PROFILE 0
 #endif
 
-#if SPRINT_PROFILE
-#   define SPRINT_PROFILE_SCOPE(__name) ::sprint::profiler::Scope SPRINT_CONCAT(_profile_scope, __LINE__)(__name);
-#   define SPRINT_PROFILE_FUNCTION() SPRINT_PROFILE_SCOPE(SPRINT_FUNCTION)
+#if UBIK_PROFILE
+#   define UBIK_PROFILE_SCOPE(__name) ::sprint::profiler::Scope UBIK_CONCAT(_profile_scope, __LINE__)(__name);
+#   define UBIK_PROFILE_FUNCTION() UBIK_PROFILE_SCOPE(UBIK_FUNCTION)
 #else
-#   define SPRINT_PROFILE_SCOPE(__name)
-#   define SPRINT_PROFILE_FUNCTION()
+#   define UBIK_PROFILE_SCOPE(__name)
+#   define UBIK_PROFILE_FUNCTION()
 #endif
 

@@ -9,12 +9,14 @@
 #include "core/components/camera_component.h"
 #include "core/assets/shader.h"
 #include "core/assets/filesystem_provider.h"
+#include "core/meta/registration.h"
 
 #include "editor/editor_gui.h"
 #include "editor/gui/imgui_renderer.h"
 
 class scene_view_gui : public editor_gui {
  public:
+  void start(assets::provider*) override {}
   void gui(gui_renderer* gui_renderer) override;
 
  private:
@@ -166,11 +168,10 @@ void scene_view_gui::rotate_camera(world *w, const vec2 &delta) {
 }
 
 void load_scene_view_gui(plugins* plugins) {
+  register_type(scene_view_gui);
   plugins->get<editor_gui_plugin>()->add_editor<scene_view_gui>();
 }
 
 void unload_scene_view_gui(plugins* plugins) {
-//  plugins->get<editor_gui_plugin>()
-  // TODO
-//  plugins_registry->remove("scene_view_gui");
+  plugins->get<editor_gui_plugin>()->remove_editor<scene_view_gui>();
 }

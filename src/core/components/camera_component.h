@@ -3,7 +3,6 @@
 #include "base/color.h"
 #include "base/intset.h"
 #include "gfx/gfx.h"
-#include "core/components/component.h"
 #include "core/serialization.h"
 
 #include <cstdint>
@@ -42,5 +41,3 @@ struct serializer<camera_component> {
   static void from_asset(assets::provider*, const asset&, camera_component&);
   static void to_asset(asset&, const camera_component&);
 };
-
-register_component(camera_component)

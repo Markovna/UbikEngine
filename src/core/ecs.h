@@ -1,8 +1,7 @@
 #pragma once
 
-#include "base/guid.h"
 #include "base/sparse_set.h"
-#include "core/components/component.h"
+#include "core/meta/type.h"
 
 #include <unordered_map>
 #include <cassert>
@@ -255,7 +254,7 @@ template<class Component>
 using pool_t = details::component_pool<Component>;
 using pool_ptr = std::unique_ptr<sparse_set<entity>>;
 using entity_traits = details::entity_traits;
-using component_id_t = guid;
+using component_id_t = meta::typeid_t;
 
 struct pool_info {
   using remove_ptr_t = void (*)(sparse_set<entity>*, ecs::entity);
@@ -276,7 +275,7 @@ class component_ids {
  public:
   class iterator {
    public:
-    using value_type = std::pair<guid, void*>;
+    using value_type = std::pair<component_id_t, void*>;
 
    public:
     iterator(entity entity, pool_iterator curr, pool_iterator last);
@@ -327,18 +326,18 @@ private:
 
   template<class Component>
   [[nodiscard]] uint32_t component_index() const {
-    auto it = guid_to_pool_idx_.find(component_info<Component>::id());
-    return it != guid_to_pool_idx_.end() ? it->second : std::numeric_limits<uint32_t>::max();
+    auto it = component_id_index_.find(meta::get_typeid<Component>());
+    return it != component_id_index_.end() ? it->second : std::numeric_limits<uint32_t>::max();
   }
 
   template<class Component>
   pool_t<Component>& assure() {
-    component_id_t id = component_info<Component>::id();
+    component_id_t id = meta::get_typeid<Component>();
 
-    if (auto it = guid_to_pool_idx_.find(id); it != guid_to_pool_idx_.end())
+    if (auto it = component_id_index_.find(id); it != component_id_index_.end())
       return *static_cast<pool_t<Component>*>(pools_[it->second].ptr.get());
 
-    guid_to_pool_idx_[id] = pools_.size();
+    component_id_index_[id] = pools_.size();
 
     pool_info& p = pools_.emplace_back();
     p.id = id;
@@ -463,7 +462,7 @@ public:
 private:
     std::vector<pool_info> pools_{};
     std::vector<entity> entities_{};
-    std::unordered_map<component_id_t , uint32_t> guid_to_pool_idx_{};
+    std::unordered_map<component_id_t , uint32_t> component_id_index_{};
 
     size_t free_idx_{invalid_idx};
 };
