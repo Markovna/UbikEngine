@@ -51,9 +51,10 @@ class game_view_gui : public editor_gui {
 
 void load_game_view_gui(plugins* plugins) {
   register_type(game_view_gui);
-  plugins->get<editor_gui_plugin>()->add_editor<game_view_gui>();
+
+  editor::g_editor_gui->add_editor<game_view_gui>();
 }
 
 void unload_game_view_gui(plugins* plugins) {
-  plugins->get<editor_gui_plugin>()->remove_editor<game_view_gui>();
+  editor::g_editor_gui->remove_editor<game_view_gui>();
 }

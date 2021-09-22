@@ -1,6 +1,5 @@
 #include "core/input_system.h"
 #include "core/world.h"
-#include "core/plugins_registry.h"
 #include "core/plugins.h"
 #include "core/meta/registration.h"
 #include "core/meta/schema.h"
@@ -74,7 +73,7 @@ int main(int argc, char* argv[]) {
 
   connect_gui_events(gui_renderer.get(), input);
 
-  plugins_reg->add<editor_gui_plugin>();
+  editor::init_editor_gui();
 
   library_loader libs(fs::append(fs::paths::cache(), "libs_tmp").c_str());
   for (auto plugin_name : plugin_names) {
@@ -84,6 +83,7 @@ int main(int argc, char* argv[]) {
   if (g_application)
     g_application->start(g_fsprovider);
 
+  editor::g_editor_gui->start(g_fsprovider);
   ecs::world->start_systems();
 
   bool running = true;
@@ -110,7 +110,7 @@ int main(int argc, char* argv[]) {
 
     ecs::world->update_systems();
 
-    plugins_reg->get<editor_gui_plugin>()->gui(gui_renderer.get());
+    editor::g_editor_gui->gui(gui_renderer.get());
 
     window.set_cursor(gui_renderer->cursor());
     gui_renderer->end_frame();
@@ -124,6 +124,8 @@ int main(int argc, char* argv[]) {
   for (auto plugin_name : plugin_names) {
     libs.unload(plugin_name, plugins_reg);
   }
+
+  editor::shutdown_editor_gui();
 
   disconnect_gui_events(gui_renderer.get(), input);
 

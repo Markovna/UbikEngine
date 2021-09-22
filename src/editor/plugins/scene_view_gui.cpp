@@ -169,9 +169,9 @@ void scene_view_gui::rotate_camera(world *w, const vec2 &delta) {
 
 void load_scene_view_gui(plugins* plugins) {
   register_type(scene_view_gui);
-  plugins->get<editor_gui_plugin>()->add_editor<scene_view_gui>();
+  editor::g_editor_gui->add_editor<scene_view_gui>();
 }
 
 void unload_scene_view_gui(plugins* plugins) {
-  plugins->get<editor_gui_plugin>()->remove_editor<scene_view_gui>();
+  editor::g_editor_gui->remove_editor<scene_view_gui>();
 }

@@ -17,7 +17,7 @@ set(BASE_SRC
 
 set(CORE_SRC
         src/core/ecs.h src/core/ecs.cpp
-        src/core/plugins_registry.h src/core/plugins_registry.cpp src/core/world.h src/core/renderer.cpp src/core/renderer.h
+        src/core/world.h src/core/renderer.cpp src/core/renderer.h
         src/core/input_system.cpp src/core/input_system.h
         src/core/assets/texture.cpp src/core/assets/texture.h src/core/assets/shader.cpp src/core/assets/shader.h src/core/components/mesh_component.cpp src/core/components/mesh_component.h src/core/components/camera_component.cpp src/core/components/camera_component.h src/core/world.cpp src/core/meta/registration.h src/core/meta/registration.cpp src/core/serialization.h src/core/meta/type.h src/core/meta/type_info.h src/core/meta/type_info.cpp src/core/meta/schema.cpp src/core/meta/schema.h src/core/assets/asset_loader.h src/core/assets/asset.h src/core/assets/asset.cpp
         src/core/render_texture.h src/core/render_texture.cpp
@@ -144,11 +144,11 @@ list(APPEND UBIK_DEPENDENCIES sandbox_plugin)
 # -------------- Editor lib --------------- #
 # ----------------------------------------- #
 
-add_library(editor
+add_library(editor SHARED
         src/platform/file_watcher.h src/platform/file_watcher.cpp
         src/editor/gui/imgui_renderer.cpp src/editor/gui/imgui_renderer.h
         src/editor/gui/gui.h src/editor/gui/gui.cpp
-        )
+        src/editor/editor_gui.h src/editor/editor_gui.cpp)
 
 target_link_libraries(editor PRIVATE engine)
 target_link_libraries(editor PUBLIC efsw imgui)

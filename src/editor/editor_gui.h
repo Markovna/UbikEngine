@@ -16,13 +16,15 @@ struct editor_gui_plugin {
  public:
   void start(assets::provider* provider) {
     for (auto& editor : editors_) {
-      editor->start(provider);
+      if (editor)
+        editor->start(provider);
     }
   }
 
   void gui(gui_renderer* gui_renderer) {
     for (auto& editor : editors_) {
-      editor->gui(gui_renderer);
+      if (editor)
+        editor->gui(gui_renderer);
     }
   }
 
@@ -59,3 +61,10 @@ struct editor_gui_plugin {
   std::unordered_map<meta::typeid_t, size_t> editor_index_;
   std::vector<std::unique_ptr<editor_gui>> editors_;
 };
+
+namespace editor {
+extern editor_gui_plugin *g_editor_gui;
+
+void init_editor_gui();
+void shutdown_editor_gui();
+}
