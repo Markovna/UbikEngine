@@ -33,7 +33,7 @@ struct camera_component {
   vec4 normalized_rect = {0.0f, 0.0f, 1.0f, 1.0f};
   color clear_color = color::black();
   clear_flag clear_flags = gfx::clear_flag::Color | gfx::clear_flag::Depth;
-  tag_t::type tag;
+  tag_t::type tag = 0;
 };
 
 template<>

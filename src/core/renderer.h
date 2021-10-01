@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/components/camera_component.h"
+#include "core/assets/shader.h"
 
 struct world;
 struct entity;
@@ -11,7 +12,10 @@ class renderer {
 
  public:
   static void update_views(world* world, vec4 viewport, gfx::framebuf_handle fb_handle, const camera_predicate_t& predicate = {});
-  static void render(world* world, const camera_predicate_t& predicate = {});
+  static void render(
+      world* world,
+      const camera_predicate_t& predicate = {},
+      resources::handle<shader> shader = {});
   static void render(
       const mat4& model,
       gfx::shader_handle shader,

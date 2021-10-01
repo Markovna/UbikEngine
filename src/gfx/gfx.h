@@ -299,7 +299,9 @@ void destroy(shader_handle&);
 void destroy(uniform_handle&);
 void destroy(texture_handle&);
 
-void set_uniform(uniform_handle, int);
+void set_uniform(uniform_handle, int32_t);
+void set_uniform(uniform_handle, uint32_t);
+void set_uniform(uniform_handle, uint64_t);
 void set_uniform(uniform_handle, bool);
 void set_uniform(uniform_handle, float);
 void set_uniform(uniform_handle, const vec3&);

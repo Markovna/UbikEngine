@@ -1,4 +1,5 @@
 #include "core/components/mesh_component.h"
+#include "core/assets/shader.h"
 #include "renderer.h"
 #include "world.h"
 #include "gfx/gfx.h"
@@ -55,7 +56,7 @@ void renderer::render(
   gfx::render(camera.viewid, shader);
 }
 
-void renderer::render(world* world, const std::function<bool(entity, const camera_component&)>& predicate) {
+void renderer::render(world* world, const std::function<bool(entity, const camera_component&)>& predicate, resources::handle<shader> shader) {
   auto camera_view = world->view<camera_component>();
   auto mesh_view = world->view<mesh_component>();
 
@@ -68,8 +69,8 @@ void renderer::render(world* world, const std::function<bool(entity, const camer
       const mesh_component& mesh = mesh_view.get(mesh_id);
       const transform& model = world->world_transform({ mesh_id });
 
-      gfx::set_uniform(mesh.GetMainTextureUniform(), mesh.GetMainTexture()->handle(), 0);
-      gfx::set_uniform(mesh.GetSecondTextureUniform(), mesh.GetSecondTexture()->handle(), 1);
+      gfx::set_uniform(mesh.GetMainTextureUniform(), mesh.GetMainTexture()->handle(), 1);
+      gfx::set_uniform(mesh.GetSecondTextureUniform(), mesh.GetSecondTexture()->handle(), 0);
       gfx::set_uniform(mesh.GetColorUniform(), mesh.color());
 
       gfx::set_buffer(mesh.GetVertexBuf());
@@ -77,7 +78,7 @@ void renderer::render(world* world, const std::function<bool(entity, const camer
 
       gfx::set_transform((mat4) model);
 
-      gfx::render(camera.viewid, mesh.GetShader()->handle());
+      gfx::render(camera.viewid, shader ? shader->handle() : mesh.GetShader()->handle());
    }
 
   }

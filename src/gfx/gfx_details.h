@@ -36,6 +36,8 @@ void DestroyRendererApi(renderer_api* api);
 struct uniform {
   enum type {
     Int  = 0,
+    Uint,
+    Uint2,
     Bool,
     Float,
     Vec3,
@@ -45,7 +47,9 @@ struct uniform {
   };
 
   union {
-    int int_val = {};
+    int32_t int_val = {};
+    uint32_t uint_val;
+    uint64_t uint2_val;
     bool bool_val;
     float float_val;
     vec3 vec3_val;
@@ -61,7 +65,11 @@ template<class T>
 void set_uniform_value(details::uniform& uniform, T value);
 
 template<>
-void set_uniform_value<int>(details::uniform& uniform, int value);
+void set_uniform_value<int32_t>(details::uniform& uniform, int32_t value);
+template<>
+void set_uniform_value<uint32_t>(details::uniform& uniform, uint32_t value);
+template<>
+void set_uniform_value<uint64_t>(details::uniform& uniform, uint64_t value);
 template<>
 void set_uniform_value<bool>(details::uniform& uniform, bool value);
 template<>

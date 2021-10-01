@@ -201,10 +201,10 @@ gui_renderer::gui_renderer(window* w, assets::provider* provider) : context_(gui
   // your ImTextureId represent a higher-level concept than just a GL texture id,
   // consider calling GetTexDataAsAlpha8() instead to save on GPU memory.
   io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
-  texture_ = std::make_unique<texture>(pixels, width, height, gfx::texture_format::RGBA8);
+  fonts_texture_ = std::make_unique<texture>(pixels, width, height, gfx::texture_format::RGBA8);
   shader_ = resources::load<shader>(fs::absolute("assets/shaders/GUIShader.shader"), provider);
 
-  io.Fonts->TexID = (ImTextureID)(intptr_t) texture_->handle().id;
+  io.Fonts->TexID = (ImTextureID)(intptr_t) fonts_texture_->handle().id;
 
   io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
   io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;

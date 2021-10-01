@@ -31,7 +31,7 @@ private:
     using const_iterator = typename std::vector<Component>::const_iterator;
 
 public:
-    using entities = sparse_set<entity>;
+    using base_type = sparse_set<entity>;
 
 public:
     auto begin() { return components_.begin(); }
@@ -49,45 +49,45 @@ public:
     size_t size() const { return components_.size(); }
 
     Component& push(entity entity, const Component& component) {
-        assert(!entities::contains(entity));
-        components_.push_back(component);
-        entities::insert(entity);
-        return components_.back();
+      assert(!base_type::contains(entity));
+      components_.push_back(component);
+      base_type::insert(entity);
+      return components_.back();
     }
 
     Component& push(entity entity, Component&& component) {
-        assert(!entities::contains(entity));
-        components_.push_back(std::move(component));
-        entities::insert(entity);
-        return components_.back();
+      assert(!base_type::contains(entity));
+      components_.push_back(std::move(component));
+      base_type::insert(entity);
+      return components_.back();
     }
 
     template<class ...Args>
     Component& emplace(entity entity, Args&&... args) {
-        assert(!entities::contains(entity));
-        Component& comp = components_.emplace_back(std::forward<Args>(args)...);
-        entities::insert(entity);
-        return comp;
+      assert(!base_type::contains(entity));
+      Component& comp = components_.emplace_back(std::forward<Args>(args)...);
+      base_type::insert(entity);
+      return comp;
     }
 
     void erase(entity entity) {
-        assert(entities::contains(entity));
-        auto other = std::move(components_.back());
-        components_[entities::index(entity)] = std::move(other);
-        components_.pop_back();
-        entities::erase(entity);
+      assert(base_type::contains(entity));
+      auto other = std::move(components_.back());
+      components_[base_type::index(entity)] = std::move(other);
+      components_.pop_back();
+      base_type::erase(entity);
     }
 
     void clear() {
       components_.clear();
-      entities::clear();
+      base_type::clear();
     }
 
-    [[nodiscard]] Component& get(entity entity) { return components_[entities::index(entity)]; }
-    [[nodiscard]] const Component& get(entity entity) const { return components_[entities::index(entity)]; }
+    [[nodiscard]] Component& get(entity entity) { return components_[base_type::index(entity)]; }
+    [[nodiscard]] const Component& get(entity entity) const { return components_[base_type::index(entity)]; }
 
-    [[nodiscard]] Component* try_get(entity entity) { return entities::contains(entity) ? &get(entity) : nullptr; }
-    [[nodiscard]] const Component* try_get(entity entity) const  { return entities::contains(entity) ? &get(entity) : nullptr; }
+    [[nodiscard]] Component* try_get(entity entity) { return base_type::contains(entity) ? &get(entity) : nullptr; }
+    [[nodiscard]] const Component* try_get(entity entity) const  { return base_type::contains(entity) ? &get(entity) : nullptr; }
 
 private:
     std::vector<Component> components_;
@@ -103,7 +103,7 @@ class component_view;
 template<class Component>
 class component_view<Component> {
 private:
-    using pool_t = details::component_pool<Component>;
+    using pool_t = details::component_pool<std::remove_cv_t<Component>>;
     using entities_t = sparse_set<entity>;
 public:
     explicit component_view(pool_t& pool) : pool_(&pool) {}
@@ -111,7 +111,7 @@ public:
     auto begin() const { return pool_->entities_t::begin(); }
     auto end() const { return pool_->entities_t::end(); }
 
-    size_t size() const { return pool_->size(); }
+    [[nodiscard]] size_t size() const { return pool_->size(); }
 
     [[nodiscard]] Component &get(entity entity) { return pool_->get(entity); }
     [[nodiscard]] const Component &get(entity entity) const { return pool_->get(entity); }
@@ -131,7 +131,7 @@ private:
     static_assert(sizeof...(Components) > 1, "Invalid components");
 
     template<class Comp>
-    using pool_t = details::component_pool<Comp>;
+    using pool_t = details::component_pool<std::remove_cv_t<Comp>>;
     using entities_t = sparse_set<entity>;
     using unchecked_array = std::array<const entities_t*, sizeof...(Components) - 1>;
 
@@ -264,8 +264,6 @@ struct pool_info {
   component_id_t id;
   remove_ptr_t remove_ptr;
   get_ptr_t get_ptr;
-//  pool_info() = default;
-//  ~pool_info() = default;
 };
 
 class component_ids {
@@ -446,7 +444,7 @@ public:
 
   template<class ...Component>
   component_view<Component...> view() {
-      return component_view<Component...>(assure<Component>()...);
+      return component_view<Component...>(assure<std::remove_cv_t<Component>>()...);
   }
 
   template<class Component>

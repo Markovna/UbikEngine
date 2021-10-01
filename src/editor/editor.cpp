@@ -18,6 +18,7 @@
 #include "core/assets/resources.h"
 #include "core/assets/resource_compiler.h"
 #include "core/assets/filesystem_provider.h"
+#include "core/serialization.h"
 
 #include "library_loader.h"
 
@@ -29,7 +30,8 @@ int main(int argc, char* argv[]) {
       "spin_plugin",
       "sandbox_plugin",
       "game_view_gui",
-      "scene_view_gui"
+      "file_browser_gui",
+      "entity_asset_editor"
   };
 
   fs::paths::project(argv[1]);
@@ -52,6 +54,16 @@ int main(int argc, char* argv[]) {
   register_type(transform_component);
   register_type(camera_component);
   register_type(mesh_component);
+
+  register_component_i(link_component);
+  register_component_i(transform_component);
+  register_component_i(camera_component);
+  register_component_i(mesh_component);
+
+  register_serializer_i(link_component);
+  register_serializer_i(transform_component);
+  register_serializer_i(camera_component);
+  register_serializer_i(mesh_component);
 
   window window({1024, 512});
   gfx::init({.window_handle = window.get_handle(), .resolution = window.get_resolution()});
@@ -84,7 +96,6 @@ int main(int argc, char* argv[]) {
     g_application->start(g_fsprovider);
 
   editor::g_editor_gui->start(g_fsprovider);
-  ecs::world->start_systems();
 
   bool running = true;
   while (running) {
@@ -128,8 +139,6 @@ int main(int argc, char* argv[]) {
   editor::shutdown_editor_gui();
 
   disconnect_gui_events(gui_renderer.get(), input);
-
-  ecs::world->stop_systems();
 
   shutdown_filesystem_provider();
 

@@ -8,7 +8,7 @@
 #include "core/world.h"
 #include "core/meta/registration.h"
 
-class spin_plugin : public world_system {
+class spin_plugin : public ecs::system {
  public:
   static int ver;
   int count = 0;
@@ -16,7 +16,7 @@ class spin_plugin : public world_system {
 
   spin_plugin() = default;
 
-  void update(world*) override {
+  void update(world*, ecs::component_view<const transform_component>) {
     count++;
 
     if (count > 180) {
@@ -25,10 +25,7 @@ class spin_plugin : public world_system {
     }
   }
 
-  void start(world*) override {}
-  void stop(world*) override {}
-
-  ~spin_plugin() {
+  ~spin_plugin() override {
     logger::core::Info("~spin_plugin (ver.{})", ver);
   }
 };
@@ -39,15 +36,18 @@ void load_spin_plugin(plugins* plugins_registry) {
 
   logger::core::Info("load_spin_plugin {}", spin_plugin::ver);
 
-  ecs::world->register_system<spin_plugin>("spin_plugin");
-  ecs::world->register_system<some_plugin>("some_plugin");
+  register_type(spin_plugin);
+  register_type(some_plugin);
+
+  ecs::world->register_system<spin_plugin>();
+  ecs::world->register_system<some_plugin>();
 }
 
 void unload_spin_plugin(plugins* plugins_registry) {
   logger::core::Info("unload_spin_plugin {}", spin_plugin::ver);
 
-  ecs::world->unregister_system("spin_plugin");
-  ecs::world->unregister_system("some_plugin");
+  ecs::world->remove_system<spin_plugin>();
+  ecs::world->remove_system<some_plugin>();
 }
 
 int some_plugin::foo() {
@@ -56,9 +56,7 @@ int some_plugin::foo() {
   return 42;
 }
 
-void some_plugin::start(world*) { logger::core::Info("some_plugin::start {}", count); }
-
-void some_plugin::update(world*) {
+void some_plugin::update(world*, ecs::component_view<const transform_component>) {
 
   count++;
   if (count > 180) {

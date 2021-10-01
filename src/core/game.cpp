@@ -11,7 +11,8 @@
 #include "core/meta/registration.h"
 #include "core/meta/schema.h"
 #include "core/plugins.h"
-//#include "core/plugins_registry.h"
+#include "core/assets/filesystem_provider.h"
+#include "core/application.h"
 
 extern void load_plugins(plugins*);
 
@@ -46,13 +47,14 @@ int main(int argc, char* argv[]) {
   init_plugins_registry();
   load_plugins(plugins_reg);
 
-  assets::filesystem_provider* provider = new assets::filesystem_provider;
-  provider->add(fs::paths::project());
+  init_filesystem_provider();
 
-  assets::init_provider(provider);
   assets::init();
 
   resources::init();
+
+  if (g_application)
+    g_application->start(g_fsprovider);
 
   ecs::world->start_systems();
   vec4 viewport {};
@@ -72,6 +74,9 @@ int main(int argc, char* argv[]) {
 
     gfx::resolution(window.get_resolution());
 
+    if (g_application)
+      g_application->tick();
+
     ecs::world->update_systems();
 
     vec2i resolution = window.get_resolution();
@@ -84,17 +89,19 @@ int main(int argc, char* argv[]) {
 
   ecs::world->stop_systems();
 
+  if (g_application)
+    g_application->stop();
+
+  shutdown_filesystem_provider();
+
   shutdown_input_system();
   shutdown_plugins_registry();
   ecs::shutdown_world();
 
   resources::shutdown();
-
   assets::shutdown();
-  assets::shutdown_provider();
-
   meta::shutdown();
-
   gfx::shutdown();
+
   return 0;
 }

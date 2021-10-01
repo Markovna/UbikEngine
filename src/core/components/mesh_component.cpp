@@ -53,7 +53,7 @@ float *GetVertices() {
 }
 gfx::vertexbuf_handle GetVertexBuf() {
   uint32_t count;
-  uint32_t* indices = GetIndices(count);
+  GetIndices(count);
   float* vertices = GetVertices();
 
   static gfx::vertexbuf_handle vb_handle = gfx::create_vertex_buffer(

@@ -27,7 +27,7 @@ class library_loader {
   ~library_loader();
 
   template<class ...Args>
-  void load(const char* name, const fs::path& path, Args... args) {
+  void load(const char* name, const fs::path& path, Args&&... args) {
     if (libs_.count(std::string(name))) {
       logger::core::Info("Library {} ({}) has been already loaded", name, path.c_str());
       return;
@@ -63,7 +63,7 @@ class library_loader {
   }
 
   template<class ...Args>
-  void unload(const char* name, Args... args) {
+  void unload(const char* name, Args&&... args) {
     if (!libs_.count(std::string(name))) {
       logger::core::Info("Library {} has not been loaded", name);
       return;
@@ -84,7 +84,7 @@ class library_loader {
   void reset();
 
   template<class ...Args>
-  void check_hot_reload(Args... args) {
+  void check_hot_reload(Args&&... args) {
     for (auto& [_, info] : libs_) {
 
       int64_t timestamp = os::get_timestamp(info.src_path);
@@ -131,22 +131,22 @@ class library_loader {
   fs::path copy_to_temp(const char* name, const fs::path& src_path, uint32_t version);
 
   template<class ...Args>
-  void invoke_load_function(void* symbols, const char* name, Args... args) {
+  void invoke_load_function(void* symbols, const char* name, Args&&... args) {
     char function_name[50] = "load_";
     std::strcat(function_name, name);
     invoke_function(symbols, function_name, std::forward<Args>(args)...);
   }
 
   template<class ...Args>
-  void invoke_unload_function(void* symbols, const char* name, Args... args) {
+  void invoke_unload_function(void* symbols, const char* name, Args&&... args) {
     char function_name[50] = "unload_";
     std::strcat(function_name, name);
     invoke_function(symbols, function_name, std::forward<Args>(args)...);
   }
 
   template<class ...Args>
-  void invoke_function(void* symbols, const char* function_name, Args... args) {
-    auto unload_func = (func_t<Args...>) os::get_symbol(symbols, function_name);
+  void invoke_function(void* symbols, const char* function_name, Args&&... args) {
+    auto unload_func = (func_t<Args&&...>) os::get_symbol(symbols, function_name);
     if (!unload_func) {
       logger::core::Error("Couldn't find function {}", function_name);
     } else {

@@ -7,7 +7,8 @@ namespace fs {
 
 path absolute(const char* _path) {
   path result { paths::project() };
-  result.append(_path);
+  if (std::strlen(_path))
+    result.append(_path);
   return result;
 }
 

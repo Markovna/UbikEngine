@@ -16,7 +16,7 @@ std::unique_ptr<T>& get_shared() {
 class plugins {
  public:
   template<class T, class F = T, class ...Args>
-  F* add(Args... args) {
+  F* add(Args&&... args) {
     get_shared<T>().reset(new F(std::forward<Args>(args)...));
     return static_cast<F*>(get<T>());
   }

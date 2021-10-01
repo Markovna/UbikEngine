@@ -8,12 +8,10 @@ struct test_component {
 
 struct plugins;
 
-class some_plugin : public world_system {
+class some_plugin : public ecs::system {
  public:
   int count = 100;
-  void update(world*) override;
-  void start(world*) override;
-  void stop(world*) override {}
+  void update(world*, ecs::component_view<const transform_component>);
 
   int foo();
 };

@@ -6,7 +6,7 @@
 #include "base/mouse_codes.h"
 #include "base/key_codes.h"
 
-enum event_type : uint8_t {
+enum class event_type : uint8_t {
   None,
   MouseUp,
   MouseDown,

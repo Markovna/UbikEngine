@@ -90,6 +90,7 @@ class provider {
 
 class handle {
  public:
+  handle() noexcept : repository_(nullptr), key_() {}
   handle(repository*, const repository::key&);
   ~handle();
 
@@ -121,8 +122,12 @@ class handle {
   repository::key key_;
 };
 
-handle load(provider* provider, repository& rep, const guid& id);
-handle load(provider* provider, repository& rep, const fs::path& path);
+namespace details {
+
+handle load(provider *provider, repository &rep, const guid &id);
+handle load(provider *provider, repository &rep, const fs::path &path);
+
+}
 
 handle load(provider* provider, const guid& id);
 handle load(provider* provider, const fs::path& path);

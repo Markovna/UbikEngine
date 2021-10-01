@@ -42,7 +42,7 @@ class gui_renderer {
   constexpr static const size_t kBufferMaxSize  = 10 * 2048;
 
   resources::handle<shader> shader_;
-  std::unique_ptr<texture> texture_;
+  std::unique_ptr<texture> fonts_texture_;
   gfx::uniform_handle texture_uniform_handle_;
   gfx::vertexbuf_handle vb_handle_;
   gfx::indexbuf_handle ib_handle_;

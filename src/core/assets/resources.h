@@ -141,7 +141,7 @@ class handle {
   using key = typename pool_base::key;
 
  public:
-  handle() : pool_(nullptr) {}
+  handle() noexcept : pool_(nullptr) {}
 
   handle(const handle& other) : pool_(other.pool_), key_(other.key_) {
     if (pool_)

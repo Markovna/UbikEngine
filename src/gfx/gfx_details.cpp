@@ -68,10 +68,21 @@ void destroy_shader_execute(frame_command *cmd, renderer_api *api) {
   api->Destroy(std::get<destroy_shader_command>(*cmd).handle);
 }
 template<>
-void set_uniform_value<int>(uniform &uniform, int value) {
+void set_uniform_value<int32_t>(uniform &uniform, int32_t value) {
   uniform.type = details::uniform::Int;
   uniform.int_val = value;
 }
+template<>
+void set_uniform_value<uint32_t>(details::uniform& uniform, uint32_t value) {
+  uniform.type = details::uniform::Uint;
+  uniform.uint_val = value;
+}
+template<>
+void set_uniform_value<uint64_t>(details::uniform& uniform, uint64_t value) {
+  uniform.type = details::uniform::Uint2;
+  uniform.uint2_val = value;
+}
+
 template<>
 void set_uniform_value<bool>(uniform& uniform, bool value) {
   uniform.type = details::uniform::Bool;

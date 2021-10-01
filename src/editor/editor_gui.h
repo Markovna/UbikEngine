@@ -37,7 +37,7 @@ struct editor_gui_plugin {
   }
 
   template<class T, class ...Args>
-  void add_editor(Args... args) {
+  void add_editor(Args&&... args) {
 
     meta::typeid_t id = meta::get_typeid<T>();
     assert(editor_index_.count(id) == 0);

@@ -245,7 +245,14 @@ void set_uniform_impl(uniform_handle handle, T value) {
   details::set_uniform_value(uniform.value, value);
 }
 
-void set_uniform(uniform_handle handle, int value) {
+void set_uniform(uniform_handle handle, int32_t value) {
+  set_uniform_impl(handle, value);
+}
+
+void set_uniform(uniform_handle handle, uint32_t value) {
+  set_uniform_impl(handle, value);
+}
+void set_uniform(uniform_handle handle, uint64_t value) {
   set_uniform_impl(handle, value);
 }
 

@@ -3,6 +3,18 @@ project(engine)
 
 set(CMAKE_CXX_STANDARD 17)
 
+function(add_plugin name)
+    cmake_parse_arguments(PARSE_ARGV 1 ADD_PLUGIN "" "" "FILES;LIBRARIES")
+    add_library(${name} SHARED ${ADD_PLUGIN_FILES})
+    target_link_libraries(${name} PRIVATE ${ADD_PLUGIN_LIBRARIES})
+    set_target_properties(${name}
+            PROPERTIES
+            ARCHIVE_OUTPUT_DIRECTORY "${SANDBOX_LIBS_DIR}"
+            LIBRARY_OUTPUT_DIRECTORY "${SANDBOX_LIBS_DIR}"
+            RUNTIME_OUTPUT_DIRECTORY "${SANDBOX_LIBS_DIR}"
+            )
+endfunction()
+
 add_subdirectory(thirdparty/glfw glfw)
 add_subdirectory(thirdparty/glad glad)
 add_subdirectory(thirdparty/spdlog spdlog)
@@ -16,6 +28,9 @@ set(BASE_SRC
         src/base/detector.h src/base/timer.cpp src/base/timer.h src/base/type_name.h)
 
 set(CORE_SRC
+        src/core/assets/assets.h
+        src/core/assets/assets.cpp
+        src/core/assets/resources.cpp src/core/assets/resources.h
         src/core/ecs.h src/core/ecs.cpp
         src/core/world.h src/core/renderer.cpp src/core/renderer.h
         src/core/input_system.cpp src/core/input_system.h
@@ -32,11 +47,6 @@ set(PLATFORM_SRC
         src/platform/os.cpp src/platform/os.h
         src/platform/file_system.h src/platform/file_system.cpp)
 
-set(EXPERIMENTAL
-        src/core/assets/assets.h
-        src/core/assets/assets.cpp
-        src/core/assets/resources.cpp src/core/assets/resources.h)
-
 set(ENGINE_LIBS
         glfw
         glad
@@ -47,8 +57,6 @@ set(ENGINE_INCLUDES src)
 
 set(SANDBOX_LIBS_DIR ${CMAKE_SOURCE_DIR}/sandbox/.ubik/libs)
 
-set(UBIK_DEPENDENCIES)
-
 file(MAKE_DIRECTORY ${SANDBOX_LIBS_DIR})
 
 # ----------------------------------------- #
@@ -56,7 +64,7 @@ file(MAKE_DIRECTORY ${SANDBOX_LIBS_DIR})
 # ----------------------------------------- #
 
 add_library(game STATIC
-        ${EXPERIMENTAL} ${BASE_SRC} ${CORE_SRC} ${GFX_SRC} ${PLATFORM_SRC} src/core/game.cpp
+        ${BASE_SRC} ${CORE_SRC} ${GFX_SRC} ${PLATFORM_SRC} src/core/game.cpp
         )
 
 target_link_libraries(game PRIVATE ${ENGINE_LIBS})
@@ -67,7 +75,7 @@ target_include_directories(game PRIVATE ${ENGINE_INCLUDES})
 # ----------------------------------------- #
 
 add_library(engine SHARED
-        ${EXPERIMENTAL} ${BASE_SRC} ${CORE_SRC} ${GFX_SRC} ${PLATFORM_SRC}
+        ${BASE_SRC} ${CORE_SRC} ${GFX_SRC} ${PLATFORM_SRC}
         )
 
 target_link_libraries(engine PUBLIC ${ENGINE_LIBS})
@@ -88,57 +96,25 @@ add_executable(host
 target_link_libraries(host PRIVATE game ${ENGINE_LIBS})
 target_include_directories(host PRIVATE ${ENGINE_INCLUDES})
 
-
 # ----------------------------------------- #
 # ------------ Sandbox plugins ------------ #
 # ----------------------------------------- #
 
-add_library(spin_plugin SHARED
-        ${SANDBOX_DIR}/src/spin_plugin.cpp ${SANDBOX_DIR}/src/spin_plugin.h
-        )
-target_link_libraries(spin_plugin PRIVATE engine)
-
-set_target_properties(spin_plugin
-        PROPERTIES
-        ARCHIVE_OUTPUT_DIRECTORY "${SANDBOX_LIBS_DIR}"
-        LIBRARY_OUTPUT_DIRECTORY "${SANDBOX_LIBS_DIR}"
-        RUNTIME_OUTPUT_DIRECTORY "${SANDBOX_LIBS_DIR}"
-        )
-
-list(APPEND UBIK_DEPENDENCIES spin_plugin)
-
-# ----------------------------------------- #
-
-add_library(sandbox SHARED
+add_plugin(sandbox
+        FILES
         ${SANDBOX_DIR}/src/sandbox.cpp ${SANDBOX_DIR}/src/sandbox.h
-        )
-target_link_libraries(sandbox PRIVATE engine)
+        LIBRARIES engine)
 
-set_target_properties(sandbox
-        PROPERTIES
-        ARCHIVE_OUTPUT_DIRECTORY "${SANDBOX_LIBS_DIR}"
-        LIBRARY_OUTPUT_DIRECTORY "${SANDBOX_LIBS_DIR}"
-        RUNTIME_OUTPUT_DIRECTORY "${SANDBOX_LIBS_DIR}"
-        )
+add_plugin(spin_plugin
+        FILES
+        ${SANDBOX_DIR}/src/spin_plugin.cpp ${SANDBOX_DIR}/src/spin_plugin.h
+        LIBRARIES engine)
 
-list(APPEND UBIK_DEPENDENCIES sandbox)
-
-# ----------------------------------------- #
-
-add_library(sandbox_plugin SHARED
+add_plugin(sandbox_plugin
+        FILES
         ${SANDBOX_DIR}/src/spin_plugin.cpp ${SANDBOX_DIR}/src/spin_plugin.h
         ${SANDBOX_DIR}/src/sandbox_plugin.cpp ${SANDBOX_DIR}/src/sandbox_plugin.h
-        )
-target_link_libraries(sandbox_plugin PRIVATE engine)
-
-set_target_properties(sandbox_plugin
-        PROPERTIES
-        ARCHIVE_OUTPUT_DIRECTORY "${SANDBOX_LIBS_DIR}"
-        LIBRARY_OUTPUT_DIRECTORY "${SANDBOX_LIBS_DIR}"
-        RUNTIME_OUTPUT_DIRECTORY "${SANDBOX_LIBS_DIR}"
-        )
-
-list(APPEND UBIK_DEPENDENCIES sandbox_plugin)
+        LIBRARIES engine)
 
 # ----------------------------------------- #
 # -------------- Editor lib --------------- #
@@ -159,35 +135,17 @@ target_include_directories(editor PUBLIC src/editor/)
 # ------------ Editor plugins ------------- #
 # ----------------------------------------- #
 
-add_library(game_view_gui SHARED
-        src/editor/plugins/game_view_gui.cpp src/editor/plugins/game_view_gui.h
-        )
+add_plugin(game_view_gui
+        FILES src/editor/plugins/game_view_gui.cpp src/editor/plugins/game_view_gui.h
+        LIBRARIES engine editor)
 
-target_link_libraries(game_view_gui PRIVATE engine editor)
+add_plugin(file_browser_gui
+        FILES src/editor/plugins/file_browser_gui.cpp
+        LIBRARIES engine editor)
 
-set_target_properties(game_view_gui
-        PROPERTIES
-        ARCHIVE_OUTPUT_DIRECTORY "${SANDBOX_LIBS_DIR}"
-        LIBRARY_OUTPUT_DIRECTORY "${SANDBOX_LIBS_DIR}"
-        RUNTIME_OUTPUT_DIRECTORY "${SANDBOX_LIBS_DIR}"
-        )
-list(APPEND UBIK_DEPENDENCIES game_view_gui)
-
-# ----------------------------------------- #
-
-add_library(scene_view_gui SHARED
-        src/editor/plugins/scene_view_gui.cpp src/editor/plugins/scene_view_gui.h
-        )
-
-target_link_libraries(scene_view_gui PRIVATE engine editor)
-
-set_target_properties(scene_view_gui
-        PROPERTIES
-        ARCHIVE_OUTPUT_DIRECTORY "${SANDBOX_LIBS_DIR}"
-        LIBRARY_OUTPUT_DIRECTORY "${SANDBOX_LIBS_DIR}"
-        RUNTIME_OUTPUT_DIRECTORY "${SANDBOX_LIBS_DIR}"
-        )
-list(APPEND UBIK_DEPENDENCIES scene_view_gui)
+add_plugin(entity_asset_editor
+        FILES src/editor/plugins/entity_asset_editor.cpp
+        LIBRARIES engine editor)
 
 # ----------------------------------------- #
 # ----------- Editor executable ----------- #
@@ -200,6 +158,8 @@ add_executable(ubik
 target_link_libraries(ubik PRIVATE engine editor)
 
 # TODO
+list(APPEND UBIK_DEPENDENCIES game_view_gui entity_asset_editor file_browser_gui)
+list(APPEND UBIK_DEPENDENCIES sandbox_plugin sandbox spin_plugin)
 add_dependencies(ubik ${UBIK_DEPENDENCIES})
 
 

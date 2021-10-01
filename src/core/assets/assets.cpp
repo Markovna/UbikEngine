@@ -26,7 +26,7 @@ void write(const fs::path &path, const asset &asset) {
   file << asset.dump(2);
 }
 
-handle load(provider* provider, repository &rep, const guid &id) {
+handle details::load(provider* provider, repository &rep, const guid &id) {
   if (auto [ key, success ] = rep.find(id); success)
     return { &rep, key };
 
@@ -36,7 +36,7 @@ handle load(provider* provider, repository &rep, const guid &id) {
   return { &rep, key };
 }
 
-handle load(provider* provider, repository &rep, const fs::path &path) {
+handle details::load(provider* provider, repository &rep, const fs::path &path) {
   if (auto [ key, success ] = rep.find(path); success)
     return { &rep, key };
 
@@ -47,11 +47,11 @@ handle load(provider* provider, repository &rep, const fs::path &path) {
 }
 
 handle load(provider* provider, const guid& id) {
-  return load(provider, *g_repository, id);
+  return details::load(provider, *g_repository, id);
 }
 
 handle load(provider* provider,const fs::path& path) {
-  return load(provider, *g_repository, path);
+  return details::load(provider, *g_repository, path);
 }
 
 buffer_t load_buffer(provider* provider, const handle& handle, const char* name) {
@@ -91,6 +91,9 @@ handle::handle(repository* repository, const repository::key& key)
 }
 
 handle::~handle() {
+  if (!repository_)
+    return;
+
   assert(get().use_count);
   uint32_t count = --get().use_count;
   if (!count) {
