@@ -38,13 +38,13 @@ bool operator==(vec4i lhs, vec4i rhs);
 bool operator!=(vec4i lhs, vec4i rhs);
 
 struct vec2 {
-  float x, y;
+  float x = 0, y = 0;
 
   static const vec2& zero();
 };
 
 struct vec3 {
-  float x, y, z;
+  float x = 0, y = 0, z = 0;
 
   explicit operator vec2() const;
 
@@ -61,7 +61,7 @@ struct vec3 {
 };
 
 struct vec4 {
-  float x, y, z, w;
+  float x = 0, y = 0, z = 0, w = 0;
 
   explicit operator vec3() const;
 };

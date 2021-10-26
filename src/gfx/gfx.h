@@ -219,8 +219,8 @@ class buffer_ptr {
   buffer_ptr() = default;
   ~buffer_ptr() = default;
 
-  buffer_ptr(buffer_ptr&&) = default;
-  buffer_ptr(const buffer_ptr&) = default;
+  buffer_ptr(buffer_ptr&&) noexcept = default;
+  buffer_ptr(const buffer_ptr&) noexcept = default;
 
   buffer_ptr& operator=(buffer_ptr&& other) noexcept {
     buffer_ptr(std::move(other)).swap(*this);
@@ -289,15 +289,15 @@ shader_handle create_shader(const char* vertex_src, const char* fragment_src, at
 texture_handle create_texture(uint32_t width, uint32_t height, texture_format::type, buffer_ptr ref = {});
 texture_handle create_texture(uint32_t width, uint32_t height, texture_format::type, texture_wrap wrap, texture_filter filter, texture_flags::mask, buffer_ptr ptr);
 
-viewid_t reserve_view();
-void release_view(viewid_t);
-
 void destroy(vertexbuf_handle&);
 void destroy(indexbuf_handle&);
 void destroy(framebuf_handle&);
 void destroy(shader_handle&);
 void destroy(uniform_handle&);
 void destroy(texture_handle&);
+
+viewid_t reserve_view();
+void release_view(viewid_t);
 
 void set_uniform(uniform_handle, int32_t);
 void set_uniform(uniform_handle, uint32_t);

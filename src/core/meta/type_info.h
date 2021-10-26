@@ -21,7 +21,7 @@ struct interface_info_base {
 
 template<class T>
 struct interface_info : public interface_info_base {
-  std::unordered_map<typeid_t, T> interfaces;
+  std::unordered_map<typeid_t, T> items;
 };
 
 struct type_info {
@@ -107,7 +107,7 @@ interface_info<T>* create_or_get_interface_info(std::string_view name) {
 template<class I>
 void add_interface(std::string_view i_name, typeid_t id, const I& i_instance) {
   details::interface_info<I>* info = details::create_or_get_interface_info<I>(i_name);
-  info->interfaces[id] = i_instance;
+  info->items.emplace(std::make_pair(id, i_instance));
 }
 
 }

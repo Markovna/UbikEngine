@@ -49,7 +49,7 @@ template<class T>
 T* get_interface(interface_info<T>* info, typeid_t id) {
   if (!info) return nullptr;
 
-  if (auto it = info->interfaces.find(id); it != info->interfaces.end()) {
+  if (auto it = info->items.find(id); it != info->items.end()) {
     return (T*) &it->second;
   }
 

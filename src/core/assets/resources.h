@@ -228,21 +228,21 @@ void unregister_pool() {
 template<class T>
 handle<T> load(const fs::path& path, assets::provider* provider) {
   pool<T>* pool_ptr = get_pool_storage<T>().pool.get();
-  auto result = pool_ptr->load(path, provider);
-  if (!result.first)
+  auto [success, key] = pool_ptr->load(path, provider);
+  if (!success)
     return {};
 
-  return { pool_ptr, result.second};
+  return { pool_ptr, key };
 }
 
 template<class T>
 handle<T> load(const guid& id, assets::provider* provider) {
   pool<T>* pool_ptr = get_pool_storage<T>().pool.get();
-  auto result = pool_ptr->load(id, provider);
-  if (!result.first)
+  auto [success, key] = pool_ptr->load(id, provider);
+  if (!success)
     return {};
 
-  return { pool_ptr, result.second};
+  return { pool_ptr, key };
 }
 
 template<class T>
