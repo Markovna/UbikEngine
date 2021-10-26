@@ -306,7 +306,8 @@ class handle_pool {
 
   void erase(T value) {
     auto index = value.index();
-    auto generation = ((value.id >> traits::generation_offs) + 1) << traits::generation_offs;
+//    auto generation = ((value.id >> traits::generation_offs) + 1) << traits::generation_offs;
+    auto generation = (value.id & traits::generation_mask) + (1 << traits::generation_offs);
     store_[index] = free_ | generation;
     free_ = index;
   }

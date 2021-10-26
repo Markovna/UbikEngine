@@ -138,6 +138,7 @@ void GLRendererAPI::CreateFrameBuffer(framebuf_handle handle, texture_handle* ha
 
     FrameBuffer& frame_buffer = frame_buffers_[handle.index()];
 
+    int32_t color_attachment = 0;
     for (int i = 0; i < num; i++) {
         texture_handle tex = handles[i];
         Texture& texture = textures_[tex.index()];
@@ -148,15 +149,17 @@ void GLRendererAPI::CreateFrameBuffer(framebuf_handle handle, texture_handle* ha
         auto& format_info = get_texture_formats()[format];
         bool is_depth = format_info.depth_bits || format_info.stencil_bits;
         if (is_depth) {
-            if (format_info.stencil_bits && format_info.depth_bits) {
-                attachment = GL_DEPTH_STENCIL_ATTACHMENT;
-            } else if (format_info.depth_bits) {
-                attachment = GL_DEPTH_ATTACHMENT;
-            } else {
-                attachment = GL_STENCIL_ATTACHMENT;
-            }
+          if (format_info.stencil_bits && format_info.depth_bits) {
+            attachment = GL_DEPTH_STENCIL_ATTACHMENT;
+          } else if (format_info.depth_bits) {
+            attachment = GL_DEPTH_ATTACHMENT;
+          } else {
+            attachment = GL_STENCIL_ATTACHMENT;
+            attachment = GL_STENCIL_ATTACHMENT;
+          }
         } else {
-            attachment = GL_COLOR_ATTACHMENT0;
+          attachment = GL_COLOR_ATTACHMENT0 + color_attachment;
+          color_attachment++;
         }
 
         if (texture.render_buffer) {
