@@ -45,10 +45,10 @@ void unload_sandbox_plugin(plugins* plugins_registry) {
   ecs::world->remove_system<test>();
 }
 
-void serializer<custom_component>::from_asset(assets::provider* p, const asset &asset, custom_component& comp) {
-  assets::get(p, asset, "a", comp.a);
-  assets::get(p, asset, "b", comp.b);
-  assets::get(p, asset, "c", comp.c);
+void serializer<custom_component>::from_asset(assets::repository* r, const asset &asset, custom_component& comp) {
+  assets::get(r, asset, "a", comp.a);
+  assets::get(r, asset, "b", comp.b);
+  assets::get(r, asset, "c", comp.c);
 }
 
 void serializer<custom_component>::to_asset(asset &asset, const custom_component& comp) {
@@ -57,8 +57,8 @@ void serializer<custom_component>::to_asset(asset &asset, const custom_component
   assets::set(asset, "c", comp.c);
 }
 
-void serializer<inner_type>::from_asset(assets::provider* p, const asset &asset, inner_type& val) {
-  assets::get(p, asset, "a", val.a);
+void serializer<inner_type>::from_asset(assets::repository* r, const asset &asset, inner_type& val) {
+  assets::get(r, asset, "a", val.a);
 }
 
 void serializer<inner_type>::to_asset(asset &asset, const inner_type& val) {

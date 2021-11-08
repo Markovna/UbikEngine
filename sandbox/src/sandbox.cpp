@@ -9,11 +9,11 @@
 
 class application_impl : public application {
  public:
-  void start(assets::provider* provider) override {
+  void start(assets::repository* rep) override {
     logger::core::Info("application_impl::start");
 
-    assets::handle scene = assets::load(provider, fs::absolute("assets/scenes/start_scene.entity"));
-    ecs::world->load_from_asset(provider, *scene);
+    assets::handle scene = rep->load(fs::absolute("assets/scenes/start_scene.entity"));
+    ecs::world->load_from_asset(rep, *scene);
   }
 
   void tick() override {
