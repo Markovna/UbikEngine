@@ -11,9 +11,6 @@ using typeid_t = uintptr_t;
 
 namespace details {
 
-using to_asset_fn = void (*)(asset&, const void*);
-using from_asset_fn = void (*)(assets::provider*, const asset&, void*);
-
 struct interface_info_base {
   typeid_t id;
   std::string name;

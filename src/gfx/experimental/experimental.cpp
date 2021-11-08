@@ -3,6 +3,7 @@
 #include <gfx/experimental/renderer.h>
 #include <gfx/experimental/render_context_opengl.h>
 #include <gfx/experimental/vertex_layout_desc.h>
+#include <gfx/experimental/opengl_shader_desc.h>
 #include "GLFW/glfw3.h"
 #include "stb_image.h"
 
@@ -34,30 +35,13 @@ gfx::texture_handle load_texture(std::ifstream& stream, gfx::resource_command_bu
           .format = channels == 3 ? gfx::texture_format::RGB8 : gfx::texture_format::RGBA8,
       },
       mem
-      );
+    );
 
   std::memcpy(mem.data, data, mem.size);
   stbi_image_free(data);
   return texture;
 }
 
-class a {
- public:
-  auto begin() const { return values.begin(); }
-  auto end() const { return values.end(); }
-
-  void emplace(int val) { values.emplace_back(val); }
- private:
-  std::vector<int> values;
-};
-
-class b : a {
- public:
-  auto begin() const { return a::begin(); }
-  auto end() const { return a::end(); }
-
-  void push(int val) { emplace(val); }
-};
 
 int main(int argc, char* argv[]) {
 
@@ -75,39 +59,58 @@ int main(int argc, char* argv[]) {
   std::ifstream file1 { std::filesystem::current_path().append("assets/textures/seal.png"), std::ios::in };
   gfx::texture_handle texture1 = load_texture(file1, resource_command_buffer);
 
+  char vertex_shader[] = "#version 410 core\n"
+                         "in vec3 _POSITION;\n"
+                         "in vec2 _TEXCOORD0;\n"
+                         "\n"
+                         "out vec2 vTexCoord;\n"
+                         "\n"
+                         "layout(std140) uniform CameraParams {\n"
+                         "  uniform mat4 model;\n"
+                         "  uniform mat4 view;\n"
+                         "  uniform mat4 projection;\n"
+                         "};\n"
+                         "\n"
+                         "void main()\n"
+                         "{\n"
+                         "  gl_Position = projection * view * model * vec4(_POSITION, 1.0);\n"
+                         "  vTexCoord = _TEXCOORD0;\n"
+                         "}";
+  char fragment_shader[] =  "#version 410 core\n"
+                            "in vec2 vTexCoord;\n"
+                            "\n"
+                            "out vec4 FragColor;\n"
+                            "\n"
+                            "uniform sampler2D Texture1;\n"
+                            "uniform sampler2D Texture2;\n"
+                            "\n"
+                            "void main()\n"
+                            "{\n"
+                            "  FragColor = mix(texture(Texture1, vTexCoord), texture(Texture2, vTexCoord), 0.7);\n"
+                            "}";
+  {
+    gfx::shader_binding_desc_gl bindings[] = {
+        {.name = "Texture1",     .type = gfx::uniform_type::SAMPLER, .binding = 0},
+        {.name = "Texture2",     .type = gfx::uniform_type::SAMPLER, .binding = 1},
+        {.name = "CameraParams", .type = gfx::uniform_type::BUFFER,  .binding = 2},
+    };
 
-  char vertex_shader[] = "    in vec3 _POSITION;\n"
-                         "    in vec2 _TEXCOORD0;\n"
-                         "\n"
-                         "    out vec2 vTexCoord;\n"
-                         "\n"
-                         "    layout(std140) uniform CameraParams {\n"
-                         "      uniform mat4 model;\n"
-                         "      uniform mat4 view;\n"
-                         "      uniform mat4 projection;\n"
-                         "    };\n"
-                         "\n"
-                         "    void main()\n"
-                         "    {\n"
-                         "        gl_Position = projection * view * model * vec4(_POSITION, 1.0);\n"
-                         "        vTexCoord = _TEXCOORD0;\n"
-                         "    }";
-  char fragment_shader[] =  "    in vec2 vTexCoord;\n"
-                            "\n"
-                            "    out vec4 FragColor;\n"
-                            "\n"
-                            "    //uniform vec4 mainColor;\n"
-                            "    uniform sampler2D Texture1;\n"
-                            "    uniform sampler2D Texture2;\n"
-                            "\n"
-                            "    void main()\n"
-                            "    {\n"
-                            "      FragColor = mix(texture(Texture1, vTexCoord), texture(Texture2, vTexCoord), 0.7);\n"
-                            "    }";
+    gfx::shader_blob_header_gl header {
+        .binding_table_offset = 0,
+        .binding_table_size   = 3,
+    };
 
-//  char metadata[] = "Texture1 1 0\n"
-//                   "Texture2 1 1\n"
-//                   "CameraParams 0 2";
+    std::stringstream blob;
+    blob.write((char*) &bindings, sizeof(bindings));
+
+    char mem[sizeof(gfx::shader_blob_header_gl) + 3 * sizeof(gfx::shader_binding_desc_gl)];
+    new (mem) gfx::shader_binding_desc_gl[] {
+      { .name = "Texture1",     .type = gfx::uniform_type::SAMPLER, .binding = 0 },
+      { .name = "Texture2",     .type = gfx::uniform_type::SAMPLER, .binding = 1 },
+      { .name = "CameraParams", .type = gfx::uniform_type::BUFFER,  .binding = 2 },
+    };
+
+  }
 
   std::stringstream meta;
   char uniform1_str[] = "Texture1";
@@ -115,8 +118,8 @@ int main(int argc, char* argv[]) {
   char uniform3_str[] = "CameraParams";
   gfx::uniform_type::type sampler = gfx::uniform_type::SAMPLER;
   gfx::uniform_type::type buffer = gfx::uniform_type::BUFFER;
-  uint8_t binding = 0;
 
+  uint8_t binding = 0;
   meta.write(uniform1_str, sizeof(uniform1_str));
   meta.write((char*) &sampler, sizeof(uint8_t));
   meta.write((char*) &binding, sizeof(uint8_t));
@@ -139,7 +142,6 @@ int main(int argc, char* argv[]) {
   gfx::shader_handle shader = resource_command_buffer->create_shader({
     .vertex_shader = { .data = vertex_shader, .size = sizeof(vertex_shader) },
     .fragment_shader = { .data = fragment_shader, .size = sizeof(fragment_shader) },
-    .metadata = { .data = metadata, .size = meta_size }
   });
 
   static float size = 1.0f;
@@ -200,11 +202,11 @@ int main(int argc, char* argv[]) {
   std::memcpy(vertex_mem.data, vertices, sizeof(vertices));
 
   gfx::uniform_handle uniform = resource_command_buffer->create_uniform(
-    {
-            { .binding = 0, .type = gfx::uniform_type::SAMPLER },
-            { .binding = 1, .type = gfx::uniform_type::SAMPLER },
-            { .binding = 2, .type = gfx::uniform_type::BUFFER },
-        });
+  {
+          { .type = gfx::uniform_type::SAMPLER, .binding = 0 },
+          { .type = gfx::uniform_type::SAMPLER, .binding = 1 },
+          { .type = gfx::uniform_type::BUFFER,  .binding = 2 },
+      });
   resource_command_buffer->update_uniform(uniform, 0, texture0);
   resource_command_buffer->update_uniform(uniform, 1, texture1);
 
@@ -212,11 +214,30 @@ int main(int argc, char* argv[]) {
 
   renderer.submit(resource_command_buffer);
 
+  const vec4 normalized_rect { 0.0f, 0.0f, 1.0f, 1.0f };
+  const float fov = 60.0f;
+  const float near = 0.1f;
+  const float far = 1000.0f;
+  vec2i resolution = window.get_resolution();
+  vec4 viewport { };
+  viewport.z = (float) resolution.x;
+  viewport.w = (float) resolution.y;
+  float ratio = viewport.z / viewport.w;
+
   struct camera_model_view_projection {
     mat4 model;
     mat4 view;
     mat4 projection;
   } mvp;
+
+  mvp.projection = mat4::perspective(
+      fov * math::DEG_TO_RAD, ratio * normalized_rect.z / normalized_rect.w, near, far
+  );
+
+  mvp.view = mat4::inverse(
+      mat4::translation({0, 0, -5})
+  );
+
 
   bool running = true;
   while (running) {
@@ -235,24 +256,6 @@ int main(int argc, char* argv[]) {
     gfx::render_command_buffer* render_buffer = renderer.create_render_command_buffer();
     gfx::resource_command_buffer* resource_buffer = renderer.create_resource_command_buffer();
 
-    const vec4 normalized_rect { 0.0f, 0.0f, 1.0f, 1.0f };
-    const float fov = 60.0f;
-    const float near = 0.1f;
-    const float far = 1000.0f;
-    vec2i resolution = window.get_resolution();
-    vec4 viewport { };
-    viewport.z = (float) resolution.x;
-    viewport.w = (float) resolution.y;
-    float ratio = viewport.z / viewport.w;
-
-    mvp.projection = mat4::perspective(
-        fov * math::DEG_TO_RAD, ratio * normalized_rect.z / normalized_rect.w, near, far
-      );
-
-    mvp.view = mat4::inverse(
-        mat4::translation({0, 0, -5})
-      );
-
     float time = glfwGetTime();
 
     quat rot = quat::axis(vec3::normalized({1, 1, 1}), time);
@@ -265,7 +268,7 @@ int main(int argc, char* argv[]) {
         .sort_key = 0,
         .shader = shader,
         .vertexbuf = vertexbuf,
-        .uniforms = {uniform}
+        .uniforms = { uniform }
     });
 
     renderer.submit(resource_buffer);

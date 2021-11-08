@@ -1,8 +1,6 @@
 #include "assets.h"
 
 #include <fstream>
-#include <set>
-#include <base/log.h>
 
 namespace assets {
 
@@ -26,66 +24,41 @@ void write(const fs::path &path, const asset &asset) {
   file << asset.dump(2);
 }
 
-handle details::load(provider* provider, repository &rep, const guid &id) {
-  if (auto [ key, success ] = rep.find(id); success)
-    return { &rep, key };
+handle repository::load(const guid &id) {
+  if (auto [ key, success ] = find(id); success)
+    return { this, key };
 
-  fs::path path = provider->get_path(id);
-  repository::key key = rep.emplace(id, path);
-  rep[key].asset = provider->load(path);
-  return { &rep, key };
+  fs::path path = provider_->get_path(id);
+  key key = emplace(id, path);
+  assets_[key].asset = provider_->load(path);
+  return { this, key };
 }
 
-handle details::load(provider* provider, repository &rep, const fs::path &path) {
-  if (auto [ key, success ] = rep.find(path); success)
-    return { &rep, key };
+handle repository::load(const fs::path &path) {
+  if (auto [ key, success ] = find(path); success)
+    return { this, key };
 
-  asset asset = provider->load(path);
-  repository::key key = rep.emplace(guid::from_string(asset["__guid"]), path);
-  rep[key].asset = std::move(asset);
-  return { &rep, key };
+  asset asset = provider_->load(path);
+  key key = emplace(guid::from_string(asset["__guid"]), path);
+  assets_[key].asset = std::move(asset);
+  return { this, key };
 }
 
-handle load(provider* provider, const guid& id) {
-  return details::load(provider, *g_repository, id);
+void repository::load_buffer(const fs::path& path, uint64_t buffer_id, std::ostream& out) const {
+  provider_->load_buffer(path, buffer_id, out);
 }
 
-handle load(provider* provider,const fs::path& path) {
-  return details::load(provider, *g_repository, path);
-}
-
-buffer_t load_buffer(provider* provider, const handle& handle, const char* name) {
-  if (!handle)
-    return { };
-
-  std::stringstream stream;
-  uint64_t id = handle->at(name);
-  const fs::path& p = handle.path();
-  provider->load_buffer(p, id, stream);
-  return std::make_unique<std::stringstream>(std::move(stream));
-}
-
-uint64_t add_buffer(handle& handle, const char* name) {
+uint64_t add_buffer(asset& handle, std::string_view name) {
   static std::random_device rd;
   static std::mt19937 gen(rd());
   static std::uniform_int_distribution<uint64_t> dis;
 
   uint64_t buffer_id = dis(gen);
-  (*handle)[name] = buffer_id;
+  handle[std::string(name)] = buffer_id;
   return buffer_id;
 }
 
-repository* g_repository;
-
-void init() {
-  g_repository = new repository;
-}
-
-void shutdown() {
-  delete g_repository;
-}
-
-handle::handle(repository* repository, const repository::key& key)
+handle::handle(repository* repository, const key& key)
   : repository_(repository), key_(key) {
   ++get().use_count;
 }
@@ -122,6 +95,24 @@ handle& handle::operator=(const handle& other) {
 void handle::swap(handle& other) noexcept {
   std::swap(repository_, other.repository_);
   std::swap(key_, other.key_);
+}
+
+handle::operator bool() const noexcept {
+  return repository_ != nullptr && repository_->find(key_) != repository_->end();
+}
+
+reference handle::get() { return repository_->at(key_); }
+const_reference handle::get() const { return repository_->at(key_); }
+
+buffer_t handle::load_buffer(const asset& asset, std::string_view name) const {
+  if (!(*this))
+    return { };
+
+  std::stringstream stream;
+  uint64_t id = asset.at(name.data());
+  const fs::path& p = path();
+  repository_->load_buffer(p, id, stream);
+  return std::make_unique<std::stringstream>(std::move(stream));
 }
 
 }

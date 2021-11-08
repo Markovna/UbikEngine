@@ -13,6 +13,7 @@ class filesystem_provider : public assets::provider {
   void save(const fs::path&, const asset&);
   void reload(assets::repository&);
 
+  static void save_asset(const fs::path&, const asset&);
   static void save_buffer(const fs::path&, uint64_t buffer_id, const std::istream&);
   static void remove_buffer(const fs::path&, uint64_t buffer_id);
 

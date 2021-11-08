@@ -22,9 +22,35 @@
 
 #include "library_loader.h"
 
-#include <vector>
+#include "gfx/experimental/asset_repository.h"
+#include "gfx/experimental/shader_compiler.h"
+#include "gfx/experimental/shader_compiler_opengl.h"
 
 int main(int argc, char* argv[]) {
+  fs::paths::project(argv[1]);
+  logger::init(fs::append(fs::paths::cache(), "log").c_str());
+  experimental::assets_repository assets_repository;
+  experimental::assets_filesystem assets_filesystem(fs::paths::project());
+  assets_filesystem.load_assets(&assets_repository);
+
+  for (const auto [a, p, g] : assets_repository) {
+    std::cout << p.c_str() << "\n";
+  }
+
+//  asset a;
+//  experimental::read(fs::absolute("assets/shaders/TestShader copy.shader"), a);
+
+
+  auto compiled_asset = assets_repository.create_asset(guid::generate(), "assets/shaders/TestShader_compiled.asset");
+  experimental::compile_program(
+      *assets_repository.load("assets/shaders/TestShader copy.shader"),
+      *compiled_asset,
+      experimental::shader_compiler_opengl::create().get(),
+      &assets_repository
+    );
+  std::cout << compiled_asset->dump(2);
+
+  return 0;
   const char* plugin_names [] = {
       "sandbox",
       "spin_plugin",
@@ -74,14 +100,14 @@ int main(int argc, char* argv[]) {
 
   init_filesystem_provider();
 
-  assets::init();
+  std::unique_ptr<assets::repository> asset_repository = std::make_unique<assets::repository>(g_fsprovider);
 
   resources::init_compiler();
-  resources::compile_all_assets(fs::paths::project().c_str());
+  resources::compile_all_assets(asset_repository.get(), fs::paths::project().c_str());
 
   resources::init();
 
-  std::unique_ptr<gui_renderer> gui_renderer = gui_renderer::create(&window, g_fsprovider);
+  std::unique_ptr<gui_renderer> gui_renderer = gui_renderer::create(&window, asset_repository.get());
 
   connect_gui_events(gui_renderer.get(), input);
 
@@ -93,9 +119,9 @@ int main(int argc, char* argv[]) {
   }
 
   if (g_application)
-    g_application->start(g_fsprovider);
+    g_application->start(asset_repository.get());
 
-  editor::g_editor_gui->start(g_fsprovider);
+  editor::g_editor_gui->start(asset_repository.get());
 
   bool running = true;
   while (running) {
@@ -149,7 +175,7 @@ int main(int argc, char* argv[]) {
   resources::shutdown();
   resources::shutdown_compiler();
 
-  assets::shutdown();
+  asset_repository.reset();
 
   meta::shutdown();
 

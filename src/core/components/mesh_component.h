@@ -78,6 +78,6 @@ class mesh_component {
 
 template<>
 struct serializer<mesh_component> {
-  static void from_asset(assets::provider*, const asset&, mesh_component&);
+  static void from_asset(assets::repository*, const asset&, mesh_component&);
   static void to_asset(asset&, const mesh_component&);
 };

@@ -6,18 +6,22 @@
 
 struct gui_renderer;
 
+namespace assets {
+class repository;
+}
+
 struct editor_gui {
-  virtual void start(assets::provider*) = 0;
+  virtual void start(assets::repository*) = 0;
   virtual void gui(gui_renderer* gui_renderer) = 0;
   virtual ~editor_gui() = default;
 };
 
 struct editor_gui_plugin {
  public:
-  void start(assets::provider* provider) {
+  void start(assets::repository* rep) {
     for (auto& editor : editors_) {
       if (editor)
-        editor->start(provider);
+        editor->start(rep);
     }
   }
 

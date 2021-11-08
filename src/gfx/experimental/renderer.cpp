@@ -35,4 +35,16 @@ void renderer::begin_frame() {
   context_->begin_frame();
 }
 
+std::string_view renderer::backend_name() const {
+  return context_->name();
+}
+
+renderer::renderer(renderer::create_context_fn create_context) :
+    context_(create_context()),
+    handle_allocators_(),
+    allocator_(std::make_unique<allocator_default>())
+{
+  assert(context_);
+}
+
 }

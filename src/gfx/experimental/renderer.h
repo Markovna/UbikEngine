@@ -13,13 +13,7 @@ class renderer {
  public:
   using create_context_fn = std::unique_ptr<render_context>(*)();
 
-  explicit renderer(create_context_fn create_context) :
-    context_(create_context()),
-    handle_allocators_(),
-    allocator_(std::make_unique<allocator_default>())
-  {
-    assert(context_);
-  }
+  explicit renderer(create_context_fn create_context);
 
   renderer(const renderer&) = delete;
   renderer(renderer&&) = delete;
@@ -29,6 +23,8 @@ class renderer {
 
   resource_command_buffer* create_resource_command_buffer() { return new resource_command_buffer(&handle_allocators_, allocator_.get()); }
   render_command_buffer* create_render_command_buffer() { return new render_command_buffer(); }
+
+  [[nodiscard]] std::string_view backend_name() const;
 
   void begin_frame();
   void submit(resource_command_buffer* buffer);

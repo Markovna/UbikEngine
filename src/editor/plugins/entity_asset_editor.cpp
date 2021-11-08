@@ -15,7 +15,7 @@ static std::unique_ptr<world> world_;
 static assets::handle entity_;
 static event<const assets::handle&> on_entity_load;
 
-static void set_entity(assets::provider* p, assets::handle e);
+static void set_entity(assets::repository* p, assets::handle e);
 
 class recursive_entity_iterator {
  private:
@@ -155,15 +155,14 @@ inline bool operator!=(const recursive_entity_iterator& lhs, const recursive_ent
   return !(lhs == rhs);
 }
 
-
 class entity_graph_gui : public editor_gui {
  private:
   std::string selected_id;
 
  public:
-  void start(assets::provider* p) override {
+  void start(assets::repository* p) override {
     // TODO:
-    set_entity(p, assets::load(p, fs::absolute("assets/scenes/start_scene.entity")));
+    set_entity(p, p->load(fs::absolute("assets/scenes/start_scene.entity")));
   }
 
   void gui(gui_renderer* gui_renderer) override {
@@ -220,15 +219,18 @@ class entity_graph_gui : public editor_gui {
   }
 };
 
-void set_entity(assets::provider* p, assets::handle e) {
+void set_entity(assets::repository* p, assets::handle e) {
   entity_ = std::move(e);
 
   // TODO: world->clear();
-  for (auto it = world_->root(); it.is_valid(); ) {
-    auto next_it = it = world_->next(it);
-    world_->destroy_entity(it);
-    it = next_it;
+  {
+    for (auto it = world_->root(); it.is_valid();) {
+      auto next_it = it = world_->next(it);
+      world_->destroy_entity(it);
+      it = next_it;
+    }
   }
+
   world_->load_from_asset(p, *entity_);
 
   on_entity_load(entity_);
@@ -237,7 +239,7 @@ void set_entity(assets::provider* p, assets::handle e) {
 class scene_view_gui : public editor_gui {
 
  public:
-  void start(assets::provider* provider) override;
+  void start(assets::repository*) override;
   void gui(gui_renderer* gui_renderer) override;
 
  private:
@@ -395,7 +397,7 @@ void scene_view_gui::rotate_camera(world *w, const vec2 &delta) {
   w->set_local_rotation(camera_, quat::look_at(center - local_pos, rot * up));
 }
 
-void scene_view_gui::start(assets::provider *provider) {
+void scene_view_gui::start(assets::repository* repository) {
   // create camera
   camera_ = world_->create_entity();
   world_->set_local_rotation(camera_, quat::axis(vec3::right(), 30 * math::DEG_TO_RAD));
@@ -405,8 +407,8 @@ void scene_view_gui::start(assets::provider *provider) {
   camera.tag |= camera_component::tag_t::Editor;
   camera.far = 10'000.0f;
 
-  grid_shader_ = resources::load<shader>(fs::absolute("assets/shaders/EditorGrid.shader"), provider);
-  picking_shader_ = resources::load<shader>(fs::absolute("assets/shaders/picking.shader"), provider);
+  grid_shader_ = resources::load<shader>(fs::absolute("assets/shaders/EditorGrid.shader"), repository);
+  picking_shader_ = resources::load<shader>(fs::absolute("assets/shaders/picking.shader"), repository);
 
   picking_id_uniform_ = gfx::create_uniform("pick_id");
 }

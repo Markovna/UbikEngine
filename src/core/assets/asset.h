@@ -34,7 +34,7 @@ struct has_to_json<T, void> {
 
 namespace assets {
 
-struct provider;
+struct repository;
 
 asset read(const char* path);
 asset read(const fs::path& path);
@@ -43,7 +43,7 @@ void write(const asset&, const char* path);
 void write(const asset&, const fs::path& path);
 
 template<class T, class = std::enable_if_t<has_from_json<T>::value>>
-void get(provider*, const asset& asset, const char* key, T& value) {
+void get(repository*, const asset& asset, const char* key, T& value) {
   value = asset.at(key);
 }
 

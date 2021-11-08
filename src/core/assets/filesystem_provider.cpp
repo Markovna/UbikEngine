@@ -69,6 +69,11 @@ fs::path filesystem_provider::get_or_create_buffers_dir(const fs::path& path) {
   return buffers_path;
 }
 
+void filesystem_provider::save_asset(const fs::path& path, const asset& asset) {
+  guid id = guid::from_string(asset["__guid"]);
+  assets::write(path, asset);
+}
+
 filesystem_provider* g_fsprovider;
 
 void init_filesystem_provider() {

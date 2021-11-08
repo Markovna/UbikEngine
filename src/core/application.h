@@ -1,12 +1,12 @@
 #pragma once
 
 namespace assets {
-struct provider;
+struct repository;
 }
 
 class application {
  public:
-  virtual void start(assets::provider*) = 0;
+  virtual void start(assets::repository*) = 0;
   virtual void tick() = 0;
   virtual void stop() = 0;
   virtual ~application() = default;

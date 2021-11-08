@@ -86,7 +86,7 @@ void resource_command_buffer::free_resources() {
   }
 }
 
-static void copy_shader_blob(shader_blob& dst, shader_blob& src, allocator* allocator) {
+static void copy_shader_blob(memory& dst, shader_blob& src, allocator* allocator) {
   dst.data = reinterpret_cast<uint8_t*>(::alloc(*allocator, src.size));
   dst.size = src.size;
   std::memcpy(dst.data, src.data, src.size);
@@ -96,13 +96,11 @@ shader_handle resource_command_buffer::create_shader(shader_program_desc desc) {
   auto& command = emplace<create_shader_command>();
   command.handle = alloc<shader_handle>();
 
-  copy_shader_blob(command.desc.vertex_shader, desc.vertex_shader, allocator_);
-  copy_shader_blob(command.desc.fragment_shader, desc.fragment_shader, allocator_);
-  copy_shader_blob(command.desc.metadata, desc.metadata, allocator_);
+  copy_shader_blob(command.vertex, desc.vertex_shader, allocator_);
+  copy_shader_blob(command.fragment, desc.fragment_shader, allocator_);
 
-  queue_free_memory(memory { .data = reinterpret_cast<uint8_t*>(command.desc.vertex_shader.data), .size = command.desc.vertex_shader.size });
-  queue_free_memory(memory { .data = reinterpret_cast<uint8_t*>(command.desc.fragment_shader.data), .size = command.desc.fragment_shader.size });
-  queue_free_memory(memory { .data = reinterpret_cast<uint8_t*>(command.desc.metadata.data), .size = command.desc.metadata.size });
+  queue_free_memory(command.vertex);
+  queue_free_memory(command.fragment);
 
   return command.handle;
 }
@@ -127,6 +125,22 @@ indexbuf_handle resource_command_buffer::create_index_buffer(size_t size) {
   command.memory.data = nullptr;
   command.memory.size = size;
   return command.handle;
+}
+
+framebuf_handle resource_command_buffer::create_frame_buffer(std::initializer_list<texture_handle> attachments) {
+  auto& command = emplace<create_frame_buffer_command>();
+  command.handle = alloc<framebuf_handle>();
+  uint32_t i = 0;
+  for (auto& a : attachments) {
+    command.attachments[i++] = a;
+  }
+  command.attachments_size = attachments.size();
+  return command.handle;
+}
+
+void resource_command_buffer::destroy_frame_buffer(framebuf_handle handle) {
+  auto& command = emplace<destroy_frame_buffer_command>();
+  command.handle = handle;
 }
 
 void resource_command_buffer::destroy_index_buffer(indexbuf_handle handle) {

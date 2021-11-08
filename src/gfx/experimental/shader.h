@@ -1,18 +1,33 @@
 #pragma once
 
+#include "gfx.h"
+#include "core/assets/asset_loader.h"
+
 #include <unordered_map>
 #include <string>
-#include "gfx.h"
 
 namespace experimental {
 
+struct shader_binding_table {
+  struct item {
+    char name[64];
+    gfx::uniform_type::type type;
+    uint8_t binding;
+    uint32_t offset;
+  };
+
+  std::vector<item> items;
+};
+
 class shader {
  public:
-  shader();
+  shader(gfx::shader_handle handle, shader_binding_table binding_table)
+    : handle_(handle), binding_table_(std::move(binding_table))
+  {}
 
  private:
-  uint32_t attribute_locations_[gfx::vertex_semantic::COUNT];
-  std::unordered_map<std::string, gfx::uniform_desc> uniform_locations_;
+  gfx::shader_handle handle_;
+  shader_binding_table binding_table_;
 };
 
 }

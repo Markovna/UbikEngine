@@ -168,7 +168,7 @@ class file_browser_gui : public editor_gui {
   }
 
  public:
-  void start(assets::provider*) override {}
+  void start(assets::repository*) override {}
 
   void gui(gui_renderer* gui_renderer) override {
     gui_renderer->set_context();

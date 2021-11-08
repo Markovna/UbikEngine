@@ -43,7 +43,7 @@ struct transform_component {
 
 template<>
 struct serializer<transform_component> {
-  static void from_asset(assets::provider*, const asset&, transform_component&);
+  static void from_asset(assets::repository*, const asset&, transform_component&);
   static void to_asset(asset&, const transform_component&);
 };
 
@@ -100,7 +100,7 @@ class world : ecs::registry {
   entity create_entity(const transform& local = {}, entity parent = entity::invalid(), entity next = entity::invalid());
   void destroy_entity(entity entity);
 
-  entity load_from_asset(assets::provider* provider, const asset& asset, entity parent = entity::invalid(), entity next = entity::invalid());
+  entity load_from_asset(assets::repository*, const asset& asset, entity parent = entity::invalid(), entity next = entity::invalid());
 
   void save_to_asset(asset& asset);
   void save_to_asset(asset& asset, entity entity);

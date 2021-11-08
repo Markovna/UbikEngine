@@ -74,11 +74,41 @@ static void bind_uniform(uniform_gl& uniform) {
     if (binding.type == uniform_type::BUFFER) {
       GL_ERRORS(glBindBufferRange(GL_UNIFORM_BUFFER, binding.binding, binding.buffer_id, binding.offset, binding.size));
     } else if (binding.type == uniform_type::SAMPLER) {
+      // TODO: glBindTextureUnit
       GL_ERRORS(glActiveTexture(GL_TEXTURE0 + binding.binding));
       GL_ERRORS(glBindTexture(GL_TEXTURE_2D, binding.texture_id));
     }
   }
 }
+
+constexpr static GLenum vertex_data_types[] = {
+    GL_FLOAT,
+    GL_BYTE,
+    GL_SHORT,
+    GL_INT,
+    GL_UNSIGNED_BYTE,
+    GL_UNSIGNED_SHORT,
+    GL_UNSIGNED_INT,
+};
+
+static_assert(sizeof(vertex_data_types) == vertex_type::COUNT * sizeof(GLenum),
+              "Missing some vertex type in types array.");
+
+struct texture_format_info_gl {
+  GLint internal_format;
+  GLenum format;
+  GLenum type;
+};
+
+constexpr static texture_format_info_gl texture_formats[] = {
+    { GL_RED,                   GL_RED,                     GL_UNSIGNED_BYTE },     // R8
+    { GL_RGB,                   GL_RGB,                     GL_UNSIGNED_BYTE },     // RGB8
+    { GL_RGBA,                  GL_RGBA,                    GL_UNSIGNED_BYTE },     // RGBA8
+    { GL_DEPTH24_STENCIL8,      GL_DEPTH_STENCIL,           GL_UNSIGNED_INT_24_8 }, // D24S8
+};
+
+static_assert(sizeof(texture_formats) == texture_format::COUNT * sizeof(texture_format_info_gl),
+              "Missing some texture format type in texture_formats array.");
 
 void render_context_opengl::create_swap_chain(
     window::window_handle win_handle,
@@ -117,59 +147,114 @@ void render_context_opengl::submit(const resource_command_buffer* command_buffer
   for (auto& header : *command_buffer) {
     switch (header.type) {
       case resource_command_type::CREATE_VERTEX_BUFFER: {
-        execute<create_vertex_buffer_command>(*header.ptr);
+        execute(get_command<create_vertex_buffer_command>(header));
         break;
       }
       case resource_command_type::CREATE_INDEX_BUFFER: {
-        execute<create_index_buffer_command>(*header.ptr);
+        execute(get_command<create_index_buffer_command>(header));
         break;
       }
       case resource_command_type::CREATE_TEXTURE: {
-        execute<create_texture_command>(*header.ptr);
+        execute(get_command<create_texture_command>(header));
         break;
       }
       case resource_command_type::CREATE_UNIFORM: {
-        execute<create_uniform_command>(*header.ptr);
-        break;
-      }
-      case resource_command_type::UPDATE_UNIFORM: {
-        execute<update_uniform_command>(*header.ptr);
-        break;
-      }
-      case resource_command_type::DESTROY_VERTEX_BUFFER: {
-        execute<destroy_vertex_buffer_command>(*header.ptr);
-        break;
-      }
-      case resource_command_type::DESTROY_INDEX_BUFFER: {
-        execute<destroy_index_buffer_command>(*header.ptr);
-        break;
-      }
-      case resource_command_type::DESTROY_TEXTURE: {
-        execute<destroy_texture_command>(*header.ptr);
-        break;
-      }
-      case resource_command_type::DESTROY_UNIFORM: {
-        execute<destroy_uniform_command>(*header.ptr);
+        execute(get_command<create_uniform_command>(header));
         break;
       }
       case resource_command_type::CREATE_SHADER: {
-        execute<create_shader_command>(*header.ptr);
+        execute(get_command<create_shader_command>(header));
         break;
       }
-      case resource_command_type::DESTROY_SHADER: {
-        execute<destroy_shader_command>(*header.ptr);
+      case resource_command_type::UPDATE_UNIFORM: {
+        execute(get_command<update_uniform_command>(header));
         break;
       }
       case resource_command_type::UPDATE_VERTEX_BUFFER: {
-        execute<update_vertex_buffer_command>(*header.ptr);
+        execute(get_command<update_vertex_buffer_command>(header));
         break;
       }
       case resource_command_type::UPDATE_INDEX_BUFFER: {
-        execute<update_index_buffer_command>(*header.ptr);
+        execute(get_command<update_index_buffer_command>(header));
+        break;
+      }
+      case resource_command_type::DESTROY_VERTEX_BUFFER: {
+        execute(get_command<destroy_vertex_buffer_command>(header));
+        break;
+      }
+      case resource_command_type::DESTROY_INDEX_BUFFER: {
+        execute(get_command<destroy_index_buffer_command>(header));
+        break;
+      }
+      case resource_command_type::DESTROY_TEXTURE: {
+        execute(get_command<destroy_texture_command>(header));
+        break;
+      }
+      case resource_command_type::DESTROY_UNIFORM: {
+        execute(get_command<destroy_uniform_command>(header));
+        break;
+      }
+      case resource_command_type::DESTROY_SHADER: {
+        execute(get_command<destroy_shader_command>(header));
+        break;
+      }
+      case resource_command_type::CREATE_FRAME_BUFFER: {
+        execute(get_command<create_frame_buffer_command>(header));
+        break;
+      }
+      case resource_command_type::DESTROY_FRAME_BUFFER: {
+        execute(get_command<destroy_frame_buffer_command>(header));
         break;
       }
     }
   }
+}
+
+void render_context_opengl::execute(const create_frame_buffer_command& cmd) {
+  frame_buffer_gl& fb = frame_buffers_[handle_traits::index(cmd.handle.id)];
+  fb.attachments_size = cmd.attachments_size;
+  fb.swap_chain_index = 0;
+
+  glGenFramebuffers(1, &fb.id);
+  glBindFramebuffer(GL_FRAMEBUFFER, fb.id);
+
+  uint32_t color_attachment_i = 0;
+  for (uint32_t i = 0; i < cmd.attachments_size; i++) {
+    texture_handle handle = fb.attachments[i] = cmd.attachments[i];
+    texture_gl& attachment = textures_[handle_traits::index(handle.id)];
+
+    GLenum attachment_type;
+    const texture_format_info& format = texture_format::info[attachment.format];
+    bool is_depth = format.depth_bits || format.stencil_bits;
+    if (is_depth) {
+      if (format.stencil_bits && format.depth_bits) {
+        attachment_type = GL_DEPTH_STENCIL_ATTACHMENT;
+      } else if (format.depth_bits) {
+        attachment_type = GL_DEPTH_ATTACHMENT;
+      } else {
+        attachment_type = GL_STENCIL_ATTACHMENT;
+      }
+    } else {
+      attachment_type = GL_COLOR_ATTACHMENT0 + color_attachment_i;
+      color_attachment_i++;
+    }
+
+    if (attachment.render_buffer) {
+      GL_ERRORS(glFramebufferRenderbuffer(GL_FRAMEBUFFER, attachment_type, GL_RENDERBUFFER, attachment.id));
+    } else {
+      GL_ERRORS(glFramebufferTexture2D(GL_FRAMEBUFFER, attachment_type, GL_TEXTURE_2D, attachment.id, 0));
+    }
+  }
+
+  assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
+
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void render_context_opengl::execute(const destroy_frame_buffer_command& cmd) {
+  frame_buffer_gl& fb = frame_buffers_[handle_traits::index(cmd.handle.id)];
+
+  glDeleteFramebuffers(1, &fb.id);
 }
 
 void render_context_opengl::execute(const update_vertex_buffer_command& cmd) {
@@ -217,38 +302,26 @@ void render_context_opengl::execute(const update_uniform_command& cmd) {
   }
 }
 
+static bool compile_and_attach_shader(uint32_t shader_type, char* source, uint32_t program_id) {
+  uint32_t id = glCreateShader(shader_type);
+  GL_ERRORS(glShaderSource(id, 1, &source, nullptr));
+  GL_ERRORS(glCompileShader(id));
+  bool success = check_compile_status(id);
+
+  if (success) {
+    GL_ERRORS(glAttachShader(program_id, id));
+  }
+
+  GL_ERRORS(glDeleteShader(id));
+  return success;
+}
+
 void render_context_opengl::execute(const create_shader_command& cmd) {
   shader_gl& shader = assure(shaders_, handle_traits::index(cmd.handle.id));
   shader.id = glCreateProgram();
 
-  uint32_t vs_id = glCreateShader(GL_VERTEX_SHADER);
-  uint32_t fs_id = glCreateShader(GL_FRAGMENT_SHADER);
-
-  static const char* version_str = "#version 410 core\n";
-  const char* const v_shader[] = {
-      version_str,
-      reinterpret_cast<char*>(cmd.desc.vertex_shader.data)
-  };
-
-  const char* const f_shader[] = {
-      version_str,
-      reinterpret_cast<char*>(cmd.desc.fragment_shader.data)
-  };
-
-  GL_ERRORS(glShaderSource(vs_id, 2, v_shader, nullptr));
-  GL_ERRORS(glShaderSource(fs_id, 2, f_shader, nullptr));
-
-  GL_ERRORS(glCompileShader(vs_id));
-  GL_ERRORS(glCompileShader(fs_id));
-
-  if (!check_compile_status(vs_id)) { }
-  if (!check_compile_status(fs_id)) { }
-
-  GL_ERRORS(glAttachShader(shader.id, vs_id));
-  GL_ERRORS(glAttachShader(shader.id, fs_id));
-
-  GL_ERRORS(glDeleteShader(vs_id));
-  GL_ERRORS(glDeleteShader(fs_id));
+  compile_and_attach_shader(GL_VERTEX_SHADER, reinterpret_cast<char*>(cmd.vertex.data), shader.id);
+  compile_and_attach_shader(GL_FRAGMENT_SHADER, reinterpret_cast<char*>(cmd.fragment.data), shader.id);
 
   GL_ERRORS(glLinkProgram(shader.id));
   check_link_status(shader.id);
@@ -257,49 +330,38 @@ void render_context_opengl::execute(const create_shader_command& cmd) {
     shader.locations[i] = glGetAttribLocation(shader.id, vertex_semantic::names[i]);
   }
 
-  // TODO: check on init & cache
+  // TODO: check & cache on init
   bool supported_420 = glfwExtensionSupported("GL_ARB_shading_language_420pack");
   if (!supported_420) {
     glUseProgram(shader.id);
 
-    std::string_view meta { reinterpret_cast<char*>(cmd.desc.metadata.data) };
-    while (!meta.empty()) {
-      size_t pos = meta.find_first_of(' ');
-      if (pos == std::string_view::npos) {
-        break;
-      }
+    // TODO: parse bindings
+//    void* ptr = cmd.desc.metadata.data;
+//    uint32_t pos = 0;
+//    while (pos < cmd.desc.metadata.size) {
+//      char* name = reinterpret_cast<char*>(ptr);
+//      uint32_t name_size = std::strlen(name);
+//
+//      uint8_t* next = reinterpret_cast<uint8_t*>(ptr) + name_size;
+//      uint8_t type = *(++next);
+//      uint8_t binding = *(++next);
+//
+//      if (type == uniform_type::BUFFER) {
+//        int32_t ubo_index = glGetUniformBlockIndex(shader.id, name);
+//        if (ubo_index != GL_INVALID_INDEX) {
+//          glUniformBlockBinding(shader.id, ubo_index, binding);
+//        }
+//      } else if (type == uniform_type::SAMPLER) {
+//        int32_t location = glGetUniformLocation(shader.id, name);
+//        if (location >= 0) {
+//          glUniform1i(location, binding);
+//        }
+//      }
+//
+//      ptr = ++next;
+//      pos += name_size + 3;
+//    }
 
-      char name[pos + 1];
-      std::strncpy(name, meta.begin(), pos);
-      name[pos] = '\0';
-
-      meta.remove_prefix(pos + 1);
-
-      char* end;
-      uint8_t type_i = std::strtol(meta.begin(), &end, 10);
-      meta.remove_prefix(end - meta.begin());
-
-      uint32_t binding_i = std::strtol(meta.begin(), &end, 10);
-      meta.remove_prefix(end - meta.begin());
-
-      if (type_i == uniform_type::BUFFER) {
-        int32_t ubo_index = glGetUniformBlockIndex(shader.id, name);
-        if (ubo_index != GL_INVALID_INDEX) {
-          glUniformBlockBinding(shader.id, ubo_index, binding_i);
-        }
-      } else if (type_i == uniform_type::SAMPLER) {
-        int32_t location = glGetUniformLocation(shader.id, name);
-        if (location >= 0) {
-          glUniform1i(location, binding_i);
-        }
-      }
-
-      pos = meta.find_first_not_of(' ');
-      meta.remove_prefix(pos);
-
-      pos = meta.find_first_not_of('\n');
-      meta.remove_prefix(pos);
-    }
     glUseProgram(0);
   }
 }
@@ -342,39 +404,36 @@ void render_context_opengl::submit(const render_command_buffer* command_buffer) 
   GL_ERRORS(glClearColor(0.2f, 0.2f, 0.2f, 1.0f));
   GL_ERRORS(glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT));
 
-  swap_chain_gl& sc = swap_chains_[0];
+  swap_chain_gl* sc = nullptr;
 
   for (auto& header : *command_buffer) {
     switch (header.type) {
       case render_command_type::BIND_RENDER_PASS: {
-        bind_render_pass_command& cmd = *static_cast<bind_render_pass_command*>(header.ptr.get());
+        bind_render_pass_command& cmd = get_command<bind_render_pass_command>(header);
         frame_buffer_gl& fb = frame_buffers_[handle_traits::index(cmd.handle.id)];
-        sc = swap_chains_[fb.swap_chain_index];
+        sc = &swap_chains_[fb.swap_chain_index];
 
-        glfwMakeContextCurrent((GLFWwindow*) sc.win_handle);
+        glfwMakeContextCurrent((GLFWwindow*) sc->win_handle);
         GL_ERRORS(glBindFramebuffer(GL_FRAMEBUFFER, fb.id));
-
-        GL_ERRORS(glViewport(
-            0,
-            0,
-            sc.size.x,
-            sc.size.y
-        ));
-
+        GL_ERRORS(glViewport(0, 0, sc->size.x, sc->size.y));
         break;
       }
       case render_command_type::SET_VIEWPORT: {
-        set_viewport_command& cmd = *static_cast<set_viewport_command*>(header.ptr.get());
+        assert(sc);
+
+        set_viewport_command& cmd = get_command<set_viewport_command>(header);
         GL_ERRORS(glViewport(
             cmd.viewport.x,
-            sc.size.y - (cmd.viewport.y + cmd.viewport.w),
+            sc->size.y - (cmd.viewport.y + cmd.viewport.w),
             cmd.viewport.z,
             cmd.viewport.w
         ));
         break;
       }
       case render_command_type::DRAW: {
-        draw_command& cmd = *static_cast<draw_command*>(header.ptr.get());
+        assert(sc);
+
+        draw_command& cmd = get_command<draw_command>(header);
         shader_gl& shader = shaders_[handle_traits::index(cmd.shader.id)];
         vertex_buffer_gl& vb = vertex_buffers_[handle_traits::index(cmd.vb_handle.id)];
 
@@ -384,19 +443,6 @@ void render_context_opengl::submit(const render_command_buffer* command_buffer) 
           uniform_gl& uniform = uniforms_[handle_traits::index(cmd.bindings.uniforms[i].id)];
           bind_uniform(uniform);
         }
-
-        static GLenum types[] = {
-          GL_FLOAT,
-          GL_BYTE,
-          GL_SHORT,
-          GL_INT,
-          GL_UNSIGNED_BYTE,
-          GL_UNSIGNED_SHORT,
-          GL_UNSIGNED_INT,
-        };
-
-        static_assert(sizeof(types) == vertex_type::COUNT * sizeof(GLenum),
-            "Missing some vertex type in types array.");
 
         GL_ERRORS(glBindBuffer(GL_ARRAY_BUFFER, vb.id));
 
@@ -409,7 +455,7 @@ void render_context_opengl::submit(const render_command_buffer* command_buffer) 
             GL_ERRORS(glVertexAttribPointer(
               location,
               item.size,
-              types[item.type],
+              vertex_data_types[item.type],
               item.normalized,
               vb.layout.stride,
               (void*) (uintptr_t) (base_vertex + item.offset)
@@ -481,6 +527,10 @@ void render_context_opengl::init(window::window_handle win_handle) {
   GL_ERRORS(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
   GL_ERRORS(glDisable(GL_CULL_FACE));
 }
+std::string_view render_context_opengl::name() const {
+  constexpr static const char* name = "OpenGL";
+  return { name };
+}
 
 void render_context_opengl::execute(const create_index_buffer_command& cmd) {
   index_buffer_gl& ib = assure(index_buffers_, handle_traits::index(cmd.handle.id));
@@ -495,29 +545,12 @@ void render_context_opengl::execute(const create_index_buffer_command& cmd) {
 
 void render_context_opengl::execute(const create_texture_command& cmd) {
   texture_gl& texture = assure(textures_, handle_traits::index(cmd.handle.id));
-  texture.render_buffer = (cmd.desc.flags & texture_flags::RENDER_TARGET) != 0;
+  texture.render_buffer = cmd.desc.flags[texture_flag::RENDER_TARGET];
   texture.format = cmd.desc.format;
   texture.width = cmd.desc.width;
   texture.height = cmd.desc.height;
 
-  struct texture_format_info {
-    GLint internal_format;
-    GLenum format;
-    GLenum type;
-  };
-
-  constexpr static texture_format_info texture_formats[] = {
-      { GL_RED,                   GL_RED,                     GL_UNSIGNED_BYTE },     // R8
-      { GL_RGB,                   GL_RGB,                     GL_UNSIGNED_BYTE },     // RGB8
-      { GL_RGBA,                  GL_RGBA,                    GL_UNSIGNED_BYTE },     // RGBA8
-      { GL_DEPTH24_STENCIL8,      GL_DEPTH_STENCIL,           GL_UNSIGNED_INT_24_8 }, // D24S8
-  };
-
-  static_assert(sizeof(texture_formats) == texture_format::COUNT * sizeof(texture_format_info),
-      "Missing some texture format type in texture_formats array.");
-
-  const texture_format_info& format = texture_formats[cmd.desc.format];
-
+  const texture_format_info_gl& format = texture_formats[cmd.desc.format];
   if (texture.render_buffer) {
 
     GL_ERRORS(glGenRenderbuffers(1, &texture.id));

@@ -18,6 +18,12 @@ struct command_header {
   std::unique_ptr<command_base> ptr;
 };
 
+template<class T, class F>
+static T& get_command(const command_header<F>& header) {
+  assert(T::command_type == header.type);
+  return *static_cast<T*>(header.ptr.get());
+}
+
 template<class T>
 class command_buffer {
  public:
@@ -91,6 +97,7 @@ struct draw_call_desc {
 enum class resource_command_type {
   CREATE_VERTEX_BUFFER,
   CREATE_INDEX_BUFFER,
+  CREATE_FRAME_BUFFER,
   CREATE_TEXTURE,
   CREATE_UNIFORM,
   CREATE_SHADER,
@@ -99,6 +106,7 @@ enum class resource_command_type {
   UPDATE_UNIFORM,
   DESTROY_VERTEX_BUFFER,
   DESTROY_INDEX_BUFFER,
+  DESTROY_FRAME_BUFFER,
   DESTROY_TEXTURE,
   DESTROY_UNIFORM,
   DESTROY_SHADER,
@@ -136,6 +144,16 @@ struct create_texture_command : public resource_command<resource_command_type::C
   texture_handle handle;
   texture_desc desc;
   memory memory;
+};
+
+struct create_frame_buffer_command : public resource_command<resource_command_type::CREATE_FRAME_BUFFER> {
+  framebuf_handle handle;
+  texture_handle attachments[MAX_FRAMEBUFFER_ATTACHMENTS];
+  uint32_t attachments_size;
+};
+
+struct destroy_frame_buffer_command : public resource_command<resource_command_type::DESTROY_FRAME_BUFFER> {
+  framebuf_handle handle;
 };
 
 struct destroy_vertex_buffer_command : public resource_command<resource_command_type::DESTROY_VERTEX_BUFFER> {
@@ -176,7 +194,8 @@ struct update_uniform_command : public resource_command<resource_command_type::U
 
 struct create_shader_command : public resource_command<resource_command_type::CREATE_SHADER> {
   shader_handle handle;
-  shader_program_desc desc;
+  memory vertex;
+  memory fragment;
 };
 
 struct destroy_shader_command : public resource_command<resource_command_type::DESTROY_SHADER> {
@@ -205,6 +224,9 @@ class resource_command_buffer : command_buffer<resource_command_type> {
   indexbuf_handle create_index_buffer(size_t, memory&);
   void update_index_buffer(indexbuf_handle, uint32_t size, memory&, uint32_t offset = 0);
   void destroy_index_buffer(indexbuf_handle);
+
+  framebuf_handle create_frame_buffer(std::initializer_list<texture_handle>);
+  void destroy_frame_buffer(framebuf_handle);
 
   shader_handle create_shader(shader_program_desc);
   void destroy_shader(shader_handle);

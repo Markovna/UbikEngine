@@ -82,7 +82,7 @@ void world::set_parent(entity ent, entity parent, entity next) {
   set_world_transform(ent, world);
 }
 
-entity world::load_from_asset(assets::provider* provider, const asset& asset, entity parent, entity next) {
+entity world::load_from_asset(assets::repository* rep, const asset& asset, entity parent, entity next) {
   entity entity { ecs::registry::create() };
   ecs::registry::emplace<link_component>(entity.id);
 
@@ -90,7 +90,7 @@ entity world::load_from_asset(assets::provider* provider, const asset& asset, en
     std::string name = comp_asset.at("__type");
     meta::type type =  meta::get_type(name.c_str());
     meta::get_interface<serializer_i>(type.id())->from_asset(
-        provider,
+        rep,
         comp_asset,
         meta::get_interface<component_i>(type.id())->instantiate(*this, entity)
       );
@@ -100,7 +100,7 @@ entity world::load_from_asset(assets::provider* provider, const asset& asset, en
 
   if (asset.contains("children")) {
     for (const ::asset& child_asset : asset.at("children")) {
-      load_from_asset(provider, child_asset, entity);
+      load_from_asset(rep, child_asset, entity);
     }
   }
   return entity;
@@ -180,10 +180,10 @@ void world::set_world_transform(entity ent, const transform &world) {
   component.dirty = false;
 }
 
-void serializer<transform_component>::from_asset(assets::provider* p, const asset& asset, transform_component& comp) {
-  assets::get(p, asset, "position", comp.local.position);
-  assets::get(p, asset, "rotation", comp.local.rotation);
-  assets::get(p, asset, "scale", comp.local.scale);
+void serializer<transform_component>::from_asset(assets::repository* r, const asset& asset, transform_component& comp) {
+  assets::get(r, asset, "position", comp.local.position);
+  assets::get(r, asset, "rotation", comp.local.rotation);
+  assets::get(r, asset, "scale", comp.local.scale);
 
   comp.dirty = true;
 }

@@ -45,14 +45,14 @@ union locally_stored_types {
 constexpr static const size_t max_size  = sizeof(locally_stored_types);
 constexpr static const size_t max_align = alignof(locally_stored_types);
 
-using storage = std::aligned_storage_t<max_size>;
+using storage = std::aligned_storage_t<max_size, max_align>;
 
 template<class R, class ...A>
 struct dispatcher {
     template<class T>
     constexpr static const bool stored_locally =
             std::is_trivially_copyable<T>::value &&
-            sizeof(T) <= max_size && alignof(T) <= max_align;
+            sizeof(T) <= max_size && alignof(T) <= max_align && (max_align % alignof(T) == 0);
 
     template<class T>
     using local_storage = std::integral_constant<bool, stored_locally<T>>;

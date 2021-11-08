@@ -15,12 +15,10 @@ struct serializer;
 
 struct serializer_i {
   void (*to_asset)(asset&, const void*);
-  void (*from_asset)(assets::provider*, const asset&, void*);
+  void (*from_asset)(assets::repository*, const asset&, void*);
 };
 
 namespace assets {
-
-struct provider;
 
 template<class T, typename... Args>
 using from_asset_function = decltype(serializer<T>::from_asset(std::declval<Args>()...));
@@ -37,7 +35,7 @@ struct has_to_asset : std::false_type {};
 template<class T>
 struct has_from_asset<T, void> {
   using clear_type = std::decay_t<T>;
-  static constexpr bool value = is_detected_exact<void, from_asset_function, clear_type, assets::provider*, const asset&, clear_type&>::value;
+  static constexpr bool value = is_detected_exact<void, from_asset_function, clear_type, assets::repository*, const asset&, clear_type&>::value;
 };
 
 template<class T>
@@ -57,15 +55,15 @@ static void to_asset_impl(::asset& asset, const void *ptr) {
 }
 
 template<class T>
-static void from_asset_impl(assets::provider* p, const asset &asset, void *ptr) {
+static void from_asset_impl(assets::repository* rep, const asset &asset, void *ptr) {
   if constexpr (has_from_asset<T>::value) {
-    serializer<T>::from_asset(p, asset, *static_cast<T*>(ptr));
+    serializer<T>::from_asset(rep, asset, *static_cast<T*>(ptr));
   }
 }
 
 template<class T, class = std::enable_if_t<!has_from_json<T>::value>, class = std::enable_if_t<has_from_asset<T>::value>>
-void get(assets::provider* p, const asset& asset, const char* key, T& value) {
-  serializer<std::decay_t<T>>::from_asset(p, asset.at(key), value);
+void get(assets::repository* rep, const asset& asset, const char* key, T& value) {
+  serializer<std::decay_t<T>>::from_asset(rep, asset.at(key), value);
 }
 
 template <class T, class = std::enable_if_t<!has_to_json<T>::value>, class = std::enable_if_t<has_to_asset<T>::value>>

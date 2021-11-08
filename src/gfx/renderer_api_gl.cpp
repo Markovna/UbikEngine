@@ -155,7 +155,6 @@ void GLRendererAPI::CreateFrameBuffer(framebuf_handle handle, texture_handle* ha
             attachment = GL_DEPTH_ATTACHMENT;
           } else {
             attachment = GL_STENCIL_ATTACHMENT;
-            attachment = GL_STENCIL_ATTACHMENT;
           }
         } else {
           attachment = GL_COLOR_ATTACHMENT0 + color_attachment;

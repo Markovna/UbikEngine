@@ -38,19 +38,19 @@ class pool : public pool_base {
  public:
   explicit pool(load_func_t<T> load_func) : load_func_(load_func) {}
 
-  std::pair<bool, key> load(const fs::path& path, assets::provider* provider) {
+  std::pair<bool, key> load(const fs::path& path, assets::repository* rep) {
     if (auto it = path_to_keys_.find(path); it != path_to_keys_.end()) {
       return { true, it->second};
     }
 
     fs::path meta_path = fs::concat(path, ".meta");
-    assets::handle handle = assets::load(provider, meta_path);
+    assets::handle handle = rep->load(meta_path);
     if (!handle) {
       logger::core::Error("Couldn't load resource at path {0}", path.c_str());
       return { false, {} };
     }
 
-    assets::buffer_t buffer = assets::load_buffer(provider, handle, "data");
+    assets::buffer_t buffer = handle.load_buffer(*handle, "data");
     if (!buffer) {
       return { false, {} };
     }
@@ -60,13 +60,12 @@ class pool : public pool_base {
       return { false, {} };
     }
 
-    key key = table_.insert(
-        {
-          .ptr = std::move(ptr),
-          .id = handle.id(),
-          .path = path,
-          .use_count = 0
-        });
+    key key = table_.insert({
+        .ptr = std::move(ptr),
+        .id = handle.id(),
+        .path = path,
+        .use_count = 0
+      });
 
 
     id_to_keys_.insert({handle.id(), key});
@@ -74,18 +73,18 @@ class pool : public pool_base {
     return { true, key };
   }
 
-  std::pair<bool, key> load(const guid& id, assets::provider* provider) {
+  std::pair<bool, key> load(const guid& id, assets::repository* rep) {
     if (auto it = id_to_keys_.find(id); it != id_to_keys_.end()) {
       return { true, it->second };
     }
 
-    assets::handle handle = assets::load(provider, id);
+    assets::handle handle = rep->load(id);
     if (!handle) {
       logger::core::Error("Couldn't load resource with id {0}", id.str());
       return { false, {} };
     }
 
-    assets::buffer_t buffer = assets::load_buffer(provider, handle, "data");
+    assets::buffer_t buffer = handle.load_buffer(*handle, "data");
     if (!buffer) {
       return { false, {} };
     }
@@ -95,22 +94,21 @@ class pool : public pool_base {
       return { false, {} };
     }
 
-    key key = table_.insert(
-        {
-            .ptr = std::move(ptr),
-            .id = id,
-            .path = handle.path(),
-            .use_count = 0
-        });
+    key key = table_.insert({
+      .ptr = std::move(ptr),
+      .id = id,
+      .path = handle.path(),
+      .use_count = 0
+    });
 
     id_to_keys_.insert({id, key});
     path_to_keys_.insert({handle.path().c_str(), key});
     return { true, key };
   }
 
-  const guid& get_id(key key) const { return table_[key].id; }
-  T *get(key key) { return table_[key].ptr.get(); }
-  [[nodiscard]] const T *get(key key) const { return table_[key].ptr.get(); }
+  [[nodiscard]] const guid& get_id(key key) const { return table_[key].id; }
+  T* get(key key) { return table_[key].ptr.get(); }
+  [[nodiscard]] const T* get(key key) const { return table_[key].ptr.get(); }
 
   void inc_use_count(key key) {
     table_[key].use_count++;
@@ -121,9 +119,9 @@ class pool : public pool_base {
 
     uint32_t count = --table_[key].use_count;
     if (count == 0) {
-      table_.erase(key);
       path_to_keys_.erase(table_[key].path.string());
       id_to_keys_.erase(table_[key].id);
+      table_.erase(key);
     }
   }
 
@@ -226,9 +224,9 @@ void unregister_pool() {
 }
 
 template<class T>
-handle<T> load(const fs::path& path, assets::provider* provider) {
+handle<T> load(const fs::path& path, assets::repository* repository) {
   pool<T>* pool_ptr = get_pool_storage<T>().pool.get();
-  auto [success, key] = pool_ptr->load(path, provider);
+  auto [success, key] = pool_ptr->load(path, repository);
   if (!success)
     return {};
 
@@ -236,9 +234,9 @@ handle<T> load(const fs::path& path, assets::provider* provider) {
 }
 
 template<class T>
-handle<T> load(const guid& id, assets::provider* provider) {
+handle<T> load(const guid& id, assets::repository* repository) {
   pool<T>* pool_ptr = get_pool_storage<T>().pool.get();
-  auto [success, key] = pool_ptr->load(id, provider);
+  auto [success, key] = pool_ptr->load(id, repository);
   if (!success)
     return {};
 
@@ -246,10 +244,10 @@ handle<T> load(const guid& id, assets::provider* provider) {
 }
 
 template<class T>
-handle<T> resolve(const asset& asset, const char* key, assets::provider* provider) {
+handle<T> resolve(const asset& asset, const char* key, assets::repository* repository) {
   std::string id;
-  ::assets::get(provider, asset, key, id);
-  return load<T>(guid::from_string(id.c_str()), provider);
+  ::assets::get(repository, asset, key, id);
+  return load<T>(guid::from_string(id.c_str()), repository);
 }
 
 

@@ -17,8 +17,8 @@ using buffer_t = std::unique_ptr<std::istream>;
 bool read(const fs::path &path, asset &data);
 void write(const fs::path &path, const asset &asset);
 
-class repository {
- public:
+class storage {
+ private:
   struct item {
     guid id;
     fs::path path;
@@ -26,6 +26,7 @@ class repository {
     uint32_t use_count;
   };
 
+ public:
   using container = stdext::slot_map<item>;
   using key = container::key_type;
   using iterator = container::iterator;
@@ -66,8 +67,11 @@ class repository {
     return { index_iterator->second, true };
   }
 
-  constexpr reference operator[](const key& key)              { return assets_[key]; }
-  constexpr const_reference operator[](const key& key) const  { return assets_[key]; }
+  [[nodiscard]] constexpr reference operator[](const key& key)              { return assets_[key]; }
+  [[nodiscard]] constexpr const_reference operator[](const key& key) const  { return assets_[key]; }
+
+  [[nodiscard]] constexpr reference at(const key& key)              { return assets_[key]; }
+  [[nodiscard]] constexpr const_reference at(const key& key) const  { return assets_[key]; }
 
   iterator begin() { return assets_.begin(); }
   iterator end() { return assets_.end(); }
@@ -88,10 +92,25 @@ class provider {
   virtual ~provider() = default;
 };
 
+struct item {
+  guid id;
+  fs::path path;
+  asset asset;
+  uint32_t use_count;
+};
+
+using container = stdext::slot_map<item>;
+using key = container::key_type;
+using iterator = container::iterator;
+using reference = container::reference;
+using const_reference = container::const_reference;
+
+class repository;
+
 class handle {
  public:
   handle() noexcept : repository_(nullptr), key_() {}
-  handle(repository*, const repository::key&);
+  handle(repository*, const key&);
   ~handle();
 
   handle(const handle&);
@@ -106,38 +125,84 @@ class handle {
   const asset* operator->() const { return &get().asset; }
   const asset& operator*() const { return get().asset; }
 
-  explicit operator bool() const noexcept { return repository_ != nullptr && repository_->find(key_) != repository_->end(); }
+  explicit operator bool() const noexcept;
 
   [[nodiscard]] const guid& id() const { return get().id; }
   [[nodiscard]] const fs::path& path() const { return get().path; }
+  buffer_t load_buffer(const asset&, std::string_view name) const;
 
  private:
-  repository::reference get() { return (*repository_)[key_]; }
-  [[nodiscard]] repository::const_reference get() const { return (*repository_)[key_]; }
+  reference get();
+  [[nodiscard]] const_reference get() const;
 
   void swap(handle& other) noexcept;
 
  private:
   repository* repository_;
-  repository::key key_;
+  key key_;
 };
 
-namespace details {
+class repository {
+ public:
+  friend class handle;
+  explicit repository(provider* provider) : provider_(provider) {}
 
-handle load(provider *provider, repository &rep, const guid &id);
-handle load(provider *provider, repository &rep, const fs::path &path);
+  handle load(const guid &id);
+  handle load(const fs::path &path);
+  void load_buffer(const fs::path&, uint64_t buffer_id, std::ostream&) const;
 
-}
+ private:
+  key emplace(const guid& id, const fs::path& path) {
+    key key = assets_.emplace(item { .id = id, .path = path, .asset = {}, .use_count = 0 });
+    id_index_map_[id] = key;
+    path_index_map_[path] = key;
+    return key;
+  }
 
-handle load(provider* provider, const guid& id);
-handle load(provider* provider, const fs::path& path);
-buffer_t load_buffer(provider* provider, const handle& handle, const char* name);
+  void erase(key key) {
+    auto iterator = assets_.find(key);
+    id_index_map_.erase(iterator->id);
+    path_index_map_.erase(iterator->path);
+    assets_.erase(iterator);
+  }
 
-uint64_t add_buffer(handle& handle, const char* name);
+  iterator find(key key) {
+    return assets_.find(key);
+  }
 
-extern repository* g_repository;
-void init();
-void shutdown();
+  std::pair<key, bool> find(const guid& id) {
+    auto index_iterator = id_index_map_.find(id);
+    if (index_iterator == id_index_map_.end())
+      return { {}, false };
+
+    return { index_iterator->second, true };
+  }
+
+  std::pair<key, bool> find(const fs::path& path) {
+    auto index_iterator = path_index_map_.find(path);
+    if (index_iterator == path_index_map_.end())
+      return { {}, false };
+
+    return { index_iterator->second, true };
+  }
+
+  [[nodiscard]] constexpr reference operator[](const key& key)              { return assets_[key]; }
+  [[nodiscard]] constexpr const_reference operator[](const key& key) const  { return assets_[key]; }
+
+  [[nodiscard]] constexpr reference at(const key& key)              { return assets_[key]; }
+  [[nodiscard]] constexpr const_reference at(const key& key) const  { return assets_[key]; }
+
+  iterator begin() { return assets_.begin(); }
+  iterator end() { return assets_.end(); }
+
+ private:
+  provider* provider_;
+  container assets_;
+  std::unordered_map<guid, key> id_index_map_;
+  std::unordered_map<std::string, key> path_index_map_;
+};
+
+uint64_t add_buffer(asset& handle, std::string_view name);
 
 }
 

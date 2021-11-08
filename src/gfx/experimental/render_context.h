@@ -18,6 +18,7 @@ class render_context {
   render_context& operator=(const render_context&) = delete;
   render_context& operator=(render_context&&) = delete;
 
+  virtual std::string_view name() const = 0;
   virtual void begin_frame() = 0;
   virtual void submit(const resource_command_buffer*) = 0;
   virtual void submit(const render_command_buffer*) = 0;

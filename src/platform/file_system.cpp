@@ -75,6 +75,12 @@ std::ifstream read_file(const path &path, std::ios::openmode mode) {
   return read_file(path.c_str(), mode);
 }
 
+void assure(const path& path) {
+  if (!fs::exists(path)) {
+    fs::create_directory(path);
+  }
+}
+
 details::config &details::get_config() {
   static details::config inst;
   return inst;

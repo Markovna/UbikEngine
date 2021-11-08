@@ -12,6 +12,8 @@ struct swap_chain_gl {
 struct frame_buffer_gl {
   uint32_t id;
   uint32_t swap_chain_index;
+  texture_handle attachments[MAX_FRAMEBUFFER_ATTACHMENTS];
+  uint32_t attachments_size;
 };
 
 struct vertex_buffer_gl {
@@ -78,6 +80,7 @@ class render_context_opengl : public render_context {
  public:
   static std::unique_ptr<render_context> create();
 
+  std::string_view name() const override;
   void begin_frame() override;
   void submit(const resource_command_buffer*) override;
   void submit(const render_command_buffer*) override;
@@ -90,9 +93,6 @@ class render_context_opengl : public render_context {
 
  private:
   void init(window::window_handle);
-
-  template<class T>
-  inline void execute(class command_base& ptr) { execute(*static_cast<T*>(&ptr)); }
 
   void execute(const class create_vertex_buffer_command&);
   void execute(const class create_index_buffer_command&);

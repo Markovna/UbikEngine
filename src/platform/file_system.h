@@ -26,6 +26,8 @@ void project(const path&);
 
 }
 
+void assure(const fs::path&);
+
 std::ifstream read_file(const fs::path &path, std::ios::openmode mode = std::ios::in | std::ios::binary);
 std::ifstream read_file(const char* path, std::ios::openmode mode = std::ios::in | std::ios::binary);
 

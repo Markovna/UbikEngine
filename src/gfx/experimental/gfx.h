@@ -4,6 +4,7 @@
 #include <iostream>
 #include <vector>
 #include <base/memory.h>
+#include <base/flags.h>
 
 #include "base/math.h"
 
@@ -110,14 +111,13 @@ struct texture_filter {
   type map = LINEAR;
 };
 
-struct texture_flags {
-  using type = uint32_t;
+enum class texture_flag{
+  RENDER_TARGET,
 
-  enum {
-    NONE          = 0,
-    RENDER_TARGET = 1u << 0u
-  };
+  COUNT
 };
+
+using texture_flags = flags<texture_flag>;
 
 struct texture_desc {
   uint32_t width;
@@ -125,7 +125,7 @@ struct texture_desc {
   texture_format::type format;
   texture_wrap wrap;
   texture_filter filter;
-  texture_flags::type flags;
+  texture_flags flags;
 };
 
 struct vertex_semantic {
@@ -148,7 +148,7 @@ struct vertex_semantic {
   };
 
 #define TYPE_NAME(__type) "_"#__type
-  constexpr static const char* names[] = {
+  constexpr static const char* const names[] = {
     TYPE_NAME(POSITION),
     TYPE_NAME(NORMAL),
     TYPE_NAME(COLOR0),
@@ -207,10 +207,11 @@ struct vertex_layout {
 
 static constexpr uint32_t MAX_UNIFORM_BINDINGS = 16;
 static constexpr uint32_t MAX_BINDINGS_PER_DRAW = 16;
+static constexpr uint32_t MAX_FRAMEBUFFER_ATTACHMENTS = 8;
 
 struct uniform_desc {
-  uint8_t binding;
   uniform_type::type type;
+  uint8_t binding;
 };
 
 struct shader_uniform_binding_decs {
@@ -224,14 +225,13 @@ struct memory {
 };
 
 struct shader_blob {
-  void* data;
+  const void* data;
   uint32_t size;
 };
 
 struct shader_program_desc {
   shader_blob vertex_shader;
   shader_blob fragment_shader;
-  shader_blob metadata;
 };
 
 struct handle_traits {
@@ -282,8 +282,8 @@ class index_of;
 template <typename T, typename... Args>
 struct index_of<T, T, Args...> : std::integral_constant<size_t, 0> { };
 
-template <typename T, typename F, typename... Args>
-struct index_of<T, F, Args...> : std::integral_constant<size_t, 1 + index_of<T, Args...>::value> { };
+template <typename T1, typename T2, typename... Args>
+struct index_of<T1, T2, Args...> : std::integral_constant<size_t, 1 + index_of<T1, Args...>::value> { };
 
 template<class ...Args>
 class handle_allocator_set_base {

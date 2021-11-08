@@ -5,7 +5,7 @@
 #include "core/assets/texture.h"
 #include "core/input_system.h"
 
-std::unique_ptr<gui_renderer> gui_renderer::create(window* w, assets::provider* provider) {
+std::unique_ptr<gui_renderer> gui_renderer::create(window* w, assets::repository* provider) {
   return std::make_unique<gui_renderer>(w, provider);
 }
 
@@ -179,7 +179,7 @@ void gui_renderer::on_text_input(text_event &e) {
   }
 }
 
-gui_renderer::gui_renderer(window* w, assets::provider* provider) : context_(gui::CreateContext()) {
+gui_renderer::gui_renderer(window* w, assets::repository* provider) : context_(gui::CreateContext()) {
 
   vb_handle_ = gfx::create_vertex_buffer(gfx::make_ref(nullptr, kBufferMaxSize * sizeof(ImDrawVert)), kBufferMaxSize, {
       { gfx::attribute::binding::Position, gfx::attribute::format::Float2() },

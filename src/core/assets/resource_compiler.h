@@ -18,8 +18,8 @@ class compiler {
     compilers_.erase(type_name);
   }
 
-  bool compile(const fs::path& path) {
-    assets::handle meta = assets::load(g_fsprovider, path);
+  bool compile(assets::repository* repository, const fs::path& path) {
+    assets::handle meta = repository->load(path);
 
     auto it = compilers_.find(meta->at("type"));
     if (it == compilers_.end())
@@ -36,7 +36,7 @@ class compiler {
 
     bool success = compile_func(file, *meta, out);
     if (success) {
-      uint64_t buffer_id = assets::add_buffer(meta, "data");
+      uint64_t buffer_id = assets::add_buffer(*meta, "data");
       filesystem_provider::save_buffer(path, buffer_id, out);
       g_fsprovider->save(path, *meta);
       return true;
@@ -52,6 +52,6 @@ class compiler {
 extern compiler *g_compiler;
 void init_compiler();
 void shutdown_compiler();
-void compile_all_assets(const char *directory);
+void compile_all_assets(assets::repository*, const char *directory);
 
 }

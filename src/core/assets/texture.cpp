@@ -110,7 +110,7 @@ bool compile<texture>(std::ifstream& stream, const asset& meta, std::ostream& ou
   stbi_set_flip_vertically_on_load(true);
 
   std::size_t size = stream.rdbuf()->pubseekoff(0, std::ios::end, std::ios_base::in);
-  char* buffer = new char[size];
+  char buffer [size];
   stream.rdbuf()->pubseekpos(0, std::ios_base::in);
   stream.rdbuf()->sgetn(buffer, size);
 

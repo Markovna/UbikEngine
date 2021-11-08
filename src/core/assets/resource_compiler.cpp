@@ -17,7 +17,7 @@ void shutdown_compiler() {
   delete g_compiler;
 }
 
-void compile_all_assets(const char *directory) {
+void compile_all_assets(assets::repository* repository, const char *directory) {
   std::vector<fs::path> files;
 
   for(auto it = fs::recursive_directory_iterator(directory); it != fs::recursive_directory_iterator(); ++it ) {
@@ -38,7 +38,7 @@ void compile_all_assets(const char *directory) {
   }
 
   for (auto& file : files) {
-    g_compiler->compile(file.c_str());
+    g_compiler->compile(repository, file.c_str());
     logger::core::Info("{0} compiled.", file.c_str());
   }
 }

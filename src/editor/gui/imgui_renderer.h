@@ -15,9 +15,9 @@ struct shader;
 
 class gui_renderer {
  public:
-  static std::unique_ptr<gui_renderer> create(window*, assets::provider* provider);
+  static std::unique_ptr<gui_renderer> create(window*, assets::repository* provider);
 
-  explicit gui_renderer(window*, assets::provider* provider);
+  explicit gui_renderer(window*, assets::repository* provider);
   ~gui_renderer();
 
   void begin_frame();
