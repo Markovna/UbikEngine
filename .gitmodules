@@ -6,8 +6,11 @@
     path = thirdparty/efsw
     url = https://github.com/Markovna/efsw.git
     branch = master
-
 [submodule "thirdparty/imgui"]
 	path = thirdparty/imgui
 	url = https://github.com/Markovna/imgui
 	branch = docking
+
+[submodule "thirdparty/glslang"]
+	path = thirdparty/glslang
+	url = https://github.com/KhronosGroup/glslang
