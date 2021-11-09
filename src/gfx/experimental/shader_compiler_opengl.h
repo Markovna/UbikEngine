@@ -10,8 +10,7 @@ class shader_compiler_opengl : public shader_compiler {
  public:
   static std::unique_ptr<shader_compiler_opengl> create();
 
-  std::string_view name() const override;
-  void compile(const asset&, std::ostream&) override;
+  bool compile(std::string_view, shader_stage::type, shader_reflection&, std::ostream&) override;
 };
 
 }
