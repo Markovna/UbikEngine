@@ -13,3 +13,4 @@
 [submodule "thirdparty/glslang"]
 	path = thirdparty/glslang
 	url = https://github.com/KhronosGroup/glslang
+	branch = master
