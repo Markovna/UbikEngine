@@ -12,6 +12,33 @@ namespace experimental {
 using asset = nlohmann::json;
 using key_t = stdext::slot_map<struct any>::key_type;
 
+enum class visit_recursive_result {
+  BREAK,
+  CONTINUE,
+  RECURSE
+};
+
+template<class Iterator, class Operation>
+int32_t visit_recursive(Iterator first, Iterator last, Operation op) {
+  for (; first != last; ++first) {
+    visit_recursive_result op_result = op(*first);
+    if (op_result == visit_recursive_result::BREAK)
+      return -1;
+
+    if (op_result == visit_recursive_result::CONTINUE)
+      continue;
+
+    asset(op_result == visit_recursive_result::RECURSE);
+    if (first->is_structured()) {
+      auto visit_result = visit_recursive(first->begin(), first->end(), op);
+      if (visit_result)
+        return visit_result;
+    }
+
+  }
+  return 0;
+}
+
 bool read(const fs::path &path, asset &data);
 void write(const fs::path &path, const asset &asset);
 

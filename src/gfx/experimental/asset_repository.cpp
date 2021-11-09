@@ -148,6 +148,7 @@ void assets_repository::emplace(guid guid, const fs::path& path, asset asset) {
     path_index_[path] = key;
     id_index_[guid] = key;
   }
+  logger::core::Info("assets_repository::emplace {0} ({1})", path.c_str(), guid.str());
 }
 
 asset_handle assets_repository::load(const fs::path& path) {
@@ -196,17 +197,21 @@ void assets_filesystem::load_assets(assets_repository* repository) const {
     if (!id.is_valid())
       continue;
 
-    fs::path relative = fs::relative(it->path(), root_);
     fs::path buffers_directory = get_buffers_path(it->path());
-
     stream_buffers& buffers = repository->buffers();
-    if (asset.contains("__buffers")) {
-      for (uint64_t buffer_id : asset.at("__buffers")) {
-        fs::path buffer_path = fs::append(buffers_directory, std::to_string(buffer_id));
-        buffers.map(buffer_path);
+    visit_recursive(asset.begin(), asset.end(), [&] (experimental::asset& a) {
+      if (a.contains("__binary_hash")) {
+        uint32_t buf_hash = a["__binary_hash"];
+        fs::path buf_path = fs::append(buffers_directory, std::to_string(buf_hash));
+        uint64_t buf_id = buffers.map(buf_path);
+        a["__buffer_id"] = buf_id;
+        return visit_recursive_result::CONTINUE;
       }
-    }
 
+      return visit_recursive_result::RECURSE;
+    });
+
+    fs::path relative = fs::relative(it->path(), root_);
     repository->emplace(id, relative, std::move(asset));
   }
 }
@@ -226,12 +231,17 @@ void assets_filesystem::load(assets_repository* repository, const fs::path& path
 
   fs::path buffers_directory = get_buffers_path(fullpath);
   stream_buffers& buffers = repository->buffers();
-  if (asset.contains("__buffers")) {
-    for (uint64_t buffer_id : asset.at("__buffers")) {
-      fs::path buffer_path = fs::append(buffers_directory, std::to_string(buffer_id));
-      buffers.map(buffer_path);
+  visit_recursive(asset::iterator { &asset }, asset.end(), [&] (experimental::asset& a) {
+    if (a.contains("__binary_hash")) {
+      uint32_t buf_hash = a["__binary_hash"];
+      fs::path buf_path = fs::append(buffers_directory, std::to_string(buf_hash));
+      uint64_t buf_id = buffers.map(buf_path);
+      a["__buffer_id"] = buf_id;
+      return visit_recursive_result::CONTINUE;
     }
-  }
+
+    return visit_recursive_result::RECURSE;
+  });
 
   repository->emplace(id, path, std::move(asset));
 }
@@ -253,34 +263,40 @@ void assets_filesystem::save(assets_repository* repository, const fs::path& path
 void assets_filesystem::save(assets_repository* repository, const asset& asset, const fs::path& path) {
   fs::path fullpath = fs::append(root_, path);
   stream_buffers& buffers = repository->buffers();
-  fs::path temp_buffers_directory = fs::concat(get_buffers_path(fullpath), ".tmp");
 
-  if (asset.contains("__buffers")) {
-    for (uint64_t buffer_id : asset.at("__buffers")) {
-      fs::assure(temp_buffers_directory);
+  std::unordered_map<uint32_t, bool> hashes;
+  fs::path buffers_directory = get_buffers_path(fullpath);
 
-      if (!buffers.has(buffer_id)) {
-        logger::core::Info("Couldn't save buffer {} for asset at path {}.", buffer_id, fullpath.c_str());
-        continue;
+  visit_recursive(asset.begin(), asset.end(), [&] (const experimental::asset& a) {
+    if (a.contains("__buffer_id")) {
+      uint32_t buf_id = a["__buffer_id"];
+      bool is_loaded = buffers.is_loaded(buf_id);
+      uint32_t buf_hash = buffers.hash(buf_id);
+      if (!hashes.count(buf_hash)) {
+        auto [size, data] = buffers.get(buf_id);
+
+        fs::path buf_path = fs::append(buffers_directory, std::to_string(buf_hash));
+        std::ofstream dst(buf_path, std::ios::in | std::ios::out | std::ios::binary | std::ios::trunc);
+        std::copy_n(data, size, std::ostreambuf_iterator<char>(dst));
+
+        hashes[buf_hash] = true;
       }
 
-      bool is_loaded = buffers.is_loaded(buffer_id);
-      auto [size, data] = buffers.get(buffer_id);
-
-      fs::path buffer_path = fs::append(temp_buffers_directory, std::to_string(buffer_id));
-      std::ofstream dst(buffer_path, std::ios::in | std::ios::out | std::ios::binary | std::ios::trunc);
-      std::copy_n(data, size, std::ostreambuf_iterator<char>(dst));
-
       if (!is_loaded)
-        buffers.unload(buffer_id);
+        buffers.unload(buf_id);
+
+      return visit_recursive_result::CONTINUE;
+    }
+
+    return visit_recursive_result::RECURSE;
+  });
+
+  for (auto& [hash, used] : hashes) {
+    if (!used) {
+      fs::path buf_path = fs::append(buffers_directory, std::to_string(hash));
+      fs::remove(buf_path);
     }
   }
-
-  fs::path buffers_directory = get_buffers_path(fullpath);
-  if (fs::exists(buffers_directory))
-    fs::remove_all(buffers_directory);
-
-  fs::rename(temp_buffers_directory, buffers_directory);
 
   write(fullpath, asset);
 }

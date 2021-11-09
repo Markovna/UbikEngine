@@ -21,11 +21,12 @@ add_subdirectory(thirdparty/spdlog spdlog)
 add_subdirectory(thirdparty/stb_image stb_image)
 add_subdirectory(thirdparty/efsw efsw)
 add_subdirectory(thirdparty/imgui imgui)
+add_subdirectory(thirdparty/glslang glslang)
 
 set(BASE_SRC
         src/base/slot_map.h src/base/delegate.h src/base/event.h src/base/key_codes.h src/base/mouse_codes.h src/base/color.h src/base/color.cpp src/base/math.h src/base/math.cpp src/base/cursor.h src/base/iterator_range.h src/base/profiler.h src/base/profiler.cpp src/base/macro.h src/base/log.h src/base/log.cpp
         src/base/guid.cpp
-        src/base/detector.h src/base/timer.cpp src/base/timer.h src/base/type_name.h src/base/memory.h src/base/allocator.cpp src/base/allocator.h src/base/flags.h)
+        src/base/detector.h src/base/timer.cpp src/base/timer.h src/base/type_name.h src/base/memory.h src/base/allocator.cpp src/base/allocator.h src/base/flags.h src/base/crc32.h)
 
 set(CORE_SRC
         src/core/application.cpp
@@ -52,7 +53,10 @@ set(ENGINE_LIBS
         glfw
         glad
         spdlog
-        stb_image)
+        stb_image
+        glslang
+        SPIRV
+        )
 
 set(ENGINE_INCLUDES src)
 

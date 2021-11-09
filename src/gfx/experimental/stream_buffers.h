@@ -37,17 +37,17 @@ class stream_buffers {
         , path(std::move(desc.path))
         , offset(desc.offset)
         , size(desc.size)
+        , hash(0)
     {}
 
     mutable memory memory;
     fs::path path;
     size_t offset;
     size_t size;
+    uint32_t hash;
   };
 
   using key_t = stdext::slot_map<struct any>::key_type;
-
-  static uint64_t generate_id();
 
  public:
   void __debug_info(std::ostream& out) const;
@@ -60,6 +60,8 @@ class stream_buffers {
   uint64_t map(fs::path path, size_t offset = 0, size_t size = 0);
   std::pair<size_t, const uint8_t*> get(uint64_t id) const;
 
+  void hash_dirty(uint64_t id);
+  uint32_t hash(uint64_t id);
   void save(uint64_t id, const fs::path& path, size_t offset);
   void unload(uint64_t id) const;
   void destroy(uint64_t id);
@@ -69,7 +71,10 @@ class stream_buffers {
   [[nodiscard]] bool is_mapped(uint64_t id) const;
 
  private:
+  constexpr static inline uint64_t to_int(key_t);
+  constexpr static inline key_t to_key(uint64_t);
+
+ private:
   stdext::slot_map<buffer> buffers_;
-  std::unordered_map<uint64_t, key_t> id_index_;
 };
 
