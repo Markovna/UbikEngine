@@ -59,9 +59,19 @@ static constexpr const uint32_t crc_table[256] = {
     0x2D02EF8DU
 };
 
-uint32_t crc32(const uint8_t* data, size_t size, uint32_t crc = 0) {
+template<class Iterator>
+uint32_t crc32(Iterator first, Iterator last, uint32_t crc = 0) {
   crc = ~crc;
-  while (size--) {
+  for ( ; first != last; ++first) {
+    crc = crc_table[(uint8_t)*first ^ (crc & 0xFF)] ^ (crc >> 8);
+  }
+
+  return ~crc;
+}
+
+inline uint32_t crc32(const uint8_t* data, size_t size, uint32_t crc = 0) {
+  crc = ~crc;
+  for (uint32_t i = 0; i < size; i++) {
     crc = crc_table[*data ^ (crc & 0xFF)] ^ (crc >> 8);
     data++;
   }

@@ -17,8 +17,8 @@ class flags<T, Size, std::enable_if_t<std::is_enum_v<T>, void>> {
     }
   }
 
-  inline bool operator [](T val) const noexcept { return set_[static_cast<size_t>(val)]; }
-  inline bool& operator [](T val) noexcept { return set_[static_cast<size_t>(val)]; }
+  inline auto operator [](T val) const noexcept { return set_[static_cast<size_t>(val)]; }
+  inline auto operator [](T val) noexcept { return set_[static_cast<size_t>(val)]; }
 
   inline flags& operator |=(const flags& rhs) noexcept {
     set_ |= rhs.set_;
@@ -38,9 +38,10 @@ class flags<T, Size, std::enable_if_t<std::is_enum_v<T>, void>> {
     return !(*this == rhs);
   }
 
-  void add(T val) noexcept { set_[static_cast<size_t>(val)] = true; }
-  void remove(T val) noexcept { set_[static_cast<size_t>(val)] = false; }
-  void set(T val, bool bit) noexcept { set_.set(static_cast<size_t>(val), bit); }
+  inline void add(T val) noexcept { set_[static_cast<size_t>(val)] = true; }
+  inline void remove(T val) noexcept { set_[static_cast<size_t>(val)] = false; }
+  inline void set(T val, bool bit) noexcept { set_.set(static_cast<size_t>(val), bit); }
+  inline void reset() noexcept { set_.reset(); }
 
  private:
   std::bitset<Size> set_;

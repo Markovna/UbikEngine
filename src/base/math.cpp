@@ -85,9 +85,9 @@ void mat4::set_column(uint32_t index, const vec4& vec) {
 
 mat4 mat4::trs(const vec3& origin, const quat& rot, const vec3& scale) {
   mat4 mat = mat4::from_quat(rot);
-  mat.data[0][1] *= scale.x; mat.data[0][2] *= scale.x;
-  mat.data[1][0] *= scale.y; mat.data[1][2] *= scale.y;
-  mat.data[2][0] *= scale.z; mat.data[2][1] *= scale.z;
+  mat.data[0][0] *= scale.x; mat.data[0][1] *= scale.x; mat.data[0][2] *= scale.x;
+  mat.data[1][0] *= scale.y; mat.data[1][1] *= scale.y; mat.data[1][2] *= scale.y;
+  mat.data[2][0] *= scale.z; mat.data[2][1] *= scale.z; mat.data[2][2] *= scale.z;
   mat.set_row(3, origin);
   return mat;
 }
@@ -537,57 +537,4 @@ transform operator*(const transform& lhs, const transform& rhs) {
 
 float math::length(const vec3 &vec) {
   return std::sqrtf(vec | vec);
-}
-
-
-void serializer<vec4>::from_asset(assets::repository* r, const asset& asset, vec4& value) {
-  assets::get(r, asset, "x", value.x);
-  assets::get(r, asset, "y", value.y);
-  assets::get(r, asset, "z", value.z);
-  assets::get(r, asset, "w", value.w);
-}
-
-void serializer<vec4>::to_asset(asset& asset, const vec4& value) {
-  assets::set(asset, "x", value.x);
-  assets::set(asset, "y", value.y);
-  assets::set(asset, "z", value.z);
-  assets::set(asset, "w", value.w);
-}
-
-void serializer<vec3>::from_asset(assets::repository* r, const asset& asset, vec3& value) {
-  assets::get(r, asset, "y", value.y);
-  assets::get(r, asset, "z", value.z);
-  assets::get(r, asset, "x", value.x);
-}
-
-void serializer<vec3>::to_asset(asset& asset, const vec3& value) {
-  assets::set(asset, "x", value.x);
-  assets::set(asset, "y", value.y);
-  assets::set(asset, "z", value.z);
-}
-
-void serializer<quat>::from_asset(assets::repository* r, const asset& asset, quat& value) {
-  assets::get(r, asset, "x", value.x);
-  assets::get(r, asset, "y", value.y);
-  assets::get(r, asset, "z", value.z);
-  assets::get(r, asset, "w", value.w);
-}
-
-void serializer<quat>::to_asset(asset& asset, const quat& value) {
-  assets::set(asset, "x", value.x);
-  assets::set(asset, "y", value.y);
-  assets::set(asset, "z", value.z);
-  assets::set(asset, "w", value.w);
-}
-
-void serializer<transform>::from_asset(assets::repository* r, const asset& asset, transform& value) {
-  assets::get(r, asset, "position", value.position);
-  assets::get(r, asset, "rotation", value.rotation);
-  assets::get(r, asset, "scale", value.scale);
-}
-
-void serializer<transform>::to_asset(asset& asset, const transform& value) {
-  assets::set(asset, "position", value.position);
-  assets::set(asset, "rotation", value.rotation);
-  assets::set(asset, "scale", value.scale);
 }

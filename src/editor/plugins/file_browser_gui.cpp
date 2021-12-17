@@ -208,12 +208,12 @@ class file_browser_gui : public editor_gui {
   }
 };
 
-void load_file_browser_gui(plugins*) {
+void load_file_browser_gui(engine_events*) {
   register_type(file_browser_gui);
 
   editor::g_editor_gui->add_editor<file_browser_gui>();
 }
 
-void unload_file_browser_gui(plugins*) {
+void unload_file_browser_gui(engine_events*) {
   editor::g_editor_gui->remove_editor<file_browser_gui>();
 }

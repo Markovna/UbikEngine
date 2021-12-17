@@ -6,9 +6,9 @@
 #include "editor/editor_gui.h"
 #include "editor/gui/gui.h"
 #include "editor/gui/imgui_renderer.h"
-#include "core/plugins.h"
 #include "core/renderer.h"
 #include "core/meta/registration.h"
+#include "core/engine_events.h"
 
 class game_view_gui : public editor_gui {
  public:
@@ -49,12 +49,23 @@ class game_view_gui : public editor_gui {
 
 };
 
-void load_game_view_gui(plugins* plugins) {
+void register_editor(editor_gui_plugin* e) {
+
+}
+
+using event_key_t = event<editor_gui_plugin>::key_t;
+static inline event_key_t event_key;
+
+void load_game_view_gui(engine_events* events) {
   register_type(game_view_gui);
+
+  event_key = events->get<editor_gui_plugin*>("register_editor").connect(register_editor);
 
   editor::g_editor_gui->add_editor<game_view_gui>();
 }
 
-void unload_game_view_gui(plugins* plugins) {
+void unload_game_view_gui(engine_events* events) {
   editor::g_editor_gui->remove_editor<game_view_gui>();
+
+  events->get<editor_gui_plugin*>("register_editor").disconnect(event_key);
 }

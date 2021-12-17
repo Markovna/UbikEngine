@@ -215,16 +215,16 @@ public:
         class = std::enable_if_t<!std::is_same<delegate, std::decay_t<T>>::value>
     >
     delegate(T&& functor) {
-        using F = std::decay_t<T>;
-        static const vtable_t vt {
-            dispatcher::template invoke<F>,
-            dispatcher::template destroy<F>,
-            dispatcher::template copy<F>,
-            dispatcher::template compare<F>
-        };
+      using F = std::decay_t<T>;
+      static const vtable_t vt {
+        dispatcher::template invoke<F>,
+        dispatcher::template destroy<F>,
+        dispatcher::template copy<F>,
+        dispatcher::template compare<F>
+      };
 
-        dispatcher::create(std::forward<T>(functor), std::addressof(store_));
-        vtable_ptr_ = &vt;
+      dispatcher::create(std::forward<T>(functor), std::addressof(store_));
+      vtable_ptr_ = &vt;
     }
 
     delegate(const delegate& other) : vtable_ptr_(other.vtable_ptr_) {
@@ -321,3 +321,8 @@ private:
         std::swap(vtable_ptr_, other.vtable_ptr_);
     }
 };
+
+template<class R, class ...Args>
+auto make_delegate(R(* const method_ptr)(Args...)) {
+  return delegate<R(Args...)>(method_ptr);
+}

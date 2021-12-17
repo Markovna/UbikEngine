@@ -14,13 +14,3 @@ void input_system::push_event(window_event event) {
     default: break;
   }
 }
-
-input_system* input;
-
-void init_input_system() {
-  input = new input_system;
-}
-
-void shutdown_input_system() {
-  delete input;
-}

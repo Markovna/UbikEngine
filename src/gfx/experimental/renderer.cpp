@@ -1,13 +1,15 @@
 #include "renderer.h"
 #include "render_context.h"
 
-namespace experimental::gfx {
-
 swap_chain renderer::create_swap_chain(window::window_handle win_handle) {
   auto fb_handle = handle_allocators_.alloc<framebuf_handle>();
   auto sc_handle = handle_allocators_.alloc<swap_chain_handle>();
   context_->create_swap_chain(win_handle, sc_handle, fb_handle);
   return swap_chain { .handle = sc_handle, .back_buffer_handle = fb_handle};
+}
+
+void renderer::resize_swap_chain(const swap_chain& sc, vec2i size) {
+  context_->resize_swap_chain(sc, size);
 }
 
 void renderer::destroy_swap_chain(swap_chain &swap_chain) {
@@ -26,7 +28,8 @@ void renderer::submit(resource_command_buffer* buffer) {
   delete buffer;
 }
 
-void renderer::submit(const render_command_buffer* buffer) {
+void renderer::submit(render_command_buffer* buffer) {
+  buffer->sort();
   context_->submit(buffer);
   delete buffer;
 }
@@ -47,4 +50,3 @@ renderer::renderer(renderer::create_context_fn create_context) :
   assert(context_);
 }
 
-}

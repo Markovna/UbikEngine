@@ -12,7 +12,7 @@ class repository;
 
 struct editor_gui {
   virtual void start(assets::repository*) = 0;
-  virtual void gui(gui_renderer* gui_renderer) = 0;
+  virtual void gui(gui_renderer*) = 0;
   virtual ~editor_gui() = default;
 };
 

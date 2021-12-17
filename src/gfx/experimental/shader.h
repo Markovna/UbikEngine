@@ -1,33 +1,25 @@
 #pragma once
 
 #include "gfx.h"
-#include "core/assets/asset_loader.h"
+#include "command_buffers.h"
 
 #include <unordered_map>
 #include <string>
 
-namespace experimental {
-
-struct shader_binding_table {
-  struct item {
-    char name[64];
-    gfx::uniform_type::type type;
-    uint8_t binding;
-    uint32_t offset;
-  };
-
-  std::vector<item> items;
-};
-
 class shader {
  public:
-  shader(gfx::shader_handle handle, shader_binding_table binding_table)
-    : handle_(handle), binding_table_(std::move(binding_table))
+  shader(const shader_program_desc& desc, resource_command_buffer* res_buf)
+    : handle_(create_shader(desc, res_buf))
   {}
 
- private:
-  gfx::shader_handle handle_;
-  shader_binding_table binding_table_;
-};
+ public:
+  inline shader_handle handle() const { return handle_; }
 
-}
+ private:
+  static shader_handle create_shader(const shader_program_desc& desc, resource_command_buffer* res_buf) {
+    return res_buf->create_shader(desc);
+  }
+
+ private:
+  shader_handle handle_;
+};

@@ -13,7 +13,7 @@ component_ids::iterator component_ids::iterator::operator++(int) {
 }
 
 bool component_ids::iterator::operator==(const component_ids::iterator &other) const {
-  return other.curr_ == curr_;
+  return other.entity_ == entity_ && other.curr_ == curr_;
 }
 
 bool component_ids::iterator::operator!=(const component_ids::iterator &other) const {

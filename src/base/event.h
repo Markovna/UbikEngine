@@ -75,6 +75,10 @@ public:
         disconnect_by_value(delegate_t(std::forward<T>(functor)));
     }
 
+    void invoke(A... args) const {
+      operator()(std::forward<A>(args)...);
+    }
+
     void operator()(A... args) const {
         for (const delegate_t& delegate : delegates_) {
             delegate(std::forward<A>(args)...);

@@ -1,7 +1,10 @@
 {
-  "__guid": "2531a25525da4b1218519e2269b1b111",
-  "data": 4948704172885240547,
-  "source_guid": "e012af0005da4b1218519e2269b1b345",
-  "source_path": "assets/textures/seal.png",
-  "type": "texture"
+  "__guid": "79a4f3e744c449a6a60da0f50c66729b",
+  "data": {
+    "__binary_hash": 3055838060
+  },
+  "format": 2,
+  "hash": 3200358225,
+  "height": 838,
+  "width": 904
 }

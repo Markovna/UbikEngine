@@ -1,7 +1,7 @@
 #include "library_loader.h"
 
-library_loader::library_loader(const fs::path &temp_folder)
-  : temp_folder_(temp_folder)
+library_loader::library_loader()
+  : temp_folder_(fs::append(fs::temp_directory_path(), "libs_tmp").c_str())
 {
   if (!fs::exists(temp_folder_))
     fs::create_directory(temp_folder_);

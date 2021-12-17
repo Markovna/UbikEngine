@@ -54,15 +54,6 @@
                           "main_texture": "2531a21125da4b1386512e1269b1b252",
                           "second_texture": "2531a25525da4b1218519e2269b1b111",
                           "shader": "4054252338da4b1386512e1269a3a115"
-                        },
-                        {
-                          "__guid": "2a0a438af9a647bbb932b0a9d94e6334",
-                          "__type": "custom_component",
-                          "a": 42,
-                          "b": 0.0,
-                          "c": {
-                            "a": 0.0
-                          }
                         }
                       ]
                     },
@@ -176,9 +167,9 @@
                       "__guid": "5133a24db3d54c6aa886dd3819570734",
                       "__type": "transform_component",
                       "position": {
-                        "x": 0.0,
+                        "x": 1.0,
                         "y": 1.0,
-                        "z": -3.0
+                        "z": 6.0
                       },
                       "rotation": {
                         "w": 1.0,
@@ -197,7 +188,7 @@
                       "__type": "camera_component",
                       "clear_flags": 6,
                       "far": 100.0,
-                      "fov": 60.0,
+                      "fov": 80.0,
                       "near": 0.10000000149011612,
                       "normalized_rect": {
                         "w": 1.0,

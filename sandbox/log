@@ -1,0 +1,10 @@
+[2021-12-17 16:09:32.198] [CORE] [info] Asset assets/textures/seal.png.meta (79a4f3e744c449a6a60da0f50c66729b) was added to assets repository.
+[2021-12-17 16:09:32.203] [CORE] [info] Asset assets/textures/container.jpg.meta (fe40a7e9548c4c35bc75fbb127aef746) was added to assets repository.
+[2021-12-17 16:09:32.208] [CORE] [info] Asset assets/scenes/start_scene.entity (ee967de2d7c74899a8b1eac10c59e8b4) was added to assets repository.
+[2021-12-17 16:09:32.210] [CORE] [info] Asset assets/shaders/EditorGrid.shader (c49f175d824e4322ad8b5a62a812262a) was added to assets repository.
+[2021-12-17 16:09:32.210] [CORE] [info] Asset assets/shaders/TestShader.shader (d2606187ec37418087fab9f4db13bf18) was added to assets repository.
+[2021-12-17 16:09:32.211] [CORE] [info] Asset assets/shaders/GUIShader.shader (60e6cfb62d204370a96a136b1523574f) was added to assets repository.
+[2021-12-17 16:09:36.346] [CORE] [info] Register interface component_loader for type mesh_component
+[2021-12-17 16:09:36.347] [CORE] [info] Register interface component_loader for type transform_component
+[2021-12-17 16:09:36.347] [CORE] [info] Register interface component_loader for type camera_component
+[2021-12-17 16:09:36.347] [CORE] [info] Register interface render_i for type mesh_component

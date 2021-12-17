@@ -1,6 +1,6 @@
 #include "schema.h"
+#include "core/assets/asset.h"
 #include "base/log.h"
-#include "core/serialization.h"
 #include "platform/file_system.h"
 
 #include <unordered_map>
@@ -39,7 +39,7 @@ void load_schemas(const char *path) {
     try {
 
       file.open(schema_path, std::ios::in | std::ios::binary);
-      asset data = nlohmann::json::parse(file);
+      asset data = asset::parse(file);
 
       schema_info &schema_info = g_context->schemas[data["name"]];
       schema_info.name = data["name"];

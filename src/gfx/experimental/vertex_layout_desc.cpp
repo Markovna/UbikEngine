@@ -1,7 +1,5 @@
 #include "vertex_layout_desc.h"
 
-namespace experimental::gfx {
-
 vertex_layout_desc& vertex_layout_desc::add(
     vertex_semantic::type semantic,
     vertex_type::type type,
@@ -23,6 +21,4 @@ vertex_layout_desc::operator vertex_layout() const {
   std::memcpy(layout.items, items, vertex_semantic::COUNT * sizeof(vertex_layout::item));
   layout.stride = offset;
   return layout;
-}
-
 }

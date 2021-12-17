@@ -26,16 +26,21 @@ type_info* get_type_info() {
 
 }
 
-inline type get_type(typeid_t id) { return type(id); }
-inline type get_type(const char* name) { return type(details::get_type_info(name)->id); }
-
 template<class T>
-type get_type() {
-  return type(details::get_type_info<T>()->id);
+typeid_t get_typeid() { return details::get_type_info<T>()->id; }
+
+inline type get_type(typeid_t id) { return type(id); }
+
+inline type get_type(const char* name) {
+  const auto* type_info = details::get_type_info(name);
+  return type_info ? type(type_info->id) : type(0);
 }
 
 template<class T>
-typeid_t get_typeid() { return details::get_type_info<T>()->id; }
+type get_type() {
+  const auto* type_info = details::get_type_info<T>();
+  return type_info ? type(type_info->id) : type(0);
+}
 
 namespace details {
 
@@ -66,6 +71,12 @@ I* get_interface() {
 template<class I>
 I* get_interface(typeid_t id) {
   return details::get_interface(details::get_interface_info<I>(), id);
+}
+
+template<class T>
+auto get_interface_view() {
+  auto* info = details::get_interface_info<T>();
+  return details::interface_view<T> { info->items.begin(), info->items.end() };
 }
 
 }

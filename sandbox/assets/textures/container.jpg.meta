@@ -1,7 +1,10 @@
 {
-  "__guid": "2531a21125da4b1386512e1269b1b252",
-  "data": 16154037935690307400,
-  "source_guid": "a100c01015bb1a2386512e1261b1b293",
-  "source_path": "assets/textures/container.jpg",
-  "type": "texture"
+  "__guid": "fe40a7e9548c4c35bc75fbb127aef746",
+  "data": {
+    "__binary_hash": 1395916521
+  },
+  "format": 1,
+  "hash": 1621544439,
+  "height": 512,
+  "width": 512
 }

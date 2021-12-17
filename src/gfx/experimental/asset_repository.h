@@ -6,11 +6,9 @@
 #include "base/json.hpp"
 #include "base/log.h"
 #include "gfx/experimental/stream_buffers.h"
-
-namespace experimental {
+#include "shader_repository.h"
 
 using asset = nlohmann::json;
-using key_t = stdext::slot_map<struct any>::key_type;
 
 enum class visit_recursive_result {
   BREAK,
@@ -28,13 +26,11 @@ int32_t visit_recursive(Iterator first, Iterator last, Operation op) {
     if (op_result == visit_recursive_result::CONTINUE)
       continue;
 
-    asset(op_result == visit_recursive_result::RECURSE);
+    assert(op_result == visit_recursive_result::RECURSE);
     if (first->is_structured()) {
-      auto visit_result = visit_recursive(first->begin(), first->end(), op);
-      if (visit_result)
+      if (auto visit_result = visit_recursive(first->begin(), first->end(), op))
         return visit_result;
     }
-
   }
   return 0;
 }
@@ -46,6 +42,8 @@ class assets_repository;
 
 class asset_handle {
  public:
+  using key_t = stdext::slot_map<struct any>::key_type;
+
   asset_handle() noexcept : repository_(nullptr), key_() {}
   asset_handle(assets_repository*, const key_t&);
 
@@ -141,6 +139,8 @@ class assets_repository {
   asset_handle load(guid);
 
   asset_handle create_asset(guid, const fs::path&);
+  void remove_asset(const fs::path&);
+  void remove_asset(guid);
   void emplace(guid, const fs::path&, asset);
 
   iterator begin() { return iterator(storage_.begin()); };
@@ -157,22 +157,22 @@ class assets_repository {
  private:
   friend class asset_handle;
 
-  asset& get(key_t);
-  [[nodiscard]] const asset& get(key_t) const;
+  asset& get(asset_handle::key_t);
+  [[nodiscard]] const asset& get(asset_handle::key_t) const;
 
-  const fs::path& path(key_t);
-  const guid& id(key_t);
+  const fs::path& path(asset_handle::key_t);
+  const guid& id(asset_handle::key_t);
 
-  asset* find(key_t);
-  [[nodiscard]] const asset* find(key_t) const;
+  asset* find(asset_handle::key_t);
+  [[nodiscard]] const asset* find(asset_handle::key_t) const;
 
-  void inc_use_count(key_t);
-  void dec_use_count(key_t);
+  void inc_use_count(asset_handle::key_t);
+  void dec_use_count(asset_handle::key_t);
 
  private:
   container_t storage_;
-  std::unordered_map<guid, key_t> id_index_;
-  std::unordered_map<std::string, key_t> path_index_;
+  std::unordered_map<guid, asset_handle::key_t> id_index_;
+  std::unordered_map<std::string, asset_handle::key_t> path_index_;
   stream_buffers buffers_;
 };
 
@@ -185,19 +185,14 @@ class assets_database {
 
 class assets_filesystem {
  public:
-  explicit assets_filesystem(fs::path path) noexcept : root_(std::move(path)) {}
+  assets_filesystem() noexcept = default;
 
-  void load_assets(assets_repository*) const;
-  void save_assets(assets_repository*);
-  void save(assets_repository*, const fs::path&);
-  void load(assets_repository*, const fs::path&) const;
+  void load_assets(assets_repository&, std::initializer_list<fs::path> extensions = {}) const;
+  void save_assets(assets_repository&);
+  void save(assets_repository&, const fs::path&);
+  void load(assets_repository&, const fs::path&) const;
 
  private:
   static fs::path get_buffers_path(const fs::path& path);
-  void save(assets_repository*, const asset&, const fs::path&);
-
- private:
-  fs::path root_;
+  void save(assets_repository&, const asset&, const fs::path&);
 };
-
-}

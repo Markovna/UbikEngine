@@ -17,142 +17,31 @@ static event<const assets::handle&> on_entity_load;
 
 static void set_entity(assets::repository* p, assets::handle e);
 
-class recursive_entity_iterator {
- private:
-  using iterator = asset::const_iterator;
-
- public:
-  recursive_entity_iterator() : ptr_(nullptr), pointer_(), rec_(true), depth_(0) {};
-  explicit recursive_entity_iterator(const asset& asset) : ptr_(&asset), pointer_(), rec_(true), depth_(0) {};
-
-  recursive_entity_iterator(const recursive_entity_iterator& other) = default;
-  recursive_entity_iterator(recursive_entity_iterator&& other) = default;
-
-  recursive_entity_iterator& operator=(const recursive_entity_iterator& other) = default;
-  recursive_entity_iterator& operator=(recursive_entity_iterator&& other) = default;
-
-  recursive_entity_iterator& operator++() { return increment(); }
-  recursive_entity_iterator operator++(int) {
-    recursive_entity_iterator orig = *this;
-    increment();
-    return orig;
-  }
-
-  const asset& operator*() const { return dereference(); }
-  const asset* operator->() const { return &dereference(); }
-
-  [[nodiscard]] size_t depth() const { return depth_; }
-
-  void disable_recursion_pending() { rec_ = false; }
-
-  void pop() {
-    asset::json_pointer parent = pointer_.parent_pointer();
-    if (parent.empty()) {
-      *this = recursive_entity_iterator();
-    } else {
-      pointer_.pop_back();
-      pointer_.pop_back();
-      --depth_;
-      rec_ = true;
-    }
-  }
-
-  inline friend bool operator==(const recursive_entity_iterator&, const recursive_entity_iterator&) noexcept;
-
- private:
-  static bool try_get_array_index(const std::string& s, size_t& index)
-  {
-    // error condition (cf. RFC 6901, Sect. 4)
-    if (s.size() > 1 && s[0] == '0') {
-      return false;
-    }
-
-    // error condition (cf. RFC 6901, Sect. 4)
-    if (s.size() > 1 && !(s[0] >= '1' && s[0] <= '9')) {
-      return false;
-    }
-
-    std::size_t processed_chars = 0;
-    unsigned long long res = 0;
-    try {
-      res = std::stoull(s, &processed_chars);
-    }
-    catch (std::out_of_range&) {
-      return false;
-    }
-
-    // check if the string was completely read
-    if (processed_chars != s.size()) {
-      return false;
-    }
-
-    // only triggered on special platforms (like 32bit), see also
-    // https://github.com/nlohmann/json/pull/2203
-    if (res >= static_cast<unsigned long long>((std::numeric_limits<size_t>::max)())) {
-      return false;
-    }
-
-    index = static_cast<size_t>(res);
-    return true;
-  }
-
-  bool try_next() {
-    if (pointer_.empty())
-      return false;
-
-    asset::json_pointer parent = pointer_.parent_pointer();
-    if (size_t index;
-        !parent.empty() &&
-            try_get_array_index(pointer_.back(), index) &&
-            index < (*ptr_)[parent].size() - 1
-        ) {
-      index++;
-      pointer_.pop_back();
-      pointer_.push_back(std::to_string(index));
-      rec_ = true;
-      return true;
-    }
-    return false;
-  }
-
-  [[nodiscard]] const asset& dereference() const {
-    if (pointer_.empty())
-      return *ptr_;
-
-    return (*ptr_)[pointer_];
-  }
-
-  recursive_entity_iterator& increment() {
-    static const char* children = "children";
-    const asset& ref = dereference();
-    if (rec_ && ref.contains(children) && !ref[children].empty()) {
-      pointer_ /= children;
-      pointer_ /= "0";
-      depth_++;
-      rec_ = true;
-      return *this;
-    }
-
-    while (ptr_ != nullptr && !try_next()) {
-      pop();
-    }
-
-    return *this;
-  }
-
- private:
-  const asset* ptr_;
-  asset::json_pointer pointer_;
-  bool rec_;
-  size_t depth_;
+enum class visit_children_result {
+  BREAK,
+  CONTINUE,
+  RECURSE
 };
 
-inline bool operator==(const recursive_entity_iterator& lhs, const recursive_entity_iterator& rhs) noexcept {
-  return lhs.ptr_ == rhs.ptr_ && lhs.pointer_ == rhs.pointer_;
-}
+template<class Iterator, class Operation>
+int32_t visit_children(Iterator first, Operation op, uint32_t depth = 0) {
+  constexpr static const char* CHILDREN = "children";
+  auto op_result = op(*first, depth);
+  if (op_result == visit_children_result::BREAK)
+    return -1;
 
-inline bool operator!=(const recursive_entity_iterator& lhs, const recursive_entity_iterator& rhs) noexcept {
-  return !(lhs == rhs);
+  if (op_result == visit_children_result::CONTINUE)
+    return 0;
+
+  assert(op_result == visit_children_result::RECURSE);
+  if (first->contains(CHILDREN) && first->at(CHILDREN).is_array()) {
+    auto children = first->at(CHILDREN);
+    for (auto it = children.begin(); it != children.end(); ++it) {
+      if (auto result = visit_children(it, op, depth + 1))
+        return result;
+    }
+  }
+  return 0;
 }
 
 class entity_graph_gui : public editor_gui {
@@ -182,18 +71,16 @@ class entity_graph_gui : public editor_gui {
       if (entity_) {
 
         int recursion_depth = 0;
-        for (auto it = recursive_entity_iterator(*entity_); it != recursive_entity_iterator(); ++it) {
-
-          while (recursion_depth > it.depth()) {
+        visit_children(entity_, [&](asset& asset, uint32_t depth) {
+          while (recursion_depth > depth) {
             gui::TreePop();
             recursion_depth--;
           }
+          assert(recursion_depth == depth);
 
-          assert(recursion_depth == it.depth());
+          std::string id = asset.at("__guid");
 
-          std::string id = it->at("__guid");
-
-          bool leaf = !it->contains("children") || it->at("children").empty();
+          bool leaf = !asset.contains("children") || asset.at("children").empty();
           bool selected = id == selected_id;
 
           ImGuiTreeNodeFlags flag = base_flag;
@@ -206,8 +93,10 @@ class entity_graph_gui : public editor_gui {
           }
 
           if (open) recursion_depth++;
-          if (!open || leaf) it.disable_recursion_pending();
-        }
+          if (!open || leaf) return visit_children_result::CONTINUE;
+
+          return visit_children_result::RECURSE;
+        });
 
         while (recursion_depth--) {
           gui::TreePop();
@@ -413,7 +302,7 @@ void scene_view_gui::start(assets::repository* repository) {
   picking_id_uniform_ = gfx::create_uniform("pick_id");
 }
 
-void load_entity_asset_editor(struct plugins*) {
+void load_entity_asset_editor(struct engine_events*) {
   register_type(entity_graph_gui);
   register_type(scene_view_gui);
 
@@ -423,7 +312,7 @@ void load_entity_asset_editor(struct plugins*) {
   world_ = world::create();
 }
 
-void unload_entity_asset_editor(struct plugins*) {
+void unload_entity_asset_editor(struct engine_events*) {
   editor::g_editor_gui->remove_editor<entity_graph_gui>();
   editor::g_editor_gui->remove_editor<scene_view_gui>();
 

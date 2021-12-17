@@ -2,19 +2,17 @@
 #include <core/assets/assets.h>
 #include "core/input_system.h"
 #include "core/world.h"
-#include "core/components/mesh_component.h"
-#include "core/components/camera_component.h"
-#include "core/renderer.h"
+
 #include "gfx/gfx.h"
 #include "platform/window.h"
 #include "base/window_event.h"
 #include "core/meta/registration.h"
 #include "core/meta/schema.h"
-#include "core/plugins.h"
 #include "core/assets/filesystem_provider.h"
 #include "core/application.h"
+#include "engine_events.h"
 
-extern void load_plugins(plugins*);
+extern void load_plugins(engine_events*);
 
 int main(int argc, char* argv[]) {
 
@@ -42,10 +40,11 @@ int main(int argc, char* argv[]) {
   window window({512, 512});
   gfx::init({.window_handle = window.get_handle(), .resolution = window.get_resolution()});
 
+  engine_events events;
+
   ecs::init_world();
   init_input_system();
-  init_plugins_registry();
-  load_plugins(plugins_reg);
+  load_plugins(&events);
 
   init_filesystem_provider();
 
@@ -95,7 +94,6 @@ int main(int argc, char* argv[]) {
   shutdown_filesystem_provider();
 
   shutdown_input_system();
-  shutdown_plugins_registry();
   ecs::shutdown_world();
 
   resources::shutdown();

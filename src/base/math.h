@@ -3,8 +3,6 @@
 #include <cmath>
 #include <limits>
 
-#include "core/serialization.h"
-
 struct vec2;
 struct vec3;
 struct vec4;
@@ -195,26 +193,3 @@ inline approximately(T x, T y, int ulp = 1) {
 
 }
 
-template<>
-struct serializer<vec4> {
-  static void from_asset(assets::repository*, const asset&, vec4&);
-  static void to_asset(asset&, const vec4&);
-};
-
-template<>
-struct serializer<vec3> {
-  static void from_asset(assets::repository*, const asset&, vec3&);
-  static void to_asset(asset&, const vec3&);
-};
-
-template<>
-struct serializer<quat> {
-  static void from_asset(assets::repository*, const asset&, quat&);
-  static void to_asset(asset&, const quat&);
-};
-
-template<>
-struct serializer<transform> {
-  static void from_asset(assets::repository*, const asset&, transform&);
-  static void to_asset(asset&, const transform&);
-};

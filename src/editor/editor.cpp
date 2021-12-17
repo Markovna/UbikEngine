@@ -1,6 +1,5 @@
 #include "core/input_system.h"
 #include "core/world.h"
-#include "core/plugins.h"
 #include "core/meta/registration.h"
 #include "core/meta/schema.h"
 #include "core/application.h"
@@ -8,49 +7,48 @@
 #include "platform/window.h"
 #include "platform/file_system.h"
 
-#include "core/components/mesh_component.h"
-#include "core/components/camera_component.h"
 
 #include "editor/gui/gui.h"
 #include "editor/gui/imgui_renderer.h"
 #include "editor_gui.h"
-#include "core/assets/assets.h"
-#include "core/assets/resources.h"
-#include "core/assets/resource_compiler.h"
-#include "core/assets/filesystem_provider.h"
-#include "core/serialization.h"
+#include "core/engine_events.h"
 
 #include "library_loader.h"
 
 #include "gfx/experimental/asset_repository.h"
 #include "gfx/experimental/shader_compiler.h"
+#include "gfx/experimental/shader_repository.h"
 #include "gfx/experimental/shader_compiler_opengl.h"
+#include "gfx/experimental/render_context_opengl.h"
 
 int main(int argc, char* argv[]) {
-  fs::paths::project(argv[1]);
-  logger::init(fs::append(fs::paths::cache(), "log").c_str());
-  experimental::assets_repository assets_repository;
-  experimental::assets_filesystem assets_filesystem(fs::paths::project());
-  assets_filesystem.load_assets(&assets_repository);
+//  {
+//    fs::paths::project(argv[1]);
+//    logger::init(fs::append(fs::paths::cache(), "log").c_str());
+//    experimental::assets_repository assets_repository;
+//    experimental::assets_filesystem assets_filesystem(fs::paths::project());
+//    assets_filesystem.load_assets(&assets_repository);
+//
+//    for (const auto[a, p, g] : assets_repository) {
+//      std::cout << p.c_str() << "\n";
+//    }
+//
+//    window window({1024, 512});
+//    experimental::gfx::renderer renderer { experimental::gfx::render_context_opengl::create };
+//
+//
+//
+//    auto compiler = experimental::shader_compiler_opengl::create();
+//
+//    experimental::shader_repository shader_repository(compiler.get());
+//    shader_repository.compile(
+//        *assets_repository.load("assets/shaders/TestShader.shader.meta"),
+//        &assets_repository,
+//        nullptr);
+//
+//    return 0;
+//  }
 
-  for (const auto [a, p, g] : assets_repository) {
-    std::cout << p.c_str() << "\n";
-  }
-
-//  asset a;
-//  experimental::read(fs::absolute("assets/shaders/TestShader copy.shader"), a);
-
-
-  auto compiled_asset = assets_repository.create_asset(guid::generate(), "assets/shaders/TestShader_compiled.asset");
-  experimental::compile_program(
-      *assets_repository.load("assets/shaders/TestShader copy.shader"),
-      *compiled_asset,
-      experimental::shader_compiler_opengl::create().get(),
-      &assets_repository
-    );
-  std::cout << compiled_asset->dump(2);
-
-  return 0;
   const char* plugin_names [] = {
       "sandbox",
       "spin_plugin",
@@ -91,12 +89,13 @@ int main(int argc, char* argv[]) {
   register_serializer_i(camera_component);
   register_serializer_i(mesh_component);
 
+  engine_events events;
+
   window window({1024, 512});
   gfx::init({.window_handle = window.get_handle(), .resolution = window.get_resolution()});
 
   ecs::init_world();
   init_input_system();
-  init_plugins_registry();
 
   init_filesystem_provider();
 
@@ -113,9 +112,9 @@ int main(int argc, char* argv[]) {
 
   editor::init_editor_gui();
 
-  library_loader libs(fs::append(fs::paths::cache(), "libs_tmp").c_str());
+  library_loader libs;
   for (auto plugin_name : plugin_names) {
-    libs.load(plugin_name, os::find_lib(fs::append(fs::paths::cache(), "libs").c_str(), plugin_name), plugins_reg);
+    libs.load(plugin_name, os::find_lib(fs::append(fs::paths::cache(), "libs").c_str(), plugin_name), &events);
   }
 
   if (g_application)
@@ -125,7 +124,7 @@ int main(int argc, char* argv[]) {
 
   bool running = true;
   while (running) {
-    libs.check_hot_reload(plugins_reg);
+    libs.check_hot_reload(&events);
 
     window.update();
 
@@ -159,7 +158,7 @@ int main(int argc, char* argv[]) {
     g_application->stop();
 
   for (auto plugin_name : plugin_names) {
-    libs.unload(plugin_name, plugins_reg);
+    libs.unload(plugin_name, &events);
   }
 
   editor::shutdown_editor_gui();
@@ -169,7 +168,6 @@ int main(int argc, char* argv[]) {
   shutdown_filesystem_provider();
 
   shutdown_input_system();
-  shutdown_plugins_registry();
   ecs::shutdown_world();
 
   resources::shutdown();

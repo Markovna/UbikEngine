@@ -23,7 +23,7 @@ class library_loader {
   };
 
  public:
-  explicit library_loader(const fs::path& temp_folder);
+  explicit library_loader();
   ~library_loader();
 
   template<class ...Args>
@@ -92,37 +92,32 @@ class library_loader {
         continue;
 
       // reload
-
-      info.version++;
-
-      invoke_unload_function(info.symbols, info.name.c_str(), std::forward<Args>(args)...);
-
-      os::unload_lib(info.symbols);
-
-      fs::path temp_path = copy_to_temp(info.name.c_str(), info.src_path, info.version);
-
+      fs::path temp_path = copy_to_temp(info.name.c_str(), info.src_path, info.version+1);
       void* symbols = os::load_lib(temp_path.c_str());
       if (!symbols) {
+        // backup to previously loaded
+
         logger::core::Error("Couldn't reload {} from path {} ({})", info.name, temp_path.c_str(), info.src_path.c_str());
         fs::remove(temp_path);
 
-        // backup to previously loaded
-        info.version--;
-
-        info.symbols = os::load_lib(info.temp_path.c_str());
         info.timestamp = os::get_timestamp(info.src_path);
-        invoke_load_function(info.symbols, info.name.c_str(), std::forward<Args>(args)...);
 
       } else {
 
+        invoke_load_function(symbols, info.name.c_str(), std::forward<Args>(args)...);
+
+        // unload previously loaded
+        invoke_unload_function(info.symbols, info.name.c_str(), std::forward<Args>(args)...);
+        os::unload_lib(info.symbols);
+
+        // remove previously loaded lib file
         fs::remove(info.temp_path);
 
         info.temp_path = temp_path;
 
         info.symbols = symbols;
         info.timestamp = os::get_timestamp(info.src_path);
-
-        invoke_load_function(info.symbols, info.name.c_str(), std::forward<Args>(args)...);
+        info.version++;
       }
     }
   }

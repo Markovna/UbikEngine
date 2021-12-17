@@ -1,11 +1,11 @@
 #include "world.h"
 #include "meta/type.h"
-#include "core/serialization.h"
+#include "core/component_loader.h"
 
 void world::set_parent_impl(entity ent, entity parent, entity next) {
-  link_component& comp = component<link_component>(ent);
+  auto& comp = get<link_component>(ent.id);
   if (comp.parent) {
-    link_component& parent_comp = component<link_component>(comp.parent);
+    auto& parent_comp = get<link_component>(comp.parent.id);
     parent_comp.children_size--;
 
     if (parent_comp.child == ent)
@@ -16,22 +16,22 @@ void world::set_parent_impl(entity ent, entity parent, entity next) {
   }
 
   if (comp.prev)
-    component<link_component>(comp.prev).next = comp.next;
+    get<link_component>(comp.prev.id).next = comp.next;
 
   if (comp.next)
-    component<link_component>(comp.next).prev = comp.prev;
+    get<link_component>(comp.next.id).prev = comp.prev;
 
   comp.parent = parent;
   comp.next = next;
   comp.prev = entity::invalid();
 
   if (comp.parent) {
-    link_component& parent_comp = component<link_component>(comp.parent);
+    auto& parent_comp = get<link_component>(comp.parent.id);
     parent_comp.children_size++;
 
     if (!comp.next) {
       if (parent_comp.child_last) {
-        link_component& last_child_comp = component<link_component>(parent_comp.child_last);
+        auto& last_child_comp = get<link_component>(parent_comp.child_last.id);
         last_child_comp.next = ent;
       }
 
@@ -44,10 +44,10 @@ void world::set_parent_impl(entity ent, entity parent, entity next) {
   }
 
   if (comp.next) {
-    link_component& next_comp = component<link_component>(comp.next);
+    auto& next_comp = get<link_component>(comp.next.id);
 
     if (next_comp.prev) {
-      link_component &prev_comp = component<link_component>(next_comp.prev);
+      auto &prev_comp = get<link_component>(next_comp.prev.id);
       prev_comp.next = ent;
       comp.prev = next_comp.prev;
     }
@@ -82,48 +82,30 @@ void world::set_parent(entity ent, entity parent, entity next) {
   set_world_transform(ent, world);
 }
 
-entity world::load_from_asset(assets::repository* rep, const asset& asset, entity parent, entity next) {
+entity world::load_from_asset(const asset& asset, entity parent, entity next) {
   entity entity { ecs::registry::create() };
   ecs::registry::emplace<link_component>(entity.id);
 
   for (const ::asset& comp_asset : asset.at("components")) {
     std::string name = comp_asset.at("__type");
-    meta::type type =  meta::get_type(name.c_str());
-    meta::get_interface<serializer_i>(type.id())->from_asset(
-        rep,
-        comp_asset,
-        meta::get_interface<component_i>(type.id())->instantiate(*this, entity)
-      );
+    meta::type type = meta::get_type(name.c_str());
+    auto* loader = meta::get_interface<component_loader>(type.id());
+    if (loader) {
+      loader->instantiate(*this, entity);
+      loader->from_asset(comp_asset, *this, entity);
+    } else {
+      logger::core::Warning("Unknown component type {}", name);
+    }
   }
 
   set_parent(entity, parent, next);
 
   if (asset.contains("children")) {
     for (const ::asset& child_asset : asset.at("children")) {
-      load_from_asset(rep, child_asset, entity);
+      load_from_asset(child_asset, entity);
     }
   }
   return entity;
-}
-
-void world::save_to_asset(asset& asset, entity e) {
-  asset["__type"] = "entity";
-  asset["__guid"] = guid::generate();
-
-  for (auto [id, ptr] : ecs::registry::get_components(e.id)) {
-    meta::get_interface<serializer_i>(id)->to_asset(asset["components"], ptr);
-  }
-
-  entity child_e = child(e);
-  while (child_e) {
-    ::asset& child_asset = asset["children"].emplace_back();
-    save_to_asset(child_asset, child_e);
-    child_e = next(child_e);
-  }
-}
-
-void world::save_to_asset(asset &asset) {
-  save_to_asset(asset, root_);
 }
 
 world::world() : root_({ecs::registry::create()}) {
@@ -149,19 +131,19 @@ quat world::local_rotation(entity entity) const {
 }
 
 void world::set_local_transform(entity entity, const transform &local) {
-  transform_component& component = ecs::registry::get<transform_component>(entity.id);
+  auto& component = ecs::registry::get<transform_component>(entity.id);
   component.local = local;
   set_transform_dirty(entity, true);
 }
 
 void world::set_local_position(entity entity, const vec3 &pos) {
-  transform_component& component = ecs::registry::get<transform_component>(entity.id);
+  auto& component = ecs::registry::get<transform_component>(entity.id);
   component.local.position = pos;
   set_transform_dirty(entity, true);
 }
 
 void world::set_local_rotation(entity entity, const quat &rot) {
-  transform_component& component = ecs::registry::get<transform_component>(entity.id);
+  auto& component = ecs::registry::get<transform_component>(entity.id);
   component.local.rotation = rot;
   set_transform_dirty(entity, true);
 }
@@ -174,36 +156,44 @@ void world::set_world_transform(entity ent, const transform &world) {
   entity p = parent(ent);
   transform parent_inv = p ? transform::inverse(world_transform(p)) : transform::identity();
 
-  transform_component& component = ecs::registry::get<transform_component>(ent.id);
+  auto& component = ecs::registry::get<transform_component>(ent.id);
   component.local = parent_inv * world;
   component.world = world;
   component.dirty = false;
 }
 
-void serializer<transform_component>::from_asset(assets::repository* r, const asset& asset, transform_component& comp) {
-  assets::get(r, asset, "position", comp.local.position);
-  assets::get(r, asset, "rotation", comp.local.rotation);
-  assets::get(r, asset, "scale", comp.local.scale);
+const transform &world::resolve_transform(entity ent) const {
+  const auto& component = ecs::registry::get<transform_component>(ent.id);
+  if (component.dirty) {
+    entity p = parent(ent);
 
-  comp.dirty = true;
+    component.world = (p ? world_transform(p) : transform::identity()) * component.local;
+    component.dirty = false;
+  }
+  return component.world;
 }
 
-void serializer<transform_component>::to_asset(asset& asset, const transform_component& comp) {
-  assets::set(asset, "position", comp.local.position);
-  assets::set(asset, "rotation", comp.local.rotation);
-  assets::set(asset, "scale", comp.local.scale);
+void world::set_transform_dirty(entity ent, bool dirty) const {
+  ecs::registry::get<transform_component>(ent.id).dirty = dirty;
+
+  if (dirty) {
+    entity c = child(ent);
+    while (c) {
+      set_transform_dirty(c, dirty);
+      c = next(c);
+    }
+  }
 }
 
-namespace ecs {
+bool world::is_child_of(entity ent, entity parent_candidate) const {
+  if (parent_candidate == entity::invalid()) return true;
 
-class world* world;
+  while (ent) {
+    const auto& comp = ecs::registry::get<link_component>(ent.id);
+    if (comp.parent == parent_candidate)
+      return true;
 
-void init_world() {
-  world = new ::world;
-}
-
-void shutdown_world() {
-  delete world;
-}
-
+    ent = comp.parent;
+  }
+  return false;
 }

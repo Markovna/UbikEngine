@@ -2,8 +2,6 @@
 
 #include "render_context.h"
 
-namespace experimental::gfx {
-
 struct swap_chain_gl {
   window::window_handle win_handle;
   vec2i size;
@@ -27,6 +25,11 @@ struct index_buffer_gl {
   uint32_t size;
 };
 
+struct uniform_buffer_gl {
+  uint32_t id;
+  uint32_t size;
+};
+
 struct shader_gl {
   uint32_t id;
   int32_t locations[vertex_semantic::COUNT];
@@ -41,39 +44,16 @@ struct texture_gl {
 };
 
 struct uniform_binding_gl {
-  uint8_t binding;
-  uniform_type::type type;
-  union {
-    uint32_t texture_id;
-    struct {
-      uint32_t buffer_id;
-      uint32_t offset;
-      uint32_t size;
-    };
-  };
+  using uniform_type_flag = flags<uniform_type::type>;
+  uniform_type_flag types;
+  uint32_t texture_id;
+  uint32_t buffer_id;
 };
 
 struct uniform_gl {
-  uint32_t bindings_index[MAX_UNIFORM_BINDINGS];
-  uint32_t bindings_count;
+  using binding_set = std::bitset<MAX_UNIFORM_BINDINGS>;
   uniform_binding_gl bindings[MAX_UNIFORM_BINDINGS];
-};
-
-struct uniform_buffer {
-  uint32_t id;
-  uint32_t offset;
-  uint32_t size;
-};
-
-// TODO: (gfx) we need uniform buffers set per frame
-class uniform_buffer_pool {
- public:
-  void allocate();
-  uniform_buffer get_buffer(uint32_t size, uint32_t alignment);
-  void reset();
-
- private:
-  std::vector<uniform_buffer> buffers_;
+  binding_set active_bindings;
 };
 
 class render_context_opengl : public render_context {
@@ -86,6 +66,7 @@ class render_context_opengl : public render_context {
   void submit(const render_command_buffer*) override;
 
   void create_swap_chain(window::window_handle, swap_chain_handle, framebuf_handle) override;
+  void resize_swap_chain(const swap_chain& sc, vec2i size) override;
   void destroy_swap_chain(swap_chain& swap_chain) override;
   void swap(swap_chain& swap_chain) override;
 
@@ -96,15 +77,18 @@ class render_context_opengl : public render_context {
 
   void execute(const class create_vertex_buffer_command&);
   void execute(const class create_index_buffer_command&);
+  void execute(const class create_uniform_buffer_command&);
   void execute(const class create_texture_command&);
   void execute(const class create_frame_buffer_command&);
   void execute(const class create_uniform_command&);
   void execute(const class create_shader_command&);
-  void execute(const class update_uniform_command&);
+  void execute(const class set_uniform_command&);
   void execute(const class update_vertex_buffer_command&);
   void execute(const class update_index_buffer_command&);
+  void execute(const class update_uniform_buffer_command&);
   void execute(const class destroy_vertex_buffer_command&);
   void execute(const class destroy_index_buffer_command&);
+  void execute(const class destroy_uniform_buffer_command&);
   void execute(const class destroy_texture_command&);
   void execute(const class destroy_frame_buffer_command&);
   void execute(const class destroy_shader_command&);
@@ -115,13 +99,11 @@ class render_context_opengl : public render_context {
   std::vector<frame_buffer_gl> frame_buffers_;
   std::vector<vertex_buffer_gl> vertex_buffers_;
   std::vector<index_buffer_gl> index_buffers_;
+  std::vector<uniform_buffer_gl> uniform_buffers_;
   std::vector<shader_gl> shaders_;
   std::vector<texture_gl> textures_;
   std::vector<uniform_gl> uniforms_;
-  uniform_buffer_pool uniform_buffer_pool_;
 
-  int32_t uniform_buffer_offset_alignment_;
+//  int32_t uniform_buffer_offset_alignment_;
   uint32_t vao_;
 };
-
-}

@@ -3,7 +3,6 @@
 #include "base/window_event.h"
 #include "base/cursor.h"
 #include "base/timer.h"
-#include "core/assets/resources.h"
 
 #include "gfx/gfx.h"
 
@@ -35,6 +34,7 @@ class gui_renderer {
   void on_mouse_move(mouse_move_event& e);
   void on_scroll(scroll_event& e);
   void on_text_input(text_event& e);
+
  private:
   void render(ImDrawData* draw_data);
 

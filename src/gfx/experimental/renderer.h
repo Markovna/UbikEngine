@@ -5,8 +5,6 @@
 #include "platform/window.h"
 #include "command_buffers.h"
 
-namespace experimental::gfx {
-
 class render_context;
 
 class renderer {
@@ -28,17 +26,15 @@ class renderer {
 
   void begin_frame();
   void submit(resource_command_buffer* buffer);
-  void submit(const render_command_buffer* buffer);
+  void submit(render_command_buffer* buffer);
 
   swap_chain create_swap_chain(window::window_handle win_handle);
+  void resize_swap_chain(const swap_chain&, vec2i size);
   void destroy_swap_chain(swap_chain &swap_chain);
   void swap(swap_chain &swap_chain);
 
  private:
-
   std::unique_ptr<render_context> context_;
   handle_allocator_set handle_allocators_;
   std::unique_ptr<allocator> allocator_;
 };
-
-}

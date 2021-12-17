@@ -8,8 +8,6 @@
 
 #include "base/math.h"
 
-namespace experimental::gfx {
-
 template<uint32_t>
 struct handle {
   static constexpr uint32_t invalid = 0xFFFFFFFFu;
@@ -32,6 +30,7 @@ struct handle {
 enum handle_type : uint32_t {
   VERTEX_BUFFER_HANDLE_TYPE,
   INDEX_BUFFER_HANDLE_TYPE,
+  UNIFORM_BUFFER_HANDLE_TYPE,
   FRAME_BUFFER_HANDLE_TYPE,
   SHADER_HANDLE_TYPE,
   TEXTURE_HANDLE_TYPE,
@@ -41,6 +40,7 @@ enum handle_type : uint32_t {
 
 using vertexbuf_handle = handle<VERTEX_BUFFER_HANDLE_TYPE>;
 using indexbuf_handle = handle<INDEX_BUFFER_HANDLE_TYPE>;
+using uniformbuf_handle = handle<UNIFORM_BUFFER_HANDLE_TYPE>;
 using framebuf_handle = handle<FRAME_BUFFER_HANDLE_TYPE>;
 using shader_handle = handle<SHADER_HANDLE_TYPE>;
 using texture_handle = handle<TEXTURE_HANDLE_TYPE>;
@@ -68,7 +68,9 @@ struct texture_wrap {
 struct uniform_type {
   enum type : uint8_t {
     BUFFER = 0,
-    SAMPLER
+    SAMPLER,
+
+    COUNT
   };
 };
 
@@ -205,7 +207,7 @@ struct vertex_layout {
   uint32_t stride;
 };
 
-static constexpr uint32_t MAX_UNIFORM_BINDINGS = 16;
+static constexpr uint32_t MAX_UNIFORM_BINDINGS = 64;
 static constexpr uint32_t MAX_BINDINGS_PER_DRAW = 16;
 static constexpr uint32_t MAX_FRAMEBUFFER_ATTACHMENTS = 8;
 
@@ -224,14 +226,45 @@ struct memory {
   size_t size = 0;
 };
 
-struct shader_blob {
-  const void* data;
-  uint32_t size;
+struct shader_stage {
+  enum type {
+    VERTEX = 0,
+    FRAGMENT,
+    COMPUTE,
+    GEOMETRY,
+    TESS_CONTROL,
+    TESS_EVALUATION,
+
+    COUNT
+  };
+};
+
+struct shader_compile_result {
+  struct image {
+    std::string name = { };
+    int32_t binding = -1;
+  };
+
+  struct uniform_member {
+    std::string name = { };
+    uint32_t offset = 0;
+  };
+
+  struct uniform {
+    std::string name;
+    int32_t binding = -1;
+    std::vector<uniform_member> members = { };
+  };
+
+  std::string source = { };
+  std::vector<image> images = { };
+  std::vector<uniform> uniforms = { };
+  bool success = false;
 };
 
 struct shader_program_desc {
-  shader_blob vertex_shader;
-  shader_blob fragment_shader;
+  shader_compile_result vertex;
+  shader_compile_result fragment;
 };
 
 struct handle_traits {
@@ -303,6 +336,5 @@ class handle_allocator_set_base {
 };
 
 using handle_allocator_set = handle_allocator_set_base<
-    vertexbuf_handle, indexbuf_handle, framebuf_handle, shader_handle,
+    vertexbuf_handle, indexbuf_handle, uniformbuf_handle, framebuf_handle, shader_handle,
     texture_handle, uniform_handle, swap_chain_handle>;
-}

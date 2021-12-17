@@ -24,3 +24,12 @@ template<typename Type>
   return { };
 #endif
 }
+
+template<template<class...> class Type>
+[[nodiscard]] constexpr std::string_view type_name() noexcept {
+#if defined UBIK_FUNCTION
+  return extract_type_signature(UBIK_FUNCTION, UBIK_FUNCTION_PREFIX, UBIK_FUNCTION_SUFFIX);
+#else
+  return { };
+#endif
+}

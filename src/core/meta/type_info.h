@@ -3,6 +3,7 @@
 #include <string>
 
 #include "base/guid.h"
+#include "base/iterator_range.h"
 #include "core/assets/asset.h"
 
 namespace meta {
@@ -20,6 +21,12 @@ template<class T>
 struct interface_info : public interface_info_base {
   std::unordered_map<typeid_t, T> items;
 };
+
+template<class T>
+using interface_iterator = typename std::unordered_map<typeid_t, T>::const_iterator;
+
+template<class T>
+using interface_view = iterator_range<interface_iterator<T>>;
 
 struct type_info {
   typeid_t id;

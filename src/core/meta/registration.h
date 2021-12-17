@@ -1,9 +1,11 @@
 #pragma once
 
-#include "core/world.h"
-#include "core/serialization.h"
+//#include "core/world.h"
+//#include "core/serialization.h"
+//#include "core/meta/schema.h"
 #include "core/meta/type_info.h"
-#include "core/meta/schema.h"
+#include "base/type_name.h"
+#include "core/meta/type.h"
 #include "base/log.h"
 
 #define register_type(__type) meta::registration::type<__type>()
