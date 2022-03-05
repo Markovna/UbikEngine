@@ -1,6 +1,13 @@
 #include "world.h"
 #include "meta/type.h"
 #include "core/component_loader.h"
+#include "base/log.h"
+#include "core/components/transform_component.h"
+#include "systems_registry.h"
+#include "core/components/version_component.h"
+#include "core/meta/interface_registry.h"
+
+static system_ptr<::interface_registry> interface_reg;
 
 void world::set_parent_impl(entity ent, entity parent, entity next) {
   auto& comp = get<link_component>(ent.id);
@@ -82,26 +89,102 @@ void world::set_parent(entity ent, entity parent, entity next) {
   set_world_transform(ent, world);
 }
 
+void propagate_asset_changes(world& world, asset_repository& repository) {
+  auto version_view = world.view<version_component>();
+  if (!version_view.size())
+    return;
+
+  std::vector<entity> stack;
+  auto& root_version = version_view.get(world.root().id);
+  asset* root_asset = repository.get_asset(root_version.id);
+  if (root_asset && root_version.version != root_asset->version()) {
+    stack.push_back(world.root());
+  }
+
+  std::vector<entity> modified;
+  while (!stack.empty()) {
+    entity e = stack.back();
+    stack.pop_back();
+
+    auto& version = version_view.get(e.id);
+    asset* entity_asset = repository.get_asset(version.id);
+
+    const class asset& components = entity_asset->at("components");
+    if (components.version() != version.components_version) {
+      modified.push_back(e);
+    }
+
+    // TODO: check added/removed children
+    // const asset_array& children = asset->at("children");
+
+    for (auto child = world.child(e); child; child = world.next(child)) {
+      auto& child_version = version_view.get(child.id);
+      asset* child_asset = repository.get_asset(child_version.id);
+      if (child_asset && child_version.version != child_asset->version()) {
+        stack.push_back(child);
+      }
+    }
+
+    version.version = entity_asset->version();
+  }
+
+  for (auto e : modified) {
+    auto& version = version_view.get(e.id);
+    asset* entity_asset = repository.get_asset(version.id);
+
+    const asset& components = entity_asset->at("components");
+    for (auto& [type_name, comp_asset] : components) {
+      meta::type type = meta::get_type(type_name.c_str());
+      if (!type.is_valid()) {
+        logger::core::Warning("Unknown component type {}", type_name);
+        continue;
+      }
+
+      auto* load = interface_reg->get_interface<load_component_interface>(type.id());
+      if (load) {
+        load->invoke(comp_asset, world, e);
+      }
+    }
+
+    version.components_version = components.version();
+  }
+}
+
 entity world::load_from_asset(const asset& asset, entity parent, entity next) {
   entity entity { ecs::registry::create() };
   ecs::registry::emplace<link_component>(entity.id);
 
-  for (const ::asset& comp_asset : asset.at("components")) {
-    std::string name = comp_asset.at("__type");
-    meta::type type = meta::get_type(name.c_str());
-    auto* loader = meta::get_interface<component_loader>(type.id());
-    if (loader) {
-      loader->instantiate(*this, entity);
-      loader->from_asset(comp_asset, *this, entity);
+  const class asset& components = asset.at("components");
+  auto& version = ecs::registry::emplace<version_component>(entity.id);
+  version.id = asset.id();
+  version.version = asset.version();
+  version.components_version = components.version();
+
+  for (auto& [type_name, comp_asset] : components) {
+    meta::type type = meta::get_type(type_name.c_str());
+    if (!type.is_valid()) {
+      logger::core::Warning("Unknown component type {}", type_name);
+      continue;
+    }
+
+    auto* instantiate = interface_reg->get_interface<instantiate_component_interface>(type.id());
+    if (instantiate) {
+      instantiate->invoke(*this, entity);
+      auto* load = interface_reg->get_interface<load_component_interface>(type.id());
+      if (load) {
+        load->invoke(comp_asset, *this, entity);
+      } else {
+        logger::core::Warning("Couldn't find component loader for type {}", type_name);
+      }
     } else {
-      logger::core::Warning("Unknown component type {}", name);
+      logger::core::Warning("Couldn't find component loader for type {}", type_name);
     }
   }
 
   set_parent(entity, parent, next);
 
   if (asset.contains("children")) {
-    for (const ::asset& child_asset : asset.at("children")) {
+    for (const ::asset& child_asset : asset.at("children").get<asset_array&>()) {
       load_from_asset(child_asset, entity);
     }
   }
@@ -196,4 +279,35 @@ bool world::is_child_of(entity ent, entity parent_candidate) const {
     ent = comp.parent;
   }
   return false;
+}
+
+void init_world(const systems_registry& registry) {
+  interface_reg = registry.get<::interface_registry>();
+}
+
+void resolve_transforms(const world& w, entity root) {
+  auto transform_view = w.view<transform_component>();
+
+  std::vector<entity> stack;
+  stack.push_back(root);
+
+  while (!stack.empty()) {
+    entity e = stack.back();
+    stack.pop_back();
+
+    auto& transform = transform_view.get(e.id);
+    bool dirty = transform.dirty;
+    if (dirty) {
+      entity parent = w.parent(e);
+      transform.world = (parent ? transform_view.get(parent.id).world : transform::identity()) * transform.local;
+      transform.dirty = false;
+    }
+
+    for (auto child = w.child(e); child; child = w.next(child)) {
+      auto& child_transform = transform_view.get(child.id);
+      child_transform.dirty |= dirty;
+
+      stack.push_back(child);
+    }
+  }
 }

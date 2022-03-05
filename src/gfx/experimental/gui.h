@@ -1,9 +1,9 @@
 #pragma once
 
 #include "base/cursor.h"
-#include "texture.h"
+#include "core/texture.h"
 #include "base/timer.h"
-#include "gfx.h"
+#include "gfx/gfx.h"
 
 struct renderer;
 struct shader;
@@ -38,6 +38,7 @@ class gui {
   void on_text_input(text_event&);
 
   cursor::type cursor() const;
+  void set_context() const;
 
  private:
   void render(framebuf_handle, struct ImDrawData*);

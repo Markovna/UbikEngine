@@ -14,3 +14,9 @@
 	path = thirdparty/glslang
 	url = https://github.com/KhronosGroup/glslang
 	branch = master
+[submodule "thirdparty/spirv-cross"]
+	path = thirdparty/spirv-cross
+	url = https://github.com/KhronosGroup/SPIRV-Cross
+[submodule "thirdparty/shaderc"]
+	path = thirdparty/shaderc
+	url = https://github.com/google/shaderc

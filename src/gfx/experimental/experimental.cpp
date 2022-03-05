@@ -1,18 +1,19 @@
 #include <platform/window.h>
-#include <gfx/experimental/gfx.h>
-#include <gfx/experimental/renderer.h>
-#include <gfx/experimental/render_context_opengl.h>
-#include "asset_repository.h"
-#include "shader_compiler_opengl.h"
-#include "shader_repository.h"
-#include "texture_compiler.h"
-#include "systems_registry.h"
-#include "mesh_component.h"
-#include "render_pipeline.h"
+#include <gfx/gfx.h>
+#include <core/renderer.h>
+#include <gfx/render_context_opengl.h>
+#include "core/assets_filesystem.h"
+#include "gfx/shader_compiler_opengl.h"
+#include "gfx/shader_repository.h"
+#include "core/texture_compiler.h"
+#include "core/systems_registry.h"
+#include "core/register_components.h"
+#include "core/render_pipeline.h"
 #include "gui.h"
 #include "imgui.h"
-#include "render_target_buffer.h"
 #include "base/timer.h"
+#include "core/viewer_registry.h"
+#include "core/components/mesh_component.h"
 
 #include <core/engine_events.h>
 #include <editor/library_loader.h>
@@ -20,14 +21,21 @@
 #include <core/input_system.h>
 #include <core/simulation_events.h>
 #include <core/simulation.h>
+#include <editor/editor_tab.h>
+#include <core/meta/interface_registry.h>
+#include <core/schema.h>
+#include <base/color.h>
+#include "core/asset_repository.h"
 
 int main(int argc, char* argv[]) {
+  fs::project_path(argv[1]);
 
-  logger::init(fs::current_path().append("log").c_str());
+  logger::init(fs::project_path().append("log").c_str());
 
   systems_registry registry;
 
-  auto assets_repository = registry.set<::assets_repository>(std::make_unique<::assets_repository>());
+  auto interface_registry = registry.set<::interface_registry>(std::make_unique<::interface_registry>());
+  auto assets_repository = registry.set<::asset_repository>(std::make_unique<::asset_repository>());
   auto assets_filesystem = registry.set<::assets_filesystem>(std::make_unique<::assets_filesystem>());
   auto renderer = registry.set<::renderer>(std::make_unique<::renderer>(render_context_opengl::create));
 
@@ -35,28 +43,55 @@ int main(int argc, char* argv[]) {
   auto shader_repository = registry.set<::shader_repository>(std::make_unique<::shader_repository>(shader_compiler.get()));
   auto render_pipeline = registry.set<::render_pipeline>(std::make_unique<::render_pipeline>());
   auto input_system = registry.set<::input_system>(std::make_unique<::input_system>());
+  auto viewer_registry = registry.set<::viewer_registry>(std::make_unique<::viewer_registry>());
+  auto schema_registry = registry.set<::schema_registry>(std::make_unique<::schema_registry>());
 
-  assets_filesystem->load_assets(*assets_repository, { ".entity", ".meta", ".shader" });
+  load_assets(*assets_filesystem, *assets_repository, { ".entity", ".meta", ".shader", ".schema" });
 
   compile_shaders(*assets_repository, *assets_filesystem);
   compile_textures({".jpg", ".png"}, *assets_repository, *assets_filesystem);
+
+  schema_builder(meta::get_typeid<vec3>())
+      .add("x", schema_type::FLOAT)
+      .add("y", schema_type::FLOAT)
+      .add("z", schema_type::FLOAT)
+      .build(*schema_registry);
+
+  schema_builder(meta::get_typeid<transform>())
+      .add("position", schema_type::OBJECT, meta::get_typeid<vec3>())
+      .add("rotation", schema_type::OBJECT, meta::get_typeid<quat>())
+      .add("scale", schema_type::OBJECT, meta::get_typeid<vec3>())
+      .build(*schema_registry);
+
+  schema_builder(meta::get_typeid<color>())
+      .add("r", schema_type::FLOAT)
+      .add("g", schema_type::FLOAT)
+      .add("b", schema_type::FLOAT)
+      .add("a", schema_type::FLOAT)
+      .build(*schema_registry);
+
+  build_schema_from_asset(meta::get_typeid<transform_component>(), *assets_repository->get_asset("schemas/transform_component.schema"), *schema_registry);
+  build_schema_from_asset(meta::get_typeid<mesh_component>(), *assets_repository->get_asset("schemas/mesh_component.schema"), *schema_registry);
 
   window window({512, 512});
 
   swap_chain swap_chain = renderer->create_swap_chain(window.get_handle());
 
-  resource_command_buffer* resource_command_buffer = renderer->create_resource_command_buffer();
-  shader_repository->compile(*assets_repository->load("assets/shaders/TestShader.shader"), assets_repository.get(), resource_command_buffer);
-  shader_repository->compile(*assets_repository->load("assets/shaders/GUIShader.shader"), assets_repository.get(), resource_command_buffer);
-  shader_repository->compile(*assets_repository->load("assets/shaders/EditorGrid.shader"), assets_repository.get(), resource_command_buffer);
-  renderer->submit(resource_command_buffer);
+  auto resource_command_buffer = renderer->create_resource_command_buffer();
+  shader_repository->compile(*assets_repository->get_asset("assets/shaders/TestShader.shader"), assets_repository.get(), resource_command_buffer.get());
+  shader_repository->compile(*assets_repository->get_asset("assets/shaders/GUIShader.shader"), assets_repository.get(), resource_command_buffer.get());
+  shader_repository->compile(*assets_repository->get_asset("assets/shaders/EditorGrid.shader"), assets_repository.get(), resource_command_buffer.get());
+  renderer->submit(*resource_command_buffer);
 
-  load_mesh(registry);
+  init_world(registry);
+  init_render_pipeline(registry);
+  register_components(registry);
   load_gui(registry);
 
-  fs::path libs_folder = fs::append(fs::current_path(), ".ubik/libs");
+  fs::path libs_folder = fs::append(fs::project_path(), ".ubik/libs");
   library_loader libs;
-  libs.load("sandbox", os::find_lib(libs_folder.c_str(), "sandbox"), registry);
+  libs.load<systems_registry&>("sandbox", os::find_lib(libs_folder.c_str(), "sandbox"), registry);
+  libs.load<systems_registry&>("editor_plugin", os::find_lib(libs_folder.c_str(), "editor_plugin"), registry);
 
   auto app = registry.get<application>();
   app->start();
@@ -66,27 +101,22 @@ int main(int argc, char* argv[]) {
   gui gui_renderer { &window };
 
   connect_gui_events(gui_renderer, *input_system);
-  uniform_handle texture_uniform;
-  render_target render_target;
 
   auto simulation_view = registry.view<simulation>();
+  auto editor_tab_view = registry.view<editor_tab>();
 
   for (auto& sim : simulation_view) {
     sim->start(world);
   }
 
   timer timer;
-  timer.restart();
 
   bool running = true;
   while (running) {
 
-    libs.check_hot_reload(registry);
+    libs.check_hot_reload<systems_registry&>(registry);
 
     window.update();
-
-    float dt = timer.restart().as_milliseconds();
-    std::cout << "delta time: " << dt << "\n";
 
     window_event event;
     while (window.poll_event(event)) {
@@ -100,49 +130,25 @@ int main(int argc, char* argv[]) {
 
     app->tick();
 
+    float dt = timer.restart().as_milliseconds();
     for (auto& sim : simulation_view) {
-      std::cout << "invoke sim\n";
       sim->update(world, dt);
     }
 
+    viewer_registry->clear();
     renderer->begin_frame();
 
     gui_renderer.begin();
 
     gui_begin_dockspace();
 
-    {
-      if (!texture_uniform) {
-        auto* res_cmd_buf = renderer->create_resource_command_buffer();
-
-        texture_uniform = res_cmd_buf->create_uniform({
-            {.type = uniform_type::SAMPLER, .binding = 0}
-        });
-
-        render_target = create_render_target(*res_cmd_buf, window.get_resolution());
-        res_cmd_buf->set_uniform(texture_uniform, 0, render_target.color_target);
-
-        renderer->submit(res_cmd_buf);
-      }
-
-      auto camera_view = world.view<transform_component, camera_component>();
-      for (auto e : camera_view) {
-        vec2i size = window.get_resolution();
-        viewer viewer {
-            .world = &world,
-            .camera = &camera_view.get<camera_component>(e),
-            .transform = &camera_view.get<transform_component>(e),
-            .color_target = render_target.fb_handle,
-            .size = {(float) size.x, (float) size.y}
-        };
-
-        render_pipeline->render(viewer, *renderer);
-      }
-
-      ImGui::Begin("Hello, World");
-      ImGui::Image((ImTextureID)(intptr_t) texture_uniform.id, { 200, 200 }, {0, 1}, {1, 0});
-      ImGui::End();
+    for (auto& tab : editor_tab_view) {
+      tab->begin(&gui_renderer);
+      tab->gui();
+      tab->end();
     }
+
+    render_pipeline->render(viewer_registry->begin(), viewer_registry->end(), *renderer);
 
     window.set_cursor(gui_renderer.cursor());
 

@@ -1,16 +1,21 @@
 #include "gui.h"
 #include "imgui.h"
 #include "imgui_internal.h"
-#include "renderer.h"
-#include "vertex_layout_desc.h"
-#include "texture.h"
-#include "platform/window.h"
-#include "systems_registry.h"
-#include "shader_repository.h"
+#include "core/renderer.h"
+#include "core/texture.h"
+
+#include "core/systems_registry.h"
 #include "core/input_system.h"
 
-static systems_registry::handle<::renderer> renderer;
-static systems_registry::handle<::shader_repository> shader_repository;
+#include "gfx/shader_repository.h"
+#include "gfx/vertex_layout_desc.h"
+
+#include "platform/window.h"
+
+#include <array>
+
+static system_ptr<::renderer> renderer;
+static system_ptr<::shader_repository> shader_repository;
 
 constexpr static const size_t BUFFER_MAX_SIZE  = 10 * 2048;
 
@@ -181,7 +186,7 @@ static void setup_style() {
 }
 
 gui::gui(window* w) {
-  auto* res_cmd_buf = renderer->create_resource_command_buffer();
+  auto res_cmd_buf = renderer->create_resource_command_buffer();
   vb_handle_ = res_cmd_buf->create_vertex_buffer(
       vertex_layout_desc()
         .add(vertex_semantic::POSITION, vertex_type::FLOAT, 2)
@@ -221,7 +226,7 @@ gui::gui(window* w) {
         },
         pixels,
         sizeof(uint8_t) * width * height * 4,
-        res_cmd_buf
+        res_cmd_buf.get()
       );
 
   io.Fonts->TexID = (ImTextureID)(intptr_t) texture_uniform_handle_.id;
@@ -251,7 +256,7 @@ gui::gui(window* w) {
   setup_keymap(io);
   setup_style();
 
-  renderer->submit(res_cmd_buf);
+  renderer->submit(*res_cmd_buf);
 }
 
 cursor::type gui::cursor() const {
@@ -341,8 +346,8 @@ void gui::render(framebuf_handle target, ImDrawData* draw_data) {
   ImVec2 clip_off = draw_data->DisplayPos;         // (0,0) unless using multi-viewports
   ImVec2 clip_scale = draw_data->FramebufferScale; // (1,1) unless using retina display which are often (2,2)
 
-  auto* res_cmd_buf = renderer->create_resource_command_buffer();
-  auto* render_cmd_buf = renderer->create_render_command_buffer();
+  auto res_cmd_buf = renderer->create_resource_command_buffer();
+  auto render_cmd_buf = renderer->create_render_command_buffer();
   render_cmd_buf->bind_render_pass(1, target, false);
 
   if (size_changed_) {
@@ -382,7 +387,7 @@ void gui::render(framebuf_handle target, ImDrawData* draw_data) {
         const std::uint16_t height = (cmd->ClipRect.w - clip_off.y) * clip_scale.y - y;
 
         // TODO: custom textures support
-        uniform_handle texture { (uint32_t)(intptr_t)cmd->TextureId };
+        uniform_handle texture { (uint32_t)(intptr_t) cmd->TextureId };
 
         render_cmd_buf->set_scissor(1, { x, y, width, height });
         render_cmd_buf->draw({
@@ -403,13 +408,12 @@ void gui::render(framebuf_handle target, ImDrawData* draw_data) {
     indices_offset += num_indices;
   }
 
-  renderer->submit(res_cmd_buf);
-  renderer->submit(render_cmd_buf);
+  renderer->submit(*res_cmd_buf);
+  renderer->submit(*render_cmd_buf);
 }
 
-void load_gui(systems_registry& registry) {
-  renderer = registry.get<struct renderer>();
-  shader_repository = registry.get<struct shader_repository>();
+void gui::set_context() const {
+  ImGui::SetCurrentContext(context_);
 }
 
 void connect_gui_events(gui& gui_renderer, input_system& input_events) {
@@ -432,4 +436,9 @@ void disconnect_gui_events(gui& gui_renderer, input_system& input_events) {
   input_events.on_mouse_up.disconnect(gui_renderer, &gui::on_mouse_up);
   input_events.on_scroll.disconnect(gui_renderer, &gui::on_scroll);
   input_events.on_text.disconnect(gui_renderer, &gui::on_text_input);
+}
+
+void load_gui(systems_registry& registry) {
+  renderer = registry.get<struct renderer>();
+  shader_repository = registry.get<struct shader_repository>();
 }

@@ -1,27 +1,22 @@
 #include "core/input_system.h"
 #include "core/world.h"
 #include "core/meta/registration.h"
-#include "core/meta/schema.h"
 #include "core/application.h"
-#include "gfx/gfx.h"
 #include "platform/window.h"
 #include "platform/file_system.h"
 
-
-#include "editor/gui/gui.h"
-#include "editor/gui/imgui_renderer.h"
-#include "editor_gui.h"
 #include "core/engine_events.h"
 
 #include "library_loader.h"
 
-#include "gfx/experimental/asset_repository.h"
-#include "gfx/experimental/shader_compiler.h"
-#include "gfx/experimental/shader_repository.h"
-#include "gfx/experimental/shader_compiler_opengl.h"
-#include "gfx/experimental/render_context_opengl.h"
+#include "core/assets_filesystem.h"
+#include "gfx/shader_compiler.h"
+#include "gfx/shader_repository.h"
+#include "gfx/shader_compiler_opengl.h"
+#include "gfx/render_context_opengl.h"
 
 int main(int argc, char* argv[]) {
+
 //  {
 //    fs::paths::project(argv[1]);
 //    logger::init(fs::append(fs::paths::cache(), "log").c_str());

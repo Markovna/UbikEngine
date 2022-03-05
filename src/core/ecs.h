@@ -1,7 +1,6 @@
 #pragma once
 
 #include "base/sparse_set.h"
-#include "base/transform_iterator.h"
 #include "base/iterator_range.h"
 #include "core/meta/type.h"
 

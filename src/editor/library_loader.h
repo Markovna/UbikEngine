@@ -3,10 +3,13 @@
 #include "platform/file_system.h"
 #include "platform/os.h"
 #include "base/log.h"
+#include "base/type_name.h"
 
 #include <unordered_map>
 #include <fstream>
+#include <sstream>
 #include <array>
+#include <iostream>
 
 class library_loader {
  private:
@@ -27,7 +30,7 @@ class library_loader {
   ~library_loader();
 
   template<class ...Args>
-  void load(const char* name, const fs::path& path, Args&&... args) {
+  void load(const char* name, const fs::path& path, Args... args) {
     if (libs_.count(std::string(name))) {
       logger::core::Info("Library {} ({}) has been already loaded", name, path.c_str());
       return;
@@ -47,7 +50,8 @@ class library_loader {
       return;
     }
 
-    invoke_load_function(symbols, name, std::forward<Args>(args)...);
+    std::istringstream* in = nullptr;
+    invoke_load_function<std::istringstream*, Args...>(symbols, name, in, args...);
 
     libs_.insert({
            std::string(name),
@@ -63,7 +67,7 @@ class library_loader {
   }
 
   template<class ...Args>
-  void unload(const char* name, Args&&... args) {
+  void unload(const char* name, Args... args) {
     if (!libs_.count(std::string(name))) {
       logger::core::Info("Library {} has not been loaded", name);
       return;
@@ -71,7 +75,8 @@ class library_loader {
 
     lib_info& info = libs_[name];
 
-    invoke_unload_function(info.symbols, name, std::forward<Args>(args)...);
+    std::ostringstream* out = nullptr;
+    invoke_unload_function(info.symbols, name, out, args...);
 
     os::unload_lib(info.symbols);
 
@@ -84,7 +89,7 @@ class library_loader {
   void reset();
 
   template<class ...Args>
-  void check_hot_reload(Args&&... args) {
+  void check_hot_reload(Args... args) {
     for (auto& [_, info] : libs_) {
 
       int64_t timestamp = os::get_timestamp(info.src_path);
@@ -104,10 +109,14 @@ class library_loader {
 
       } else {
 
-        invoke_load_function(symbols, info.name.c_str(), std::forward<Args>(args)...);
+        std::ostringstream out { std::ios::binary | std::ios::out };
 
         // unload previously loaded
-        invoke_unload_function(info.symbols, info.name.c_str(), std::forward<Args>(args)...);
+        invoke_unload_function<std::ostringstream*, Args...>(info.symbols, info.name.c_str(), &out, args...);
+
+        std::istringstream in { out.str(), std::ios::binary | std::ios::in };
+        invoke_load_function<std::istringstream*, Args...>(symbols, info.name.c_str(), &in, args...);
+
         os::unload_lib(info.symbols);
 
         // remove previously loaded lib file
@@ -118,6 +127,8 @@ class library_loader {
         info.symbols = symbols;
         info.timestamp = os::get_timestamp(info.src_path);
         info.version++;
+
+        logger::core::Info("Reloaded library {} from {}", info.name, info.src_path.c_str());
       }
     }
   }
@@ -126,26 +137,27 @@ class library_loader {
   fs::path copy_to_temp(const char* name, const fs::path& src_path, uint32_t version);
 
   template<class ...Args>
-  void invoke_load_function(void* symbols, const char* name, Args&&... args) {
+  void invoke_load_function(void* symbols, const char* name, Args... args) {
     char function_name[50] = "load_";
     std::strcat(function_name, name);
-    invoke_function(symbols, function_name, std::forward<Args>(args)...);
+    invoke_function<Args...>(symbols, function_name, args...);
   }
 
   template<class ...Args>
-  void invoke_unload_function(void* symbols, const char* name, Args&&... args) {
+  void invoke_unload_function(void* symbols, const char* name, Args... args) {
     char function_name[50] = "unload_";
     std::strcat(function_name, name);
-    invoke_function(symbols, function_name, std::forward<Args>(args)...);
+    invoke_function<Args...>(symbols, function_name, args...);
   }
 
   template<class ...Args>
-  void invoke_function(void* symbols, const char* function_name, Args&&... args) {
-    auto unload_func = (func_t<Args&&...>) os::get_symbol(symbols, function_name);
-    if (!unload_func) {
+  void invoke_function(void* symbols, const char* function_name, Args... args) {
+    auto func = (func_t<Args...>) os::get_symbol(symbols, function_name);
+
+    if (!func) {
       logger::core::Error("Couldn't find function {}", function_name);
     } else {
-      unload_func(std::forward<Args>(args)...);
+      func(args...);
     }
   }
 

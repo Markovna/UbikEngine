@@ -28,18 +28,21 @@ add_subdirectory(thirdparty/shaderc)
 set(BASE_SRC
         src/base/slot_map.h src/base/delegate.h src/base/event.h src/base/key_codes.h src/base/mouse_codes.h src/base/color.h src/base/color.cpp src/base/math.h src/base/math.cpp src/base/cursor.h src/base/iterator_range.h src/base/profiler.h src/base/profiler.cpp src/base/macro.h src/base/log.h src/base/log.cpp
         src/base/guid.cpp
-        src/base/detector.h src/base/timer.cpp src/base/timer.h src/base/type_name.h src/base/memory.h src/base/allocator.cpp src/base/allocator.h src/base/flags.h src/base/crc32.h src/base/transform_iterator.h)
+        src/base/detector.h src/base/timer.cpp src/base/timer.h src/base/type_name.h src/base/memory.h src/base/allocator.cpp src/base/allocator.h src/base/flags.h src/base/crc32.h)
 
 set(CORE_SRC
         src/core/ecs.h src/core/ecs.cpp
         src/core/world.h
         src/core/input_system.cpp src/core/input_system.h
-        src/core/world.cpp src/core/meta/registration.h src/core/meta/registration.cpp src/core/meta/type.h src/core/meta/type_info.h src/core/meta/type_info.cpp src/core/meta/schema.cpp src/core/meta/schema.h src/core/assets/asset.h
-        src/core/simulation.cpp src/core/simulation.h src/gfx/experimental/shader_repository.cpp src/gfx/experimental/shader_repository.h src/gfx/experimental/stream_buffers.cpp src/gfx/experimental/stream_buffers.h src/core/engine_events.cpp src/core/engine_events.h src/gfx/experimental/mesh_component.cpp src/gfx/experimental/mesh_component.h src/gfx/experimental/systems_registry.cpp src/gfx/experimental/systems_registry.h src/gfx/experimental/resources_registry.cpp src/gfx/experimental/resources_registry.h src/gfx/experimental/render_pipeline.cpp src/gfx/experimental/render_pipeline.h src/gfx/experimental/camera_component.cpp src/gfx/experimental/camera_component.h src/gfx/experimental/texture_compiler.cpp src/gfx/experimental/texture_compiler.h src/gfx/experimental/render_target_buffer.cpp src/gfx/experimental/render_target_buffer.h src/core/simulation_events.h src/core/component_loader.h)
+        src/core/world.cpp src/core/meta/registration.h src/core/meta/type.h src/core/meta/type_info.h src/core/meta/type_info.cpp
+        src/core/simulation.cpp src/core/simulation.h src/gfx/shader_repository.cpp src/gfx/shader_repository.h src/core/engine_events.cpp src/core/engine_events.h src/core/components/mesh_component.cpp src/core/components/mesh_component.h src/core/systems_registry.cpp src/core/systems_registry.h src/core/render_pipeline.cpp src/core/render_pipeline.h src/core/components/camera_component.cpp src/core/components/camera_component.h src/core/texture_compiler.cpp src/core/texture_compiler.h src/core/simulation_events.h src/core/component_loader.h src/core/viewer_registry.cpp src/core/viewer_registry.h src/core/viewer.h src/core/viewport.cpp src/core/viewport.h
+        src/core/components/transform_component.cpp src/core/components/transform_component.h
+        src/core/register_components.cpp src/core/register_components.h src/core/schema.cpp src/core/schema.h src/core/meta/interface_registry.cpp src/core/meta/interface_registry.h src/core/meta/interface.h
+        src/core/asset_repository.cpp src/core/asset_repository.h
+        src/core/components/version_component.h)
 
 set(GFX_SRC
-        src/gfx/gfx.cpp src/gfx/gfx.h src/gfx/gfx_config.h src/gfx/gfx_details.cpp src/gfx/gfx_details.h src/gfx/renderer_api.h src/gfx/renderer_api_gl.h src/gfx/renderer_api_gl.cpp
-        src/gfx/experimental/gfx.h src/gfx/experimental/renderer.cpp src/gfx/experimental/renderer.h src/gfx/experimental/render_context.h src/gfx/experimental/command_buffers.cpp src/gfx/experimental/command_buffers.h src/gfx/experimental/render_context_opengl.cpp src/gfx/experimental/render_context_opengl.h src/gfx/experimental/shader.cpp src/gfx/experimental/shader.h  src/gfx/experimental/vertex_layout_desc.cpp src/gfx/experimental/vertex_layout_desc.h src/gfx/experimental/shader_compiler.h src/gfx/experimental/shader_compiler_opengl.cpp src/gfx/experimental/shader_compiler_opengl.h src/gfx/experimental/asset_repository.cpp src/gfx/experimental/asset_repository.h src/gfx/experimental/texture.cpp src/gfx/experimental/texture.h)
+        src/gfx/gfx.h src/core/renderer.cpp src/core/renderer.h src/gfx/render_context.h src/gfx/command_buffers.cpp src/gfx/command_buffers.h src/gfx/render_context_opengl.cpp src/gfx/render_context_opengl.h src/gfx/shader.cpp src/gfx/shader.h src/gfx/vertex_layout_desc.cpp src/gfx/vertex_layout_desc.h src/gfx/shader_compiler.h src/gfx/shader_compiler_opengl.cpp src/gfx/shader_compiler_opengl.h src/core/assets_filesystem.cpp src/core/assets_filesystem.h src/core/texture.cpp src/core/texture.h)
 
 set(PLATFORM_SRC
         src/platform/window.h src/platform/window.cpp src/base/window_event.h
@@ -115,10 +118,13 @@ add_plugin(sandbox
 # ----------------------------------------- #
 
 add_library(editor SHARED
-        src/platform/file_watcher.h src/platform/file_watcher.cpp
-        src/editor/gui/imgui_renderer.cpp src/editor/gui/imgui_renderer.h
-        src/editor/gui/gui.h src/editor/gui/gui.cpp
-        src/editor/editor_gui.h src/editor/editor_gui.cpp src/gfx/experimental/gui.cpp src/gfx/experimental/gui.h)
+#        src/platform/file_watcher.h src/platform/file_watcher.cpp
+#        src/editor/gui/imgui_renderer.cpp src/editor/gui/imgui_renderer.h
+#        src/editor/gui/gui.h src/editor/gui/gui.cpp
+#        src/editor/editor_gui.h src/editor/editor_gui.cpp
+        src/gfx/experimental/gui.cpp
+        src/editor/editor_tab.cpp
+        src/gfx/experimental/gui.cpp )
 
 target_link_libraries(editor PRIVATE engine)
 target_link_libraries(editor PUBLIC efsw imgui)
@@ -128,18 +134,10 @@ target_include_directories(editor PUBLIC src/editor/)
 # ----------------------------------------- #
 # ------------ Editor plugins ------------- #
 # ----------------------------------------- #
-
-add_plugin(game_view_gui
-        FILES src/editor/plugins/game_view_gui.cpp src/editor/plugins/game_view_gui.h
-        LIBRARIES engine editor)
-
-add_plugin(file_browser_gui
-        FILES src/editor/plugins/file_browser_gui.cpp
-        LIBRARIES engine editor)
-
-add_plugin(entity_asset_editor
-        FILES src/editor/plugins/entity_asset_editor.cpp
-        LIBRARIES engine editor)
+add_plugin (editor_plugin
+        FILES sandbox/src/editor_plugin.cpp
+        LIBRARIES engine editor
+    )
 
 # ----------------------------------------- #
 # ----------- Editor executable ----------- #
@@ -147,42 +145,24 @@ add_plugin(entity_asset_editor
 
 add_executable(ubik
         src/editor/editor.cpp
-        src/editor/library_loader.cpp src/editor/library_loader.h)
+        src/editor/library_loader.cpp src/editor/library_loader.h src/editor/editor_tab.cpp src/editor/editor_tab.h)
 
 target_link_libraries(ubik PRIVATE engine editor)
 
 # TODO
-list(APPEND UBIK_DEPENDENCIES game_view_gui entity_asset_editor file_browser_gui)
 list(APPEND UBIK_DEPENDENCIES sandbox)
 add_dependencies(ubik ${UBIK_DEPENDENCIES})
 
 # ----------------------------------------- #
 
 add_executable(experimental
-
-        ${BASE_SRC} ${CORE_SRC} ${GFX_SRC} ${PLATFORM_SRC}
-
         src/gfx/experimental/experimental.cpp
-
-        src/gfx/experimental/render_context_opengl.cpp
-        src/gfx/experimental/renderer.cpp
-        src/gfx/experimental/command_buffers.cpp
-        src/gfx/experimental/vertex_layout_desc.cpp
-
-        src/base/allocator.cpp
-        src/base/log.cpp
-        src/base/math.cpp
-
         src/editor/library_loader.cpp
-
-        src/gfx/experimental/gui.cpp
         )
 
-target_link_libraries(experimental PRIVATE engine)
+target_link_libraries(experimental PRIVATE engine editor)
 target_include_directories(experimental PRIVATE ${ENGINE_INCLUDES})
 
-#target_link_libraries(experimental PRIVATE glfw glad spdlog stb_image)
-target_link_libraries(experimental PRIVATE imgui)
 target_include_directories(experimental PRIVATE src)
 
 

@@ -5,17 +5,6 @@
 
 namespace fs {
 
-path absolute(const char* _path) {
-  path result { paths::project() };
-  if (std::strlen(_path))
-    result.append(_path);
-  return result;
-}
-
-path absolute(const path& _path) {
-  return absolute(_path.c_str());
-}
-
 path concat(const path& lhs, const char* rhs) {
   path result {lhs};
   result.concat(rhs);
@@ -35,19 +24,6 @@ path append(const path& lhs, const char* rhs) {
 path append(const path& lhs, const path& rhs) {
   return append(lhs, rhs.c_str());
 }
-
-void paths::project(const path& _path) {
-  details::get_config().project_path = _path;
-
-  path ubik_path { append(_path, ".ubik") };
-  if (!exists(ubik_path)) {
-    fs::create_directory(ubik_path);
-  }
-  details::get_config().cache_path = ubik_path;
-}
-
-const path &paths::project() { return ::fs::details::get_config().project_path; }
-const path &paths::cache() { return ::fs::details::get_config().cache_path; }
 
 path meta(const char* _path) {
   path meta_path { _path };
@@ -81,9 +57,11 @@ void assure(const path& path) {
   }
 }
 
-details::config &details::get_config() {
-  static details::config inst;
-  return inst;
+static path project_path_;
+
+path project_path() { return project_path_; }
+void project_path(const fs::path& path) {
+  project_path_ = path;
 }
 
 }

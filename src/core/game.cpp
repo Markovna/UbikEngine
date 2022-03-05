@@ -3,11 +3,9 @@
 #include "core/input_system.h"
 #include "core/world.h"
 
-#include "gfx/gfx.h"
 #include "platform/window.h"
 #include "base/window_event.h"
 #include "core/meta/registration.h"
-#include "core/meta/schema.h"
 #include "core/assets/filesystem_provider.h"
 #include "core/application.h"
 #include "engine_events.h"
