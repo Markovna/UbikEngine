@@ -1,0 +1,21 @@
+{
+  "__guid": "87ae40b0a68149ca90b2e24a7a31b28a",
+  "name": "transform_component",
+  "properties": [
+    {
+        "name": "position",
+        "type": "object",
+        "schema": "vec3"
+    },
+    {
+        "name": "rotation",
+        "type": "object",
+        "schema": "quat"
+    },
+    {
+        "name": "scale",
+        "type": "object",
+        "schema": "vec3"
+    }
+  ]
+}

@@ -5,7 +5,7 @@
     {
       "name": "color",
       "type": "object",
-      "type_guid": "65be77a1419d47f8ac87caf4dceedca1"
+      "schema": "color"
     }
   ]
 }

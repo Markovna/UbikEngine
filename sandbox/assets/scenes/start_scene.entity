@@ -1,30 +1,35 @@
 {
   "__guid": "ee967de2d7c74899a8b1eac10c59e8b4",
   "__type": "entity",
+  "name": "___root",
   "children": [
     {
       "__guid": "09732268f1374f3f8f58f1310f3fb8ce",
       "__type": "entity",
+      "name": "root",
       "children": [
         {
           "__guid": "2acb649e7f344314a5f4e7891175f329",
           "__type": "entity",
+          "name": "root_0",
           "children": [
             {
               "__guid": "59f157e222464a59a91f7dce9e11450f",
               "__type": "entity",
+              "name": "root_1",
               "children": [
                 {
                   "__guid": "e523838cda994a4fa75224a0dfa581fc",
                   "__type": "entity",
+                  "name": "root_2",
                   "children": [
                     {
                       "__guid": "c71e5e17bdb84a9cbc72653a2b8a524c",
                       "__type": "entity",
-                      "components": [
-                        {
+                      "name": "root_3",
+                      "components": {
+                        "transform_component": {
                           "__guid": "b51d909e3bd8499d880132a47a73562e",
-                          "__type": "transform_component",
                           "position": {
                             "x": 0.0,
                             "y": 0.0,
@@ -42,9 +47,8 @@
                             "z": 1.0
                           }
                         },
-                        {
+                        "mesh_component": {
                           "__guid": "cdd603881c0f455fb82f0cef4b4a7265",
-                          "__type": "mesh_component",
                           "color": {
                             "a": 1.0,
                             "b": 1.0,
@@ -55,15 +59,15 @@
                           "second_texture": "2531a25525da4b1218519e2269b1b111",
                           "shader": "4054252338da4b1386512e1269a3a115"
                         }
-                      ]
+                      }
                     },
                     {
                       "__guid": "c71e5e17bdb84a9cbc72653a2b8a5241",
                       "__type": "entity",
-                      "components": [
-                        {
+                      "name": "root_3",
+                      "components": {
+                        "transform_component": {
                           "__guid": "b51d909e3bd8499d880132a47a735621",
-                          "__type": "transform_component",
                           "position": {
                             "x": 0.0,
                             "y": 1.0,
@@ -81,9 +85,8 @@
                             "z": 1.0
                           }
                         },
-                        {
+                        "mesh_component": {
                           "__guid": "cdd603881c0f455fb82f0cef4b4a7261",
-                          "__type": "mesh_component",
                           "color": {
                             "a": 1.0,
                             "b": 1.0,
@@ -94,15 +97,15 @@
                           "second_texture": "2531a25525da4b1218519e2269b1b111",
                           "shader": "4054252338da4b1386512e1269a3a115"
                         }
-                      ]
+                      }
                     },
                     {
                       "__guid": "c71e5e17bdb84a9cbc72653a2b8a5242",
                       "__type": "entity",
-                      "components": [
-                        {
+                      "name": "root_3",
+                      "components": {
+                        "transform_component": {
                           "__guid": "b51d909e3bd8499d880132a47a735622",
-                          "__type": "transform_component",
                           "position": {
                             "x": 1.0,
                             "y": 1.0,
@@ -120,9 +123,8 @@
                             "z": 1.0
                           }
                         },
-                        {
+                        "mesh_component": {
                           "__guid": "cdd603881c0f455fb82f0cef4b4a7262",
-                          "__type": "mesh_component",
                           "color": {
                             "a": 1.0,
                             "b": 1.0,
@@ -133,13 +135,12 @@
                           "second_texture": "2531a25525da4b1218519e2269b1b111",
                           "shader": "4054252338da4b1386512e1269a3a115"
                         }
-                      ]
+                      }
                     }
                   ],
-                  "components": [
-                    {
+                  "components": {
+                    "transform_component": {
                       "__guid": "06c1a52524aa402ea6d7b7e5851e5dda",
-                      "__type": "transform_component",
                       "position": {
                         "x": 0.0,
                         "y": 0.0,
@@ -157,15 +158,15 @@
                         "z": 1.0
                       }
                     }
-                  ]
+                  }
                 },
                 {
                   "__guid": "bf03416892c641b9999d98ef9f47e899",
                   "__type": "entity",
-                  "components": [
-                    {
+                  "name": "root_4",
+                  "components": {
+                    "transform_component": {
                       "__guid": "5133a24db3d54c6aa886dd3819570734",
-                      "__type": "transform_component",
                       "position": {
                         "x": 1.0,
                         "y": 1.0,
@@ -183,9 +184,8 @@
                         "z": 1.0
                       }
                     },
-                    {
+                    "camera_component": {
                       "__guid": "89e577db2fee4e2dbb86d6538c033305",
-                      "__type": "camera_component",
                       "clear_flags": 6,
                       "far": 100.0,
                       "fov": 80.0,
@@ -198,13 +198,12 @@
                       },
                       "orthogonal_size": 1.0
                     }
-                  ]
+                  }
                 }
               ],
-              "components": [
-                {
+              "components": {
+                "transform_component": {
                   "__guid": "ac4bef13228c408ab2b86a8b526e04ba",
-                  "__type": "transform_component",
                   "position": {
                     "x": 0.0,
                     "y": 0.0,
@@ -222,13 +221,12 @@
                     "z": 1.0
                   }
                 }
-              ]
+              }
             }
           ],
-          "components": [
-            {
+          "components": {
+            "transform_component": {
               "__guid": "feab490dccc841dd894d91b509fac947",
-              "__type": "transform_component",
               "position": {
                 "x": 0.0,
                 "y": 0.0,
@@ -246,13 +244,13 @@
                 "z": 1.0
               }
             }
-          ]
+          }
         }
       ],
-      "components": [
-        {
+      "components": {
+        "transform_component": {
           "__guid": "8d1d958f57c64d808954732dc0180a0c",
-          "__type": "transform_component",
+
           "position": {
             "x": 0.0,
             "y": 0.0,
@@ -270,13 +268,12 @@
             "z": 1.0
           }
         }
-      ]
+      }
     }
   ],
-  "components": [
-    {
+  "components": {
+    "transform_component": {
       "__guid": "435beca01cae48c9aeae46300e6aa016",
-      "__type": "transform_component",
       "position": {
         "x": 0.0,
         "y": 0.0,
@@ -294,5 +291,5 @@
         "z": 1.0
       }
     }
-  ]
+  }
 }
