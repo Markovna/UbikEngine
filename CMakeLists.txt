@@ -19,7 +19,6 @@ add_subdirectory(thirdparty/glfw)
 add_subdirectory(thirdparty/glad)
 add_subdirectory(thirdparty/spdlog)
 add_subdirectory(thirdparty/stb_image)
-add_subdirectory(thirdparty/efsw)
 add_subdirectory(thirdparty/imgui)
 add_subdirectory(thirdparty/glslang)
 add_subdirectory(thirdparty/spirv-cross)
@@ -127,7 +126,7 @@ add_library(editor SHARED
         src/gfx/experimental/gui.cpp )
 
 target_link_libraries(editor PRIVATE engine)
-target_link_libraries(editor PUBLIC efsw imgui)
+target_link_libraries(editor PUBLIC imgui)
 
 target_include_directories(editor PUBLIC src/editor/)
 

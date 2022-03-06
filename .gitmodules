@@ -2,10 +2,6 @@
 	path = thirdparty/spdlog
 	url = https://github.com/gabime/spdlog.git
 	branch = v1.x
-[submodule "thirdparty/efsw"]
-    path = thirdparty/efsw
-    url = https://github.com/Markovna/efsw.git
-    branch = master
 [submodule "thirdparty/imgui"]
 	path = thirdparty/imgui
 	url = https://github.com/Markovna/imgui
