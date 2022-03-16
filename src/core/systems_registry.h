@@ -120,6 +120,10 @@ class systems_registry {
 
   template<class T>
   [[nodiscard]] auto view() const {
+    if (!systems_.count(meta::get_typeid<T>())) {
+      systems_[meta::get_typeid<T>()] = std::make_unique<pool<T>>();
+    }
+
     auto pool_ptr = reinterpret_cast<pool<T>*>(systems_.at(meta::get_typeid<T>()).get());
     return pool_view<T> { pool_ptr };
   }
@@ -145,7 +149,7 @@ class systems_registry {
 
  private:
   std::unordered_map<meta::typeid_t, std::unique_ptr<singleton_base>> singletons_;
-  std::unordered_map<meta::typeid_t, std::unique_ptr<pool_base>> systems_;
+  mutable std::unordered_map<meta::typeid_t, std::unique_ptr<pool_base>> systems_;
 };
 
 template<class T>
