@@ -56,15 +56,14 @@ void compile_shaders(asset_repository& repository, assets_filesystem& assets) {
 }
 
 void compile_shader(const fs::path& path, asset_repository& assets, assets_filesystem& assets_filesystem) {
-  fs::path vert_path { fs::concat(path, ".vert") };
-  fs::path frag_path { fs::concat(path, ".frag") };
+  fs::path vert_path { fs::to_project_path(fs::concat(path, ".vert")) };
+  fs::path frag_path { fs::to_project_path(fs::concat(path, ".frag")) };
   fs::path asset_path { fs::concat(path, ".shader") };
 
-  auto asset = assets.get_asset(asset_path);
+  auto asset = assets.get_asset_by_path(asset_path);
   if (!asset) {
     asset = &assets.create_asset();
     assets.set_asset_path(asset->id(), asset_path);
-    assets.set_asset_guid(asset->id(), guid::generate());
   }
 
   if (auto it = asset->find("name"); it == asset->end()) {
@@ -79,8 +78,8 @@ void compile_shader(const fs::path& path, asset_repository& assets, assets_files
     auto vert_buffer = static_cast<buffer_id>(it_vert->second);
     auto frag_buffer = static_cast<buffer_id>(it_frag->second);
 
-    need_compile |= assets.buffer_hash(vert_buffer) != get_hash(fs::append(fs::project_path(), vert_path));
-    need_compile |= assets.buffer_hash(frag_buffer) != get_hash(fs::append(fs::project_path(), frag_path));
+    need_compile |= assets.buffer_hash(vert_buffer) != get_hash(fs::to_project_path(vert_path));
+    need_compile |= assets.buffer_hash(frag_buffer) != get_hash(fs::to_project_path(frag_path));
   } else {
     need_compile = true;
   }
@@ -93,5 +92,4 @@ void compile_shader(const fs::path& path, asset_repository& assets, assets_files
 
     assets_filesystem.save(assets, asset_path, true);
   }
-
 }
