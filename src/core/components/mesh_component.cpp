@@ -17,69 +17,97 @@
 
 static systems_registry* reg;
 
-void load_mesh_component(const asset& asset, world& world, entity& e) {
-  static float size = 1.0f;
-  static float hs = size;
-  static float vertices[] = {
-      // pos          // tex coords
-      -hs, -hs, -hs,  0.0f, 0.0f,
-      hs, -hs, -hs,  1.0f, 0.0f,
-      hs,  hs, -hs,  1.0f, 1.0f,
-      hs,  hs, -hs,  1.0f, 1.0f,
-      -hs,  hs, -hs,  0.0f, 1.0f,
-      -hs, -hs, -hs,  0.0f, 0.0f,
-
-      -hs, -hs,  hs,  0.0f, 0.0f,
-      hs, -hs,  hs,  1.0f, 0.0f,
-      hs,  hs,  hs,  1.0f, 1.0f,
-      hs,  hs,  hs,  1.0f, 1.0f,
-      -hs,  hs,  hs,  0.0f, 1.0f,
-      -hs, -hs,  hs,  0.0f, 0.0f,
-
-      -hs,  hs,  hs,  1.0f, 0.0f,
-      -hs,  hs, -hs,  1.0f, 1.0f,
-      -hs, -hs, -hs,  0.0f, 1.0f,
-      -hs, -hs, -hs,  0.0f, 1.0f,
-      -hs, -hs,  hs,  0.0f, 0.0f,
-      -hs,  hs,  hs,  1.0f, 0.0f,
-
-      hs,  hs,  hs,  1.0f, 0.0f,
-      hs,  hs, -hs,  1.0f, 1.0f,
-      hs, -hs, -hs,  0.0f, 1.0f,
-      hs, -hs, -hs,  0.0f, 1.0f,
-      hs, -hs,  hs,  0.0f, 0.0f,
-      hs,  hs,  hs,  1.0f, 0.0f,
-
-      -hs, -hs, -hs,  0.0f, 1.0f,
-      hs, -hs, -hs,  1.0f, 1.0f,
-      hs, -hs,  hs,  1.0f, 0.0f,
-      hs, -hs,  hs,  1.0f, 0.0f,
-      -hs, -hs,  hs,  0.0f, 0.0f,
-      -hs, -hs, -hs,  0.0f, 1.0f,
-
-      -hs,  hs, -hs,  0.0f, 1.0f,
-      hs,  hs, -hs,  1.0f, 1.0f,
-      hs,  hs,  hs,  1.0f, 0.0f,
-      hs,  hs,  hs,  1.0f, 0.0f,
-      -hs,  hs,  hs,  0.0f, 0.0f,
-      -hs,  hs, -hs,  0.0f, 1.0f
-  };
-
-
+void load_mesh_component(const asset& component_asset, world& world, entity& e) {
   auto renderer = reg->get<::renderer>();
+  auto rep = reg->get<asset_repository>();
   auto cmd_buf = renderer->create_resource_command_buffer();
 
   auto& comp = world.get<mesh_component>(e.id);
+  guid mesh_guid = guid::from_string(component_asset.at("mesh"));
+
+  asset* mesh_asset = rep->get_asset(mesh_guid);
+  auto &attributes = mesh_asset->at("attributes").get<asset_array &>();
+  auto *indices_buffer = rep->get_asset(guid::from_string(mesh_asset->at("indices")));
+
+  uint32_t vertex_buffer_size = 0;
+  uint32_t stride = 0;
+  vertex_layout_desc vertex_layout = {};
+  for (const asset &attr : attributes) {
+    vertex_semantic::type semantic = (vertex_semantic::type) (uint32_t) attr.at("semantic");
+    asset *accessor = rep->get_asset(guid::from_string(attr.at("accessor")));
+
+    vertex_type::type type = vertex_type::COUNT;
+    uint32_t size = accessor->at("size");
+    uint32_t count = accessor->at("count");
+    uint32_t components = accessor->at("components");
+    bool unsigned_ = accessor->contains("unsigned") && accessor->at("unsigned");
+    bool is_float = accessor->contains("float") && accessor->at("float");
+    if (is_float && size == 4) {
+      type = vertex_type::FLOAT;
+    } else if (!is_float) {
+      if (size == 1) {
+        type = unsigned_ ? vertex_type::UINT8 : vertex_type::INT8;
+      } else if (size == 2) {
+        type = unsigned_ ? vertex_type::UINT16 : vertex_type::INT16;
+      } else if (size == 4) {
+        type = unsigned_ ? vertex_type::UINT32 : vertex_type::INT32;
+      }
+    }
+
+    if (type == vertex_type::COUNT) {
+      logger::core::Error("Parse attribute type failed (size: {}, float: {}, unsigned: {}).",
+                          size,
+                          is_float,
+                          unsigned_);
+    }
+
+    vertex_buffer_size += count * components * size;
+    stride += components * size;
+
+    vertex_layout.add(semantic, type, components, semantic == vertex_semantic::NORMAL);
+  }
+
+  uint8_t vertex_buffer[vertex_buffer_size];
+  size_t attribute_offset = 0;
+  for (const asset &attr : attributes) {
+    size_t vertex_buffer_offset = 0;
+    asset *accessor = rep->get_asset(guid::from_string(attr.at("accessor")));
+    asset* buffer_asset = rep->get_asset(guid::from_string(accessor->at("buffer")));
+    asset_buffer buf = rep->load_buffer(buffer_asset->at("data"));
+    uint32_t size = accessor->at("size");
+    uint32_t count = accessor->at("count");
+    uint32_t components = accessor->at("components");
+    size_t offset = accessor->contains("offset") ? (size_t) accessor->at("offset") : 0;
+
+    for (size_t i = 0; i < count; ++i) {
+      std::memcpy(vertex_buffer + vertex_buffer_offset + attribute_offset,
+                  buf.data() + offset + i * size * components,
+                  size * components);
+      vertex_buffer_offset += stride;
+    }
+
+    attribute_offset += size * components;
+  }
 
   memory vertex_mem;
-  comp.vb = cmd_buf->create_vertex_buffer(vertex_layout_desc()
-                                              .add(vertex_semantic::POSITION, vertex_type::FLOAT, 3)
-                                              .add(vertex_semantic::TEXCOORD0, vertex_type::FLOAT, 2),
-                                          sizeof(vertices),
-                                          vertex_mem
+  comp.vb = cmd_buf->create_vertex_buffer(
+      vertex_layout,
+      vertex_buffer_size,
+      vertex_mem
   );
+  std::memcpy(vertex_mem.data, vertex_buffer, vertex_buffer_size);
 
-  std::memcpy(vertex_mem.data, vertices, sizeof(vertices));
+  asset *indices_accessor = rep->get_asset(guid::from_string(mesh_asset->at("indices")));
+  asset* buffer_asset = rep->get_asset(guid::from_string(indices_accessor->at("buffer")));
+  asset_buffer indices_buf = rep->load_buffer(buffer_asset->at("data"));
+  uint32_t indices_size = indices_accessor->at("size");
+  uint32_t indices_count = indices_accessor->at("count");
+  uint32_t indices_components = indices_accessor->at("components");
+  size_t indices_offset = indices_accessor->contains("offset") ? (size_t) indices_accessor->at("offset") : 0;
+
+  memory index_mem;
+  comp.ib = cmd_buf->create_index_buffer(indices_count * indices_size * indices_components, index_mem);
+  std::memcpy(index_mem.data, indices_buf.data() + indices_offset, index_mem.size);
 
   comp.uniform = cmd_buf->create_uniform(
       {
@@ -92,12 +120,22 @@ void load_mesh_component(const asset& asset, world& world, entity& e) {
   comp.model_buffer = cmd_buf->create_uniform_buffer(sizeof(mat4));
   comp.camera_buffer = cmd_buf->create_uniform_buffer(sizeof(view_projection));
 
-  static auto rep = reg->get<asset_repository>();
-  static texture texture0 = load_texture(*rep->get_asset("assets/textures/container.jpg.meta"), rep.get(), cmd_buf.get());
-  static texture texture1 = load_texture(*rep->get_asset("assets/textures/seal.png.meta"), rep.get(), cmd_buf.get());
+  if (component_asset.contains("texture")) {
+    guid texture_guid = guid::from_string(component_asset.at("texture"));
 
-  cmd_buf->set_uniform(comp.uniform, 0, texture0.handle());
-  cmd_buf->set_uniform(comp.uniform, 1, texture1.handle());
+    // TODO
+    static std::unordered_map<guid, std::unique_ptr<texture>> textures;
+
+    auto& ptr = textures[texture_guid];
+    if (!ptr) {
+      ptr = std::make_unique<texture>(load_texture(*rep->get_asset(texture_guid), rep.get(), cmd_buf.get()));
+    }
+
+    cmd_buf->set_uniform(comp.uniform, 0, ptr->handle());
+//    texture texture1 = load_texture(rep->get_asset("assets/textures/seal.texture").at("output"), rep.get(), cmd_buf.get());
+//    cmd_buf->set_uniform(comp.uniform, 1, texture1.handle());
+  }
+
   cmd_buf->set_uniform(comp.uniform, 0, comp.camera_buffer);
   cmd_buf->set_uniform(comp.uniform, 1, comp.model_buffer);
 
@@ -134,6 +172,7 @@ void render_mesh(
                              .sort_key = view.sort_key,
                              .shader = reg->get<shader_repository>()->lookup("TestShader")->handle(),
                              .vertexbuf = mesh.vb,
+                             .indexbuf = mesh.ib,
                              .uniforms = { mesh.uniform }
                          });
   }

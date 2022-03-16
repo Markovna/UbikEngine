@@ -39,7 +39,7 @@ set(CORE_SRC
         src/core/components/transform_component.cpp src/core/components/transform_component.h
         src/core/register_components.cpp src/core/register_components.h src/core/schema.cpp src/core/schema.h src/core/meta/interface_registry.cpp src/core/meta/interface_registry.h src/core/meta/interface.h
         src/core/asset_repository.cpp src/core/asset_repository.h
-        src/core/components/version_component.h)
+        src/core/components/version_component.h src/core/dcc_asset.cpp src/core/dcc_asset.h)
 
 set(GFX_SRC
         src/gfx/gfx.h src/core/renderer.cpp src/core/renderer.h src/gfx/render_context.h src/gfx/command_buffers.cpp src/gfx/command_buffers.h src/gfx/render_context_opengl.cpp src/gfx/render_context_opengl.h src/gfx/shader.cpp src/gfx/shader.h src/gfx/vertex_layout_desc.cpp src/gfx/vertex_layout_desc.h src/gfx/shader_compiler.h src/gfx/shader_compiler_opengl.cpp src/gfx/shader_compiler_opengl.h src/core/assets_filesystem.cpp src/core/assets_filesystem.h src/core/texture.cpp src/core/texture.h)
