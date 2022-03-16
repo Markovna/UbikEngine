@@ -1,3 +1,4 @@
+#include <core/dcc_asset.h>
 #include "core/schema.h"
 #include "core/components/camera_component.h"
 #include "core/render_pipeline.h"
@@ -19,6 +20,7 @@ static system_ptr<renderer> renderer;
 static system_ptr<asset_repository> assets_repository;
 static system_ptr<render_pipeline> render_pipeline;
 static system_ptr<schema_registry> schema_registry;
+static system_ptr<interface_registry> interface_registry;
 
 class filebrowser_tab;
 class entity_tree_tab;
@@ -278,6 +280,16 @@ class filebrowser_tab : public editor_tab {
     return "Asset Browser";
   }
 
+  void on_drop(const std::vector<std::string>& paths) override {
+    for (auto& p : paths) {
+      fs::path path(p);
+      if (path.extension() == ".obj") {
+        asset_id asset_id = create_dcc_asset(path, *assets_repository);
+
+      }
+    }
+  }
+
   void gui() override {
 
     draw_select_panel();
@@ -414,7 +426,7 @@ class properties_tab : public editor_tab {
 
     auto schema = schema_registry->find_schema(asset_type_);
     if (schema == schema_registry->end()) {
-      logger::core::Warning("Couldn't find schema for type {}", meta::type(asset_type_).name());
+      logger::core::Warning("Failed load schema for type {}", meta::type(asset_type_).name());
       return;
     }
 
@@ -426,7 +438,7 @@ class properties_tab : public editor_tab {
       data_ui(*asset_, prop.name, prop, ++id);
     }
     ImGui::Unindent();
-  };
+  }
 
   void set_asset(const asset* asset, meta::typeid_t asset_type) {
     asset_ = asset;
@@ -460,11 +472,6 @@ class entity_tree_tab : public editor_tab {
     if (!asset_)
       return;
 
-    if (version_ != asset_->version()) {
-
-      version_ = asset_->version();
-    }
-
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4, 4));
     ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, 8);
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
@@ -477,7 +484,7 @@ class entity_tree_tab : public editor_tab {
       }
       assert(recursion_depth == depth);
 
-      std::string id = asset.at("__guid");
+      auto id = assets_repository->get_guid(asset).str();
       std::string name = "[noname]";
       if (asset.contains("name")) {
         name = asset.at("name").get<std::string>();
@@ -508,9 +515,11 @@ class entity_tree_tab : public editor_tab {
 
       if (open && has_components) {
         for (auto& [type_name, comp] : asset.at("components").get<class asset&>()) {
+          if (!comp.is_object())
+            continue;
 
           const class asset& comp_asset = comp;
-          std::string comp_id = comp_asset.at("__guid");
+          std::string comp_id = assets_repository->get_guid(comp_asset).str();
           ImGuiTreeNodeFlags comp_flag = base_flag | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
           if (comp_id == selected_id_) comp_flag |= ImGuiTreeNodeFlags_Selected;
 
@@ -540,45 +549,13 @@ class entity_tree_tab : public editor_tab {
 
   void load(const asset* asset) {
     asset_ = asset;
-    version_ = asset->version();
 
 //    logger::core::Info("[entity_tree_tab] Loaded asset {}", );
   }
 
-//  void change_parent(
-//      const guid& guid,
-//      const asset::json_pointer& parent_ptr,
-//      const asset::json_pointer& new_parent_ptr
-//    ) {
-//
-//    std::string id = guid.str();
-//    auto& new_parent = asset_->at(new_parent_ptr);
-//    auto& parent = asset_->at(parent_ptr);
-//
-//    if (parent.contains("children")) {
-//      auto& children = parent.at("children");
-//      auto it = std::find_if(
-//          children.begin(),
-//          children.end(),
-//          [&](const auto &item) {
-//            return item.contains("__guid") && item.at("__guid") == id;
-//          }
-//      );
-//
-//      auto node = *it;
-//      children.erase(it);
-//
-//      if (!new_parent.contains("children"))
-//        new_parent["children"] = {};
-//
-//      new_parent.at("children").push_back(std::move(node));
-//    }
-//  }
-
  private:
   const asset* asset_ = {};
   std::string selected_id_ = {};
-  uint32_t version_ = {};
 };
 
 class scene_tab : public editor_tab {
@@ -586,6 +563,25 @@ class scene_tab : public editor_tab {
   [[nodiscard]] std::string_view name() const override {
     static const char* _name = "Scene";
     return _name;
+  }
+
+  static void rotate_camera(const vec2 &delta, transform& camera_transform) {
+    static const float distance = 2.0f;
+    static const float speed = 0.1f;
+
+    const vec3 up = camera_transform.up();
+    const vec3 right = camera_transform.right();
+    const vec3 fwd = camera_transform.forward();
+
+    vec3 dir = distance * fwd;
+    quat rot = quat::axis(vec3::up(), speed * delta.x * math::DEG_TO_RAD);
+    rot *= quat::axis(right, speed * delta.y * math::DEG_TO_RAD);
+
+    vec3 center = camera_transform.position + dir;
+    vec3 local_pos = center + rot * -dir;
+
+    camera_transform.position = local_pos;
+    camera_transform.rotation = quat::look_at(center - local_pos, rot * up);
   }
 
   void gui() override {
@@ -598,6 +594,13 @@ class scene_tab : public editor_tab {
 
     viewport_.resize(resolution);
 
+    if (ImGui::IsWindowFocused()) {
+      // camera navigation
+      auto mouse_delta = ImGui::GetMouseDragDelta(ImGuiMouseButton_Left);
+      ImGui::ResetMouseDragDelta(ImGuiMouseButton_Left);
+      rotate_camera({ mouse_delta.x, mouse_delta.y }, camera_transform_);
+    }
+
     viewer_registry->request_render({
       .world = world_.get(),
       .camera = {
@@ -606,7 +609,7 @@ class scene_tab : public editor_tab {
           80.0f * math::DEG_TO_RAD,
           (float) resolution.x / (float) resolution.y,
           0.1f,
-          100.0f
+          1000.0f
         )
       },
       .color_target = viewport_.target()
@@ -618,11 +621,13 @@ class scene_tab : public editor_tab {
   scene_tab()
     : world_(std::make_unique<world>())
     , camera_transform_(transform::from_matrix(mat4::trs(
-          vec3 { 0.0f, -3.0f, 6.0f }, quat::identity(), vec3 { 1.0f, 1.0f, 1.0f }
+          vec3 { 0.0f, -3.0f, 106.0f }, quat::identity(), vec3 { 1.0f, 1.0f, 1.0f }
       )))
     , viewport_(renderer)
   {
-    world_->load_from_asset(*assets_repository->get_asset("assets/scenes/start_scene.entity"));
+    world_->load_from_asset(*assets_repository->get_asset_by_path("assets/scenes/backpack.entity"));
+
+
     render_pipeline->on_render_connect(this, &scene_tab::on_render_callback);
   }
 
@@ -639,12 +644,13 @@ class scene_tab : public editor_tab {
   viewport viewport_;
 };
 
-  assets_repository = reg.get<class asset_repository>();
-  viewer_registry   = reg.get<class viewer_registry>();
-  renderer          = reg.get<class renderer>();
-  render_pipeline   = reg.get<class render_pipeline>();
-  schema_registry   = reg.get<class schema_registry>();
 void load_plugin(std::istringstream*, systems_registry& reg) {
+  assets_repository  = reg.get<class asset_repository>();
+  viewer_registry    = reg.get<class viewer_registry>();
+  renderer           = reg.get<class renderer>();
+  render_pipeline    = reg.get<class render_pipeline>();
+  schema_registry    = reg.get<class schema_registry>();
+  interface_registry = reg.get<class interface_registry>();
 
 
   filebrowser       = reg.add<editor_tab>(std::make_unique<filebrowser_tab>());
@@ -652,7 +658,7 @@ void load_plugin(std::istringstream*, systems_registry& reg) {
   properties        = reg.add<editor_tab>(std::make_unique<properties_tab>());
   scene             = reg.add<editor_tab>(std::make_unique<scene_tab>());
 
-  entity_tree->load(assets_repository->get_asset("assets/scenes/start_scene.entity"));
+  entity_tree->load(assets_repository->get_asset_by_path("assets/scenes/backpack.entity"));
 }
 
 void unload_plugin(std::ostringstream*, systems_registry& reg){

@@ -1,13 +1,13 @@
-#include <editor/editor_tab.h>
 #include "sandbox.h"
+
 #include "core/application.h"
 #include "core/simulation_events.h"
 #include "core/simulation.h"
-#include "core/assets_filesystem.h"
 #include "core/components/mesh_component.h"
 #include "core/components/transform_component.h"
 #include "core/world.h"
 #include "core/systems_registry.h"
+#include "core/asset_repository.h"
 
 static system_ptr<::asset_repository> assets_repository;
 
@@ -24,7 +24,7 @@ class sandbox_simulation : public simulation {
  public:
   void start(world& world) override {
     world_ = &world;
-    world.load_from_asset(*assets_repository->get_asset("assets/scenes/start_scene.entity"));
+    world.load_from_asset(*assets_repository->get_asset_by_path("assets/scenes/start_scene.entity"));
   }
 
   void update(world& world, float dt) override {
