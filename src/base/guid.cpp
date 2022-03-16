@@ -110,12 +110,8 @@ std::istream &operator>>(std::istream &in, guid &guid) {
 }
 
 guid guid::from_string(const std::string& str) {
-  return from_string(str.c_str());
-}
-
-guid guid::from_string(const char* str) {
   guid result;
-  size_t size = std::strlen(str);
+  size_t size = str.size();
   size_t index = 0;
   bool firstDigit = true;
 

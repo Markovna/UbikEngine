@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <string>
 
 class guid {
 public:
@@ -23,8 +24,17 @@ public:
 
     void swap(guid &);
 
-    static guid from_string(const char*);
     static guid from_string(const std::string&);
+
+  template<class StringCompatibleType,
+      std::enable_if_t<
+          !std::is_same_v<std::string, StringCompatibleType> &&
+          std::is_constructible_v<std::string, StringCompatibleType>,
+        int> = 0>
+    static guid from_string(const StringCompatibleType& value) {
+      return from_string(std::string(value));
+    }
+
     static guid generate();
     static guid invalid() noexcept;
 
