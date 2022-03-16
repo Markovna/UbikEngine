@@ -90,8 +90,10 @@ int main(int argc, char* argv[]) {
 
   fs::path libs_folder = fs::append(fs::project_path(), ".ubik/libs");
   library_loader libs;
-  libs.load<systems_registry&>("sandbox", os::find_lib(libs_folder.c_str(), "sandbox"), registry);
-  libs.load<systems_registry&>("editor_plugin", os::find_lib(libs_folder.c_str(), "editor_plugin"), registry);
+  for (const auto& entry : fs::directory_iterator(libs_folder)) {
+    if (!entry.is_directory() && entry.path().extension() == ".dylib")
+      libs.load<systems_registry&>(entry.path().filename().c_str(), entry.path(), registry);
+  }
 
   auto app = registry.get<application>();
   app->start();

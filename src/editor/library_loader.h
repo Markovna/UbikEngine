@@ -138,16 +138,12 @@ class library_loader {
 
   template<class ...Args>
   void invoke_load_function(void* symbols, const char* name, Args... args) {
-    char function_name[50] = "load_";
-    std::strcat(function_name, name);
-    invoke_function<Args...>(symbols, function_name, args...);
+    invoke_function<Args...>(symbols, "load_plugin", args...);
   }
 
   template<class ...Args>
   void invoke_unload_function(void* symbols, const char* name, Args... args) {
-    char function_name[50] = "unload_";
-    std::strcat(function_name, name);
-    invoke_function<Args...>(symbols, function_name, args...);
+    invoke_function<Args...>(symbols, "unload_plugin", args...);
   }
 
   template<class ...Args>

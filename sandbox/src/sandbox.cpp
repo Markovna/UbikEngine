@@ -61,7 +61,7 @@ class sandbox_simulation : public simulation {
 
 static sandbox_simulation* sandbox_sim;
 
-void load_sandbox(std::istringstream* in, systems_registry& reg) {
+void load_plugin(std::istringstream* in, systems_registry& reg) {
 
   assets_repository = reg.get<struct asset_repository>();
 
@@ -79,7 +79,7 @@ void load_sandbox(std::istringstream* in, systems_registry& reg) {
   }
 }
 
-void unload_sandbox(std::ostringstream* out, systems_registry& reg) {
+void unload_plugin(std::ostringstream* out, systems_registry& reg) {
   if (out) {
     uint64_t address = (intptr_t) sandbox_sim->get_world();
     out->write((char*) &address, sizeof(uint64_t));

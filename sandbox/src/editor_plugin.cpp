@@ -639,12 +639,12 @@ class scene_tab : public editor_tab {
   viewport viewport_;
 };
 
-void load_editor_plugin(std::istringstream*, systems_registry& reg) {
   assets_repository = reg.get<class asset_repository>();
   viewer_registry   = reg.get<class viewer_registry>();
   renderer          = reg.get<class renderer>();
   render_pipeline   = reg.get<class render_pipeline>();
   schema_registry   = reg.get<class schema_registry>();
+void load_plugin(std::istringstream*, systems_registry& reg) {
 
 
   filebrowser       = reg.add<editor_tab>(std::make_unique<filebrowser_tab>());
@@ -655,7 +655,7 @@ void load_editor_plugin(std::istringstream*, systems_registry& reg) {
   entity_tree->load(assets_repository->get_asset("assets/scenes/start_scene.entity"));
 }
 
-void unload_editor_plugin(std::ostringstream*, systems_registry& reg){
+void unload_plugin(std::ostringstream*, systems_registry& reg){
   reg.erase<editor_tab>(properties);
   reg.erase<editor_tab>(entity_tree);
   reg.erase<editor_tab>(filebrowser);
