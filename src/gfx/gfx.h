@@ -82,7 +82,7 @@ struct texture_format_info {
 };
 
 struct texture_format {
-  enum type {
+  enum type : uint8_t {
     R8      = 0,
     RGB8,
     RGBA8,
@@ -141,7 +141,7 @@ struct texture_desc {
 };
 
 struct vertex_semantic {
-  enum type {
+  enum type : uint8_t {
     POSITION = 0,
     NORMAL,
     COLOR0,
@@ -181,7 +181,7 @@ struct vertex_semantic {
 };
 
 struct vertex_type {
-  enum type {
+  enum type : uint8_t {
     FLOAT = 0,
     INT8,
     INT16,

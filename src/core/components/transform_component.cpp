@@ -10,20 +10,20 @@ void load_transform_component(const asset& asset, world& world, entity& e) {
   auto& comp = world.get<transform_component>(e.id);
 
   const ::asset& position = asset.at("position");
-  comp.local.position.x = position.at("x");
-  comp.local.position.y = position.at("y");
-  comp.local.position.z = position.at("z");
+  comp.local.position.x = position.at("x").get<float>();
+  comp.local.position.y = position.at("y").get<float>();
+  comp.local.position.z = position.at("z").get<float>();
 
   const ::asset& rotation = asset.at("rotation");
-  comp.local.rotation.x = rotation.at("x");
-  comp.local.rotation.y = rotation.at("y");
-  comp.local.rotation.z = rotation.at("z");
-  comp.local.rotation.w = rotation.at("w");
+  comp.local.rotation.x = rotation.at("x").get<float>();
+  comp.local.rotation.y = rotation.at("y").get<float>();
+  comp.local.rotation.z = rotation.at("z").get<float>();
+  comp.local.rotation.w = rotation.at("w").get<float>();
 
   const ::asset& scale = asset.at("scale");
-  comp.local.scale.x = scale.at("x");
-  comp.local.scale.y = scale.at("y");
-  comp.local.scale.z = scale.at("z");
+  comp.local.scale.x = scale.at("x").get<float>();
+  comp.local.scale.y = scale.at("y").get<float>();
+  comp.local.scale.z = scale.at("z").get<float>();
 
   comp.dirty = true;
 }

@@ -60,7 +60,7 @@ void build_schema_from_asset(meta::typeid_t id, asset& a, schema_registry& regis
   const asset_array& props = a.at("properties");
 
   for (const asset& prop : props) {
-    auto prop_type = get_schema_type(prop.at("type").get<std::string>());
+    auto prop_type = get_schema_type(prop.at("type"));
     if (prop_type == schema_type::OBJECT) {
       auto obj_schema = registry.get_schema_handle(meta::get_type(prop.at("schema").get<std::string>()).id());
       if (registry.is_valid(obj_schema)) {
