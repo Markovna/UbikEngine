@@ -45,6 +45,7 @@ int main(int argc, char* argv[]) {
   auto input_system = registry.set<::input_system>(std::make_unique<::input_system>());
   auto viewer_registry = registry.set<::viewer_registry>(std::make_unique<::viewer_registry>());
   auto schema_registry = registry.set<::schema_registry>(std::make_unique<::schema_registry>());
+  auto editor_tab_manager = registry.set<::editor_tab_manager>(std::make_unique<::editor_tab_manager>(registry));
 
   load_assets(*assets_filesystem, *assets_repository, { ".entity", ".meta", ".shader", ".schema" });
 
@@ -105,7 +106,6 @@ int main(int argc, char* argv[]) {
   connect_gui_events(gui_renderer, *input_system);
 
   auto simulation_view = registry.view<simulation>();
-  auto editor_tab_view = registry.view<editor_tab>();
 
   for (auto& sim : simulation_view) {
     sim->start(world);
@@ -144,11 +144,7 @@ int main(int argc, char* argv[]) {
 
     gui_begin_dockspace();
 
-    for (auto& tab : editor_tab_view) {
-      tab->begin(&gui_renderer);
-      tab->gui();
-      tab->end();
-    }
+    editor_tab_manager->update();
 
     render_pipeline->render(viewer_registry->begin(), viewer_registry->end(), *renderer);
 
