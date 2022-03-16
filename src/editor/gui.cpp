@@ -14,65 +14,7 @@
 
 #include <array>
 
-static system_ptr<::renderer> renderer;
-static system_ptr<::shader_repository> shader_repository;
-
 constexpr static const size_t BUFFER_MAX_SIZE  = 10 * 2048;
-
-void gui_begin_dockspace() {
-  static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
-  ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
-
-  ImGuiViewport* viewport = ImGui::GetMainViewport();
-  ImGui::SetNextWindowPos(viewport->GetWorkPos());
-  ImGui::SetNextWindowSize(viewport->GetWorkSize());
-  ImGui::SetNextWindowViewport(viewport->ID);
-
-  ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-  ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-  ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-
-  window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
-  window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
-
-  ImGui::Begin("DockSpace", nullptr, window_flags);
-
-  ImGui::PopStyleVar(3);
-
-  {
-    // tools panel
-    ImGui::RenderFrame(
-        ImGui::GetCursorScreenPos(),
-        {
-            ImGui::GetCursorScreenPos().x + ImGui::GetWindowWidth(), ImGui::GetCursorScreenPos().y + ImGui::GetFrameHeight()
-        }, ImGui::GetColorU32(ImGuiCol_DockingEmptyBg));
-
-    ImGui::NewLine();
-  }
-
-
-  ImGuiIO& io = ImGui::GetIO();
-  ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
-  ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
-
-
-  if (ImGui::BeginMenuBar()) {
-    if (ImGui::BeginMenu("File")) {
-      if (ImGui::MenuItem("Close", NULL, false, true)) {}
-      ImGui::EndMenu();
-    }
-    if (ImGui::BeginMenu("Edit")) {
-      ImGui::EndMenu();
-    }
-    if (ImGui::BeginMenu("View")) {
-      ImGui::EndMenu();
-    }
-
-    ImGui::EndMenuBar();
-  }
-
-  ImGui::End();
-}
 
 static cursor::type cursor_type(ImGuiMouseCursor cursor) {
   using CursorsMap = std::array<cursor::type, cursor::Count>;
@@ -185,26 +127,31 @@ static void setup_style() {
   ImGui::GetStyle().WindowPadding = {4.0f, 6.0f};
 }
 
-gui::gui(window* w) {
-  auto res_cmd_buf = renderer->create_resource_command_buffer();
+gui::gui(systems_registry& registry)
+ : renderer_(registry.get<struct renderer>()),
+   shader_repository_(registry.get<struct shader_repository>())
+{}
+
+void gui::init(window* w) {
+  auto res_cmd_buf = renderer_->create_resource_command_buffer();
   vb_handle_ = res_cmd_buf->create_vertex_buffer(
       vertex_layout_desc()
-        .add(vertex_semantic::POSITION, vertex_type::FLOAT, 2)
-        .add(vertex_semantic::TEXCOORD0, vertex_type::FLOAT, 2)
-        .add(vertex_semantic::COLOR0, vertex_type::UINT8, 4, true),
+          .add(vertex_semantic::POSITION, vertex_type::FLOAT, 2)
+          .add(vertex_semantic::TEXCOORD0, vertex_type::FLOAT, 2)
+          .add(vertex_semantic::COLOR0, vertex_type::UINT8, 4, true),
       BUFFER_MAX_SIZE * sizeof(ImDrawVert));
 
   ib_handle_ = res_cmd_buf->create_index_buffer(BUFFER_MAX_SIZE * sizeof(ImDrawIdx));
 
   camera_uniform_handle_ = res_cmd_buf->create_uniform({
-      { .type = uniform_type::BUFFER, .binding = 0 },
-  });
+                                                           { .type = uniform_type::BUFFER, .binding = 0 },
+                                                       });
 
   texture_uniform_handle_ = res_cmd_buf->create_uniform({
-      { .type = uniform_type::SAMPLER, .binding = 0 },
-  });
+                                                            { .type = uniform_type::SAMPLER, .binding = 0 },
+                                                        });
 
-  shader_ = shader_repository->lookup("GUIShader");
+  shader_ = shader_repository_->lookup("GUIShader");
 
   context_ = ImGui::CreateContext();
   ImGuiIO &io = ImGui::GetIO();
@@ -216,18 +163,23 @@ gui::gui(window* w) {
   // your ImTextureId represent a higher-level concept than just a GL texture id,
   // consider calling GetTexDataAsAlpha8() instead to save on GPU memory.
   io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
-  font_texture_ = std::make_unique<texture>(
+
+  memory mem;
+  auto tex_handle = res_cmd_buf->create_texture(
       texture_desc {
-          .width = (uint32_t) width,
-          .height = (uint32_t) height,
-          .format = texture_format::RGBA8,
-          .wrap = texture_wrap::CLAMP,
+          .data = {
+              .width = (uint32_t) width,
+              .height = (uint32_t) height,
+              .format = texture_format::RGBA8,
+          },
+          .wrap =  texture_wrap::CLAMP,
           .filter = texture_filter::LINEAR
-        },
-        pixels,
-        sizeof(uint8_t) * width * height * 4,
-        res_cmd_buf.get()
-      );
+      },
+      mem
+  );
+  std::memcpy(mem.data, pixels, mem.size);
+
+  font_texture_ = std::make_unique<texture>(tex_handle);
 
   io.Fonts->TexID = (ImTextureID)(intptr_t) texture_uniform_handle_.id;
 
@@ -256,7 +208,7 @@ gui::gui(window* w) {
   setup_keymap(io);
   setup_style();
 
-  renderer->submit(*res_cmd_buf);
+  renderer_->submit(*res_cmd_buf);
 }
 
 cursor::type gui::cursor() const {
@@ -284,7 +236,7 @@ void gui::end(framebuf_handle target) {
   render(target, ImGui::GetDrawData());
 }
 
-void gui::on_resize(resize_event& event) {
+void gui::on_resize(const resize_event& event) {
   ImGuiIO& io = ImGui::GetIO();
 
   io.DisplaySize = ImVec2(event.size.x, event.size.y);
@@ -293,7 +245,7 @@ void gui::on_resize(resize_event& event) {
   size_changed_ = true;
 }
 
-void gui::on_key_pressed(key_press_event &event) {
+void gui::on_key_pressed(const key_press_event &event) {
   ImGuiIO& io = ImGui::GetIO();
   io.KeysDown[event.key_code] = true;
   io.KeyCtrl = event.control;
@@ -302,7 +254,7 @@ void gui::on_key_pressed(key_press_event &event) {
   io.KeySuper = event.super;
 }
 
-void gui::on_key_released(key_release_event &event) {
+void gui::on_key_released(const key_release_event &event) {
   ImGuiIO& io = ImGui::GetIO();
   io.KeysDown[event.key_code] = false;
   io.KeyCtrl = event.control;
@@ -311,28 +263,28 @@ void gui::on_key_released(key_release_event &event) {
   io.KeySuper = event.super;
 }
 
-void gui::on_mouse_down(mouse_down_event &e) {
+void gui::on_mouse_down(const mouse_down_event &e) {
   ImGuiIO& io = ImGui::GetIO();
   io.MouseDown[e.mouse_code] = true;
 }
 
-void gui::on_mouse_up(mouse_up_event &e) {
+void gui::on_mouse_up(const mouse_up_event &e) {
   ImGuiIO& io = ImGui::GetIO();
   io.MouseDown[e.mouse_code] = false;
 }
 
-void gui::on_mouse_move(mouse_move_event &e) {
+void gui::on_mouse_move(const mouse_move_event &e) {
   ImGuiIO& io = ImGui::GetIO();
   io.MousePos.x = e.x;
   io.MousePos.y = e.y;
 }
 
-void gui::on_scroll(scroll_event &e) {
+void gui::on_scroll(const scroll_event &e) {
   ImGuiIO& io = ImGui::GetIO();
   io.MouseWheel += e.y;
 }
 
-void gui::on_text_input(text_event &e) {
+void gui::on_text_input(const text_event &e) {
   ImGuiIO& io = ImGui::GetIO();
   if(e.unicode > 0 && e.unicode < 0x10000) {
     io.AddInputCharacter(e.unicode);
@@ -346,8 +298,8 @@ void gui::render(framebuf_handle target, ImDrawData* draw_data) {
   ImVec2 clip_off = draw_data->DisplayPos;         // (0,0) unless using multi-viewports
   ImVec2 clip_scale = draw_data->FramebufferScale; // (1,1) unless using retina display which are often (2,2)
 
-  auto res_cmd_buf = renderer->create_resource_command_buffer();
-  auto render_cmd_buf = renderer->create_render_command_buffer();
+  auto res_cmd_buf = renderer_->create_resource_command_buffer();
+  auto render_cmd_buf = renderer_->create_render_command_buffer();
   render_cmd_buf->bind_render_pass(1, target, false);
 
   if (size_changed_) {
@@ -408,8 +360,8 @@ void gui::render(framebuf_handle target, ImDrawData* draw_data) {
     indices_offset += num_indices;
   }
 
-  renderer->submit(*res_cmd_buf);
-  renderer->submit(*render_cmd_buf);
+  renderer_->submit(*res_cmd_buf);
+  renderer_->submit(*render_cmd_buf);
 }
 
 void gui::set_context() const {
@@ -436,9 +388,4 @@ void disconnect_gui_events(gui& gui_renderer, input_system& input_events) {
   input_events.on_mouse_up.disconnect(gui_renderer, &gui::on_mouse_up);
   input_events.on_scroll.disconnect(gui_renderer, &gui::on_scroll);
   input_events.on_text.disconnect(gui_renderer, &gui::on_text_input);
-}
-
-void load_gui(systems_registry& registry) {
-  renderer = registry.get<struct renderer>();
-  shader_repository = registry.get<struct shader_repository>();
 }
