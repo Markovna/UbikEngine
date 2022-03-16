@@ -119,13 +119,9 @@ add_plugin(sandbox
 # ----------------------------------------- #
 
 add_library(editor SHARED
-#        src/platform/file_watcher.h src/platform/file_watcher.cpp
-#        src/editor/gui/imgui_renderer.cpp src/editor/gui/imgui_renderer.h
-#        src/editor/gui/gui.h src/editor/gui/gui.cpp
-#        src/editor/editor_gui.h src/editor/editor_gui.cpp
-        src/gfx/experimental/gui.cpp
+        src/editor/gui.cpp
         src/editor/editor_tab.cpp
-        src/gfx/experimental/gui.cpp )
+        src/editor/editor_tab_manager.cpp src/editor/editor_tab_manager.h)
 
 target_link_libraries(editor PRIVATE engine)
 target_link_libraries(editor PUBLIC imgui)
@@ -146,7 +142,7 @@ add_plugin (editor_plugin
 
 add_executable(ubik
         src/editor/editor.cpp
-        src/editor/library_loader.cpp src/editor/library_loader.h src/editor/editor_tab.cpp src/editor/editor_tab.h)
+        src/editor/library_loader.cpp src/editor/library_loader.h src/editor/editor_tab_manager.cpp src/editor/editor_tab_manager.h)
 
 target_link_libraries(ubik PRIVATE engine editor)
 
@@ -164,6 +160,5 @@ add_executable(experimental
 target_link_libraries(experimental PRIVATE engine editor)
 target_include_directories(experimental PRIVATE ${ENGINE_INCLUDES})
 
-target_include_directories(experimental PRIVATE src)
 
 
