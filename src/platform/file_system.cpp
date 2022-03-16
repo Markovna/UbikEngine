@@ -64,4 +64,8 @@ void project_path(const fs::path& path) {
   project_path_ = path;
 }
 
+path to_project_path(const path &p) {
+  return p.is_absolute() ? p : fs::append(fs::project_path_, p);
+}
+
 }

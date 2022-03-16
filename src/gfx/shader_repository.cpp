@@ -88,14 +88,10 @@ void compile_shader(const fs::path& path, asset_repository& assets, assets_files
   if (need_compile) {
     logger::core::Info("Compile shader {}", path.c_str());
 
-    {
-      assets.set_value(*asset, "vertex_source", assets.create_buffer_from_file(vert_path, 0, 0));
-      assets.set_value(*asset, "fragment_source", assets.create_buffer_from_file(frag_path, 0, 0));
+    assets.set_value(*asset, "vertex_source", assets.create_buffer_from_file(vert_path, 0, 0));
+    assets.set_value(*asset, "fragment_source", assets.create_buffer_from_file(frag_path, 0, 0));
 
-      assets_filesystem.save(assets, asset_path);
-    }
-
-    assets_filesystem.load(assets, asset_path);
+    assets_filesystem.save(assets, asset_path, true);
   }
 
 }

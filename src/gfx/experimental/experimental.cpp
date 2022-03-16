@@ -89,7 +89,7 @@ int main(int argc, char* argv[]) {
   register_components(registry);
   load_gui(registry);
 
-  fs::path libs_folder = fs::append(fs::project_path(), ".ubik/libs");
+  fs::path libs_folder = fs::to_project_path(".ubik/libs");
   library_loader libs;
   for (const auto& entry : fs::directory_iterator(libs_folder)) {
     if (!entry.is_directory() && entry.path().extension() == ".dylib")

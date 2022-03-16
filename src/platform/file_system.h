@@ -17,6 +17,7 @@ path concat(const path&, const char*);
 path append(const path&, const path&);
 path append(const path&, const char*);
 
+path to_project_path(const fs::path& p);
 
 path project_path();
 void project_path(const fs::path&);

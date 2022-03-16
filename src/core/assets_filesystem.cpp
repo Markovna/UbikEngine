@@ -33,7 +33,7 @@ void load_assets(
 
 void assets_filesystem::load(asset_repository& repository, const fs::path& path) const {
 //  using nlohmann::json;
-  fs::path fullpath = fs::append(fs::project_path(), path);
+  fs::path fullpath = fs::to_project_path(path);
   std::ifstream file = fs::read_file(fullpath, std::ios::in);
   nlohmann::json j = nlohmann::json::parse(file);
   if (j.empty())
@@ -56,7 +56,7 @@ void assets_filesystem::save(asset_repository& repository, const fs::path& path)
 }
 
 void assets_filesystem::save(asset_repository& repository, asset& asset, const fs::path& path) {
-  fs::path fullpath = fs::append(fs::project_path(), path);
+  fs::path fullpath = fs::to_project_path(path);
   fs::path buffers_directory = get_buffers_path(fullpath);
 
   std::vector<buffer_id> buffers;
