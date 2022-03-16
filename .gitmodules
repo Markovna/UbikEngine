@@ -16,3 +16,6 @@
 [submodule "thirdparty/shaderc"]
 	path = thirdparty/shaderc
 	url = https://github.com/google/shaderc
+[submodule "thirdparty/assimp"]
+	path = thirdparty/assimp
+	url = https://github.com/assimp/assimp

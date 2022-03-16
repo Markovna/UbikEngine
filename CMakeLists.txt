@@ -23,6 +23,7 @@ add_subdirectory(thirdparty/imgui)
 add_subdirectory(thirdparty/glslang)
 add_subdirectory(thirdparty/spirv-cross)
 add_subdirectory(thirdparty/shaderc)
+add_subdirectory(thirdparty/assimp)
 
 set(BASE_SRC
         src/base/slot_map.h src/base/delegate.h src/base/event.h src/base/key_codes.h src/base/mouse_codes.h src/base/color.h src/base/color.cpp src/base/math.h src/base/math.cpp src/base/cursor.h src/base/iterator_range.h src/base/profiler.h src/base/profiler.cpp src/base/macro.h src/base/log.h src/base/log.cpp
@@ -57,6 +58,7 @@ set(ENGINE_LIBS
         SPIRV
         spirv-cross-glsl
         shaderc
+        assimp
         )
 
 set(ENGINE_INCLUDES src)
