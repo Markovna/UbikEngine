@@ -23,7 +23,10 @@ class window {
   [[nodiscard]] vec2i get_resolution() const;
 
  private:
-  void push_event(const window_event&);
+  template<class ...Args>
+  void emplace_event(Args&&... args) {
+    events_.emplace(std::forward<Args>(args)...);
+  }
 
  private:
   vec2i size_;

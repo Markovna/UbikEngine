@@ -34,28 +34,22 @@ window::window(vec2i size) : size_(size) {
   glfwSetKeyCallback(win, [](GLFWwindow *w, int key, int scancode, int action, int mods) {
     window* window = (class window*) glfwGetWindowUserPointer(w);
     if (action == GLFW_PRESS || action == GLFW_REPEAT) {
-      window->push_event({
-                            .type = event_type::KeyPress,
-                            .key_press = key_press_event{
-                                key_code(key),
-                                bool(mods & GLFW_MOD_CONTROL),
-                                bool(mods & GLFW_MOD_SHIFT),
-                                bool(mods & GLFW_MOD_ALT),
-                                bool(mods & GLFW_MOD_SUPER),
-                                action == GLFW_REPEAT
-                            }
+      window->emplace_event(key_press_event {
+                          key_code(key),
+                          bool(mods & GLFW_MOD_CONTROL),
+                          bool(mods & GLFW_MOD_SHIFT),
+                          bool(mods & GLFW_MOD_ALT),
+                          bool(mods & GLFW_MOD_SUPER),
+                          action == GLFW_REPEAT
                         });
     }
     else if (action == GLFW_RELEASE) {
-      window->push_event({
-                            .type = event_type::KeyRelease,
-                            .key_release = key_release_event {
-                                key_code(key),
-                                bool(mods & GLFW_MOD_CONTROL),
-                                bool(mods & GLFW_MOD_SHIFT),
-                                bool(mods & GLFW_MOD_ALT),
-                                bool(mods & GLFW_MOD_SUPER)
-                            }
+      window->emplace_event(key_release_event {
+                          key_code(key),
+                          bool(mods & GLFW_MOD_CONTROL),
+                          bool(mods & GLFW_MOD_SHIFT),
+                          bool(mods & GLFW_MOD_ALT),
+                          bool(mods & GLFW_MOD_SUPER)
                         });
     }
   });
@@ -63,31 +57,31 @@ window::window(vec2i size) : size_(size) {
   glfwSetMouseButtonCallback(win, [](GLFWwindow *w, int button, int action, int mods) {
     window* window = (class window*)glfwGetWindowUserPointer(w);
     if (action == GLFW_PRESS) {
-      window->push_event({ .type = event_type::MouseDown, .mouse_down = mouse_down_event{(mouse_code)button}});
+      window->emplace_event( mouse_down_event { (mouse_code) button });
     }
     else if (action == GLFW_RELEASE) {
-      window->push_event({ .type = event_type::MouseUp, .mouse_up = mouse_up_event{(mouse_code)button}});
+      window->emplace_event( mouse_up_event { (mouse_code) button });
     }
   });
 
   glfwSetScrollCallback(win, [](GLFWwindow* w, double xoffset, double yoffset){
     window* window = (class window*)glfwGetWindowUserPointer(w);
-    window->push_event({ .type = event_type::Scroll, .scroll = scroll_event { float(xoffset), float(yoffset) }});
+    window->emplace_event( scroll_event { float(xoffset), float(yoffset) });
   });
 
   glfwSetCursorPosCallback(win, [](GLFWwindow *w, double xpos, double ypos) {
     window* window = (class window*)glfwGetWindowUserPointer(w);
-    window->push_event({ .type = event_type::MouseMove, .mouse_move = mouse_move_event { float(xpos), float(ypos) }});
+    window->emplace_event( mouse_move_event { float(xpos), float(ypos) });
   });
 
   glfwSetCharCallback(win, [](GLFWwindow* w, unsigned int codepoint) {
     window* window = (class window*)glfwGetWindowUserPointer(w);
-    window->push_event({ .type = event_type::Text, .text = text_event { codepoint } });
+    window->emplace_event( text_event { codepoint } );
   });
 
   glfwSetWindowCloseCallback(win, [](GLFWwindow *w) {
     window* window = (class window*)glfwGetWindowUserPointer(w);
-    window->push_event({ .type = event_type::Close, .close = {}});
+    window->emplace_event(close_event { });
   });
 
   glfwSetWindowSizeCallback(win, [](GLFWwindow *w, int width, int height) {
@@ -97,7 +91,16 @@ window::window(vec2i size) : size_(size) {
     int buffer_w, buffer_h; glfwGetFramebufferSize(w, &buffer_w, &buffer_h);
     window->resolution_ = { buffer_w, buffer_h };
 
-    window->push_event({.type = event_type::Resize, .resize = {.resolution = window->resolution_, .size = window->size_}});
+    window->emplace_event(resize_event { .resolution = window->resolution_, .size = window->size_});
+  });
+
+  glfwSetDropCallback(win, [](GLFWwindow* w, int count, const char** paths) {
+    window* window = (class window*) glfwGetWindowUserPointer(w);
+    drop_event event;
+    for (size_t i = 0; i < count; ++i) {
+      event.paths.emplace_back(paths[i]);
+    }
+    window->emplace_event(std::move(event));
   });
 }
 
@@ -110,13 +113,9 @@ bool window::poll_event(window_event& event) {
   if (events_.empty())
     return false;
 
-  event = events_.front();
+  event = std::move(events_.front());
   events_.pop();
   return true;
-}
-
-void window::push_event(const window_event& event) {
-  events_.emplace(event);
 }
 
 window::window_handle window::get_handle() const {

@@ -5,18 +5,19 @@
 
 class input_system {
  public:
-  event<mouse_move_event&> on_mouse_move;
-  event<mouse_up_event&> on_mouse_up;
-  event<mouse_down_event&> on_mouse_down;
-  event<key_press_event&> on_key_press;
-  event<key_release_event&> on_key_release;
-  event<scroll_event&> on_scroll;
-  event<text_event&> on_text;
-  event<close_event&> on_close;
-  event<resize_event&> on_resize;
+  event<const mouse_move_event&> on_mouse_move;
+  event<const mouse_up_event&> on_mouse_up;
+  event<const mouse_down_event&> on_mouse_down;
+  event<const key_press_event&> on_key_press;
+  event<const key_release_event&> on_key_release;
+  event<const scroll_event&> on_scroll;
+  event<const text_event&> on_text;
+  event<const close_event&> on_close;
+  event<const resize_event&> on_resize;
+  event<const drop_event&> on_drop;
 
  public:
-  void push_event(window_event);
+  void push_event(const window_event&);
 };
 
 
