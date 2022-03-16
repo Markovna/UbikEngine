@@ -609,16 +609,16 @@ void render_context_opengl::execute(const create_uniform_buffer_command& cmd) {
 void render_context_opengl::execute(const create_texture_command& cmd) {
   texture_gl& texture = assure(textures_, handle_traits::index(cmd.handle.id));
   texture.render_buffer = cmd.desc.flags[texture_flag::RENDER_TARGET];
-  texture.format = cmd.desc.format;
-  texture.width = cmd.desc.width;
-  texture.height = cmd.desc.height;
+  texture.format = cmd.desc.data.format;
+  texture.width = cmd.desc.data.width;
+  texture.height = cmd.desc.data.height;
 
-  const texture_format_info_gl& format = texture_formats[cmd.desc.format];
+  const texture_format_info_gl& format = texture_formats[cmd.desc.data.format];
   if (texture.render_buffer) {
 
     GL_ERRORS(glGenRenderbuffers(1, &texture.id));
     GL_ERRORS(glBindRenderbuffer(GL_RENDERBUFFER, texture.id));
-    GL_ERRORS(glRenderbufferStorage(GL_RENDERBUFFER, format.internal_format, cmd.desc.width, cmd.desc.height));
+    GL_ERRORS(glRenderbufferStorage(GL_RENDERBUFFER, format.internal_format, cmd.desc.data.width, cmd.desc.data.height));
     GL_ERRORS(glBindRenderbuffer(GL_RENDERBUFFER, 0));
 
   } else {
@@ -649,7 +649,7 @@ void render_context_opengl::execute(const create_texture_command& cmd) {
     GL_ERRORS(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, min_filters[cmd.desc.filter.min][has_mipmaps ? cmd.desc.filter.map : 0]));
     GL_ERRORS(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, mag_filters[cmd.desc.filter.mag]));
 
-    GL_ERRORS(glTexImage2D(GL_TEXTURE_2D, 0, format.internal_format, cmd.desc.width, cmd.desc.height, 0, format.format, format.type, cmd.memory.data));
+    GL_ERRORS(glTexImage2D(GL_TEXTURE_2D, 0, format.internal_format, cmd.desc.data.width, cmd.desc.data.height, 0, format.format, format.type, cmd.memory.data));
 
     if (has_mipmaps) {
       GL_ERRORS(glGenerateMipmap(GL_TEXTURE_2D));

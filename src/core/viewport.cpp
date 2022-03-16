@@ -7,22 +7,23 @@ void viewport::create(resource_command_buffer &cmd_buf) {
   texture_uniform_ = cmd_buf.create_uniform({{.type = uniform_type::SAMPLER, .binding = 0}});
   color_target_ =
       cmd_buf.create_texture({
-         .width  = (uint32_t) size_.x,
-         .height = (uint32_t) size_.y,
-         .format = texture_format::RGBA8
-     });
+        .data = {
+          .width  = (uint32_t) size_.x,
+          .height = (uint32_t) size_.y,
+          .format = texture_format::RGBA8
+        }
+      });
 
   depth_target_ =
       cmd_buf.create_texture({
-                                 .width  = (uint32_t) size_.x,
-         .height = (uint32_t) size_.y,
-         .format = texture_format::D24S8,
-         .flags = { texture_flag::RENDER_TARGET }
-     });
+        .data = {
+          .width  = (uint32_t) size_.x,
+          .height = (uint32_t) size_.y,
+          .format = texture_format::D24S8
+        }
+      });
 
-  framebuf_ = cmd_buf.create_frame_buffer(
-      {color_target_, depth_target_ }
-  );
+  framebuf_ = cmd_buf.create_frame_buffer({ color_target_, depth_target_ });
 
   cmd_buf.set_uniform(texture_uniform_, 0, color_target_);
 }

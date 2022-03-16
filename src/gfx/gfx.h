@@ -121,10 +121,20 @@ enum class texture_flag{
 
 using texture_flags = flags<texture_flag>;
 
-struct texture_desc {
+struct texture_data_desc {
   uint32_t width;
   uint32_t height;
   texture_format::type format;
+};
+
+inline size_t texture_size(const texture_data_desc& desc) {
+  return desc.width * desc.height *
+      texture_format::info[desc.format].channel_size *
+      texture_format::info[desc.format].channels;
+}
+
+struct texture_desc {
+  texture_data_desc data;
   texture_wrap wrap;
   texture_filter filter;
   texture_flags flags;

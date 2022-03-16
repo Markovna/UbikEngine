@@ -256,29 +256,22 @@ void resource_command_buffer::update_index_buffer(indexbuf_handle handle, uint32
 texture_handle resource_command_buffer::create_texture(texture_desc desc) {
   auto& command = emplace<create_texture_command>();
   command.handle = alloc<texture_handle>();
-  command.desc = std::move(desc);
-
-  uint32_t size =
-      command.desc.width * command.desc.height *
-      texture_format::info[command.desc.format].channel_size *
-      texture_format::info[command.desc.format].channels;
+  command.desc = desc;
 
   command.memory.data = nullptr;
-  command.memory.size = size;
+  command.memory.size = texture_size(command.desc.data);;
 
   return command.handle;
 }
 
-texture_handle resource_command_buffer::create_texture(texture_desc desc, memory& mem) {
+texture_handle resource_command_buffer::create_texture(
+    texture_desc desc,
+    memory& mem) {
   auto& command = emplace<create_texture_command>();
   command.handle = alloc<texture_handle>();
-  command.desc = std::move(desc);
+  command.desc = desc;
 
-  uint32_t size = command.desc.width * command.desc.height *
-                texture_format::info[command.desc.format].channel_size *
-                texture_format::info[command.desc.format].channels;
-
-  alloc(size, mem);
+  alloc(texture_size(command.desc.data), mem);
   command.memory = mem;
   queue_free_memory(mem);
   return command.handle;

@@ -9,8 +9,7 @@ struct asset;
 
 class texture {
  public:
-  texture(const texture_desc& desc, const uint8_t* data, size_t size, resource_command_buffer* command_buf);
-
+  texture(texture_handle handle) : handle_(handle) {}
   texture_handle handle() const { return handle_; }
 
  private:
