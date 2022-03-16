@@ -32,30 +32,36 @@ void load_assets(
 }
 
 void assets_filesystem::load(asset_repository& repository, const fs::path& path) const {
-//  using nlohmann::json;
   fs::path fullpath = fs::to_project_path(path);
   std::ifstream file = fs::read_file(fullpath, std::ios::in);
   nlohmann::json j = nlohmann::json::parse(file);
   if (j.empty())
     return;
 
+  guid guid = guid::from_string(j.at("__guid"));
+  if (auto* asset = repository.get_asset(guid)) {
+    repository.destroy_asset(asset->id());
+  }
+
   asset& asset = parse_json(j, repository, get_buffers_path(fullpath));
   repository.set_asset_path(asset.id(), path);
-  if (j.contains("__guid"))
-    repository.set_asset_guid(asset.id(), guid::from_string(j["__guid"]));
 }
 
-void save_assets(assets_filesystem& filesystem, asset_repository& repository) {
+void save_assets(assets_filesystem& filesystem, asset_repository& repository, bool remap_buffers) {
   for (auto& [asset, info] : repository) {
-    filesystem.save(repository, info.path);
+    filesystem.save(repository, info.path, remap_buffers);
   }
 }
 
-void assets_filesystem::save(asset_repository& repository, const fs::path& path) {
-  save(repository, *repository.get_asset(path), path);
+void assets_filesystem::save(asset_repository& repository, const fs::path& path, bool remap_buffers) {
+  if (auto* asset = repository.get_asset_by_path(path)) {
+    save(repository, *asset, path, remap_buffers);
+  } else {
+    logger::core::Error("Asset save failed: couldn't find asset with path {} in asset repository.", path.c_str());
+  }
 }
 
-void assets_filesystem::save(asset_repository& repository, asset& asset, const fs::path& path) {
+void assets_filesystem::save(asset_repository& repository, asset& asset, const fs::path& path, bool remap_buffers) {
   fs::path fullpath = fs::to_project_path(path);
   fs::path buffers_directory = get_buffers_path(fullpath);
 
@@ -73,11 +79,12 @@ void assets_filesystem::save(asset_repository& repository, asset& asset, const f
     buffer_paths.insert(buf_path);
 
     if (!fs::exists(buf_path)) {
-      std::ofstream dst(buf_path, std::ios::in | std::ios::out | std::ios::binary | std::ios::trunc);
-      auto buf = repository.load_buffer(buf_id);
-      std::copy_n(buf.data(), buf.size(), std::ostreambuf_iterator<char>(dst));
-
+      repository.write_buffer_to_file(buf_id, buf_path, 0);
       logger::core::Info("Saved buffer at path {}", buf_path.c_str());
+    }
+
+    if (remap_buffers) {
+      repository.map_buffer_to_file(buf_id, buf_path, 0);
     }
   }
 
@@ -91,4 +98,6 @@ void assets_filesystem::save(asset_repository& repository, asset& asset, const f
   for (auto& p : paths_to_remove) {
     fs::remove(p);
   }
+
+  logger::core::Info("Asset saved at path {}", path.c_str());
 }

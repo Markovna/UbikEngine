@@ -134,6 +134,9 @@ void propagate_asset_changes(world& world, asset_repository& repository) {
 
     const asset& components = entity_asset->at("components");
     for (auto& [type_name, comp_asset] : components) {
+      if (!comp_asset.is_object())
+        continue;
+
       meta::type type = meta::get_type(type_name.c_str());
       if (!type.is_valid()) {
         logger::core::Warning("Unknown component type {}", type_name);
@@ -161,6 +164,9 @@ entity world::load_from_asset(const asset& asset, entity parent, entity next) {
   version.components_version = components.version();
 
   for (auto& [type_name, comp_asset] : components) {
+    if (!comp_asset.is_object())
+      continue;
+
     meta::type type = meta::get_type(type_name.c_str());
     if (!type.is_valid()) {
       logger::core::Warning("Unknown component type {}", type_name);

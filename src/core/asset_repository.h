@@ -12,6 +12,7 @@
 #include "base/slot_map.h"
 #include "base/detector.h"
 #include "platform/file_system.h"
+#include "base/log.h"
 
 class asset;
 class asset_value;
@@ -73,7 +74,9 @@ class asset_array {
 };
 
 struct asset_id {
-  uint32_t idx;
+  uint32_t idx = std::numeric_limits<uint32_t>::max();
+
+  explicit constexpr operator bool() const noexcept { return idx != std::numeric_limits<uint32_t>::max(); }
 };
 
 class asset {
@@ -190,6 +193,7 @@ class asset_value {
   using string_t = std::string;
 
   union value {
+    std::nullptr_t none;
     bool boolean;
     int64_t number_integer;
     uint64_t number_unsigned;
@@ -199,7 +203,7 @@ class asset_value {
     asset* object;
     buffer_id buffer;
 
-    value() = default;
+    value() noexcept : none() {}
     value(bool v) noexcept : boolean(v) {}
     value(int64_t v) noexcept : number_integer(v) {}
     value(uint64_t v) noexcept : number_unsigned(v) {}
@@ -246,6 +250,7 @@ class asset_value {
           break;
         }
         case type::NONE: {
+          none = { };
           break;
         }
       }
@@ -482,7 +487,7 @@ class asset_value {
     to_asset_value(*this, std::forward<T>(val));
   }
 
-  asset_value(asset& val) {
+  asset_value(asset& val) : type_(type::NONE), value_() {
     to_asset_value(*this, val);
   }
 
@@ -587,7 +592,7 @@ class asset_value {
   }
 
   constexpr bool is_primitive() const noexcept {
-    return is_null() || is_string() || is_boolean() || is_number() || is_buffer();
+    return is_null() || is_string() || is_boolean() || is_number();
   }
 
   constexpr bool is_null() const noexcept {
@@ -628,6 +633,15 @@ class asset_value {
 
   constexpr bool is_string() const noexcept {
     return type_ == type::STRING;
+  }
+
+  static asset_value copy(const asset_value& other) {
+    assert(other.is_primitive());
+
+    asset_value copy;
+    copy.type_ = other.type_;
+    copy.value_ = other.type_ == type::STRING ? create<string_t>(*other.value_.string) : other.value_;
+    return copy;
   }
 
   constexpr operator type() const noexcept {
@@ -708,8 +722,8 @@ class asset_value {
   }
 
  private:
-  value value_;
-  type type_;
+  value value_ = { };
+  type type_ = type::NONE;
 };
 
 class asset_buffer {
@@ -769,9 +783,20 @@ class asset_repository {
     return { index };
   }
 
-  void save_buffer_to_file(buffer_id id, const fs::path& path, uint32_t offset) {
+  void map_buffer_to_file(buffer_id id, const fs::path& path, uint32_t offset = 0, uint32_t size = 0) {
+    assert(!path.empty());
+    assert(fs::exists(path));
+
     auto& buf = buffers_[id.idx];
-    std::ofstream dst(path, std::ios::in | std::ios::out | std::ios::binary);
+    buf.path = path;
+    buf.loaded_ptr.reset();
+    buf.offset = offset;
+    buf.size = size == 0 ? fs::file_size(path) : size;
+  }
+
+  void write_buffer_to_file(buffer_id id, const fs::path& path, uint32_t offset, bool remap = false) {
+    auto& buf = buffers_[id.idx];
+    std::ofstream dst(path, std::ios::out | std::ios::binary);
     if (offset) dst.rdbuf()->pubseekoff(offset, std::ios::beg, std::ios::in | std::ios::out);
 
     if (!buf.weak_ptr.expired()) {
@@ -781,34 +806,9 @@ class asset_repository {
       if (buf.offset) src.rdbuf()->pubseekoff(buf.offset, std::ios::beg, std::ios::in | std::ios::out);
       std::copy_n(std::istreambuf_iterator<char>(src), buf.size, std::ostreambuf_iterator<char>(dst));
     }
-
-    buf.path = path;
-    buf.loaded_ptr.reset();
-    buf.offset = offset;
   }
 
-  buffer_id create_buffer(uint8_t* data, uint32_t size) {
-    uint32_t index;
-    if (!buffers_free_list_.empty()) {
-      index = buffers_free_list_.back();
-      buffers_free_list_.pop_back();
-    } else {
-      index = buffers_.size();
-      buffers_.resize(index+1);
-    }
-
-    auto ptr = std::shared_ptr<uint8_t>(new uint8_t[size], std::default_delete<uint8_t[]>());
-    std::memcpy(ptr.get(), data, size);
-
-    buffers_[index].size = size;
-    buffers_[index].path = {};
-    buffers_[index].offset = 0;
-    buffers_[index].weak_ptr = ptr;
-    buffers_[index].loaded_ptr = ptr; // don't delete memory until buffer is not mapped to file
-    return buffer_id { index };
-  }
-
-  void update_buffer(buffer_id id, uint32_t offset, uint8_t* data, uint32_t size) {
+  void update_buffer(buffer_id id, uint32_t offset, const void* data, uint32_t size) {
     buffer_info& buf = buffers_[id.idx];
     auto ptr = buf.weak_ptr.lock();
     if (!ptr) {
@@ -818,7 +818,7 @@ class asset_repository {
 
     buf.loaded_ptr = ptr; // don't delete loaded memory until buffer is not saved to file
     buf.hash = 0;
-    std::memcpy(ptr.get(), data, size);
+    std::memcpy(ptr.get() + offset, data, size);
   }
 
   void destroy_buffer(buffer_id id) {
@@ -855,6 +855,13 @@ class asset_repository {
   }
 
   asset& create_asset() {
+    return create_asset({});
+  }
+
+  asset& create_asset(guid guid) {
+    if (!guid.is_valid())
+      guid = guid::generate();
+
     uint32_t index;
     if (!objects_free_list_.empty()) {
       index = objects_free_list_.back();
@@ -864,23 +871,29 @@ class asset_repository {
       objects_.resize(index+1);
     }
 
-    return *(objects_[index] = std::make_unique<asset>(asset_id { index }));
+    asset* ptr = (objects_[index] = std::make_unique<asset>(asset_id { index })).get();
+
+    if (auto it = guid_to_asset_.find(guid); it != guid_to_asset_.end()) {
+      logger::core::Error("Couldn't create asset with guid {} because it has been reserved.", guid.str());
+      guid = guid::generate();
+    }
+
+    guid_to_asset_[guid] = ptr;
+    asset_to_info_[ptr].id = guid;
+    return *ptr;
   }
 
   void destroy_asset(asset_id id) {
     asset& a = *objects_[id.idx];
     assert(a.is_orphan());
-    if (auto it = asset_to_info_.find(&a); it != asset_to_info_.end()) {
-      if (it->second.id.is_valid()) {
-        guid_to_asset_.erase(it->second.id);
-      }
-      if (!it->second.path.empty()) {
-        path_to_asset_.erase(it->second.path);
-      }
-      asset_to_info_.erase(it);
-    }
 
     destroy_asset_value_recursive(a);
+  }
+
+  const fs::path& get_asset_path(asset_id asset_id) {
+    assert(objects_[asset_id.idx]);
+    auto a = objects_[asset_id.idx].get();
+    return asset_to_info_[a].path;
   }
 
   bool set_asset_path(asset_id asset_id, const fs::path& p) {
@@ -895,17 +908,14 @@ class asset_repository {
     return true;
   }
 
-  bool set_asset_guid(asset_id asset_id, const guid& id) {
+  const guid& get_guid(const asset& asset) {
+    return get_guid(asset.id());
+  }
+
+  const guid& get_guid(asset_id asset_id) {
     assert(objects_[asset_id.idx]);
     auto a = objects_[asset_id.idx].get();
-    auto& existed = guid_to_asset_[id];
-    if (existed != nullptr && existed != a)
-      return false;
-
-    existed = a;
-    set_value(*a, "__guid", id);
-    asset_to_info_[a].id = id;
-    return true;
+    return asset_to_info_[a].id;
   }
 
   asset* get_asset(asset_id id) {
@@ -915,7 +925,7 @@ class asset_repository {
     return objects_[id.idx].get();
   }
 
-  asset* get_asset(const fs::path& p) const {
+  asset* get_asset_by_path(const fs::path& p) const {
     auto it = path_to_asset_.find(p);
     return it != path_to_asset_.end() ? it->second : nullptr;
   }
@@ -923,6 +933,10 @@ class asset_repository {
   asset* get_asset(const guid& id) const {
     auto it = guid_to_asset_.find(id);
     return it != guid_to_asset_.end() ? it->second : nullptr;
+  }
+
+  void copy_value(asset& a, const asset::key_t& key, const asset_value& value) {
+    set_value(a, key, copy_asset_value(value));
   }
 
   void set_value(asset& a, const asset::key_t& key, asset_value value) {
@@ -940,6 +954,16 @@ class asset_repository {
   void set_value(asset_id asset_id, const asset::key_t& key, asset_value value) {
     assert(objects_[asset_id.idx]);
     set_value(*objects_[asset_id.idx], key, std::move(value));
+  }
+
+  void set_ref(asset_id id, const asset::key_t& key, asset_id value) {
+    assert(objects_[id.idx]);
+    set_ref(*objects_[id.idx], key, value);
+  }
+
+  void set_ref(asset& a, const asset::key_t& key, asset_id value) {
+    auto& guid = get_guid(value);
+    set_value(a, key, guid.str());
   }
 
   void erase(asset& a, const asset::key_t& key) {
@@ -992,6 +1016,23 @@ class asset_repository {
   void pop_back(array_id id) {
     assert(arrays_[id.idx]);
     pop_back(*arrays_[id.idx]);
+  }
+
+  buffer_id create_buffer(uint32_t size) {
+    buffer_id id = add_buffer();
+    buffer_info& buffer = get_buffer_info(id);
+
+    auto ptr = std::shared_ptr<uint8_t>(new uint8_t[size ? size : 1], std::default_delete<uint8_t[]>());
+    if (size) {
+      std::memset(ptr.get(), 0, size);
+    }
+
+    buffer.size = size;
+    buffer.path = {};
+    buffer.offset = 0;
+    buffer.weak_ptr = ptr;
+    buffer.loaded_ptr = ptr; // don't delete memory until buffer is not mapped to file
+    return id;
   }
 
   asset_array::const_iterator erase(asset_array& array, asset_array::const_iterator it) {
@@ -1047,13 +1088,52 @@ class asset_repository {
   }
 
   void free_asset(asset_id id) {
+    auto& ptr = objects_[id.idx];
+
+    if (auto it = asset_to_info_.find(ptr.get()); it != asset_to_info_.end()) {
+      if (it->second.id.is_valid()) {
+        guid_to_asset_.erase(it->second.id);
+      }
+      if (!it->second.path.empty()) {
+        path_to_asset_.erase(it->second.path);
+      }
+      asset_to_info_.erase(it);
+    }
+
     objects_free_list_.push_back(id.idx);
-    objects_[id.idx].reset();
+    ptr.reset();
   }
 
   void free_array(array_id id) {
     arrays_free_list_.push_back(id.idx);
     arrays_[id.idx].reset();
+  }
+
+  asset_value copy_asset_value(const asset_value& src) {
+    if (src.is_object()) {
+      asset& obj_dst = create_asset();
+      for (auto& [name, val] : static_cast<const asset&>(src)) {
+        set_value(obj_dst, name, copy_asset_value(val));
+      }
+      return obj_dst;
+    }
+
+    if (src.is_array()) {
+      asset_array& arr_dst = create_array();
+      for (auto& val : static_cast<const asset_array&>(src)) {
+        push_back(arr_dst, copy_asset_value(val));
+      }
+      return arr_dst;
+    }
+
+    if (src.is_buffer()) {
+      buffer_id dst_id = add_buffer();
+      buffer_info& buf_dst = get_buffer_info(dst_id);
+      buf_dst = get_buffer_info(src);
+      return dst_id;
+    }
+
+    return asset_value::copy(src);
   }
 
   void destroy_asset_value_recursive(asset_value value) {
@@ -1082,6 +1162,23 @@ class asset_repository {
         destroy_buffer(back);
       }
     }
+  }
+
+  buffer_info& get_buffer_info(buffer_id id) {
+    return buffers_[id.idx];
+  }
+
+  buffer_id add_buffer() {
+    uint32_t index;
+    if (!buffers_free_list_.empty()) {
+      index = buffers_free_list_.back();
+      buffers_free_list_.pop_back();
+    } else {
+      index = buffers_.size();
+      buffers_.resize(index+1);
+    }
+
+    return { index };
   }
 
  private:
