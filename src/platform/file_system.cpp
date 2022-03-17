@@ -68,4 +68,22 @@ path to_project_path(const path &p) {
   return p.is_absolute() ? p : fs::append(fs::project_path_, p);
 }
 
+path unique_path(const path &p) {
+  if (!fs::exists(p))
+    return p;
+
+  std::string name = p.string() + "-";
+  size_t size = name.size();
+
+  uint32_t num = 1;
+  do {
+    ++num;
+    name.resize(size);
+    name += std::to_string(num);
+  }
+  while (fs::exists(name));
+
+  return name;
+}
+
 }
