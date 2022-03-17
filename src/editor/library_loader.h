@@ -56,12 +56,12 @@ class library_loader {
     libs_.insert({
            std::string(name),
            {
-               .name = std::string(name),
-               .src_path = path,
-               .temp_path = temp_path,
-               .symbols = symbols,
-               .version = 0,
-               .timestamp = os::get_timestamp(path),
+             .name = std::string(name),
+             .src_path = path,
+             .temp_path = temp_path,
+             .symbols = symbols,
+             .version = 0,
+             .timestamp = os::get_timestamp(path),
            }
        });
   }

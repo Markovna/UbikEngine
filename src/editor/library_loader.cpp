@@ -21,13 +21,15 @@ void library_loader::reset() {
 }
 
 fs::path library_loader::copy_to_temp(const char *name, const fs::path &src_path, uint32_t version) {
-  fs::path path {temp_folder_};
+  fs::path path { temp_folder_ };
   path.append(name);
-  path.concat(std::to_string(version));
+  path.replace_extension("");
+  path.replace_filename(fs::concat(path.filename(), std::to_string(version)));
   path.replace_extension(src_path.extension());
 
   std::ifstream src_stream(src_path, std::ios::binary);
-  std::ofstream dst_stream(path, std::ios::binary);
+  std::ofstream dst_stream(path, std::ios::out | std::ios::binary);
   dst_stream << src_stream.rdbuf();
+
   return path;
 }
